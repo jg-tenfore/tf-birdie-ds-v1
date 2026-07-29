@@ -55,10 +55,13 @@ const preview: Preview = {
                     ["Overview", "Colors", "Typography", "Spacing & Layout", "Radius & Elevation", "Touch Targets", "Icons", "Logos"],
                     "Components",
                     ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Charts & Data", "Media & Visuals", "Navigation"],
-                    "Patterns",
                     "App Chrome",
                     "App Screens",
                     ["Register", "Tickets", "Payments", "Tee Sheet", "F & B", "Pro Shop", "Customers", "Reports", "Settings"],
+                    // "∕" is U+2215 (division slash), not "/" — a real slash would
+                    // split this into two nested folders in the sidebar.
+                    "Sign in ∕ Sign up",
+                    ["Log in", "PIN Unlock", "Sign up", "Forgot password", "Verification"],
                     "*",
                 ],
             },

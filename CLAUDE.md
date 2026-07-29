@@ -93,6 +93,34 @@ friends are **not** accepted as direct props any more — they must go in `sx`:
 `direction`, `spacing`, `divider`, and `useFlexGap` remain real props. Most MUI examples online are
 still v5–v7 and will hit this.
 
+### MUI v9 gotcha — legacy `*Outline` icons removed
+
+v9 deleted 23 icon exports ending in `Outline` (no "d") because they duplicated their `Outlined`
+counterparts:
+
+```typescript
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; // ❌ gone in v9
+import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined"; // ✅
+```
+
+Affects `CheckCircleOutline`, `MailOutline`, `DeleteOutline`, `InfoOutline`, `ErrorOutline`,
+`HelpOutline`, `PersonOutline`, `PeopleOutline`, `StarOutline`, `LockOutline`, and 13 more. Theme
+variants (`DeleteOutlineSharp`, `InfoOutlineRounded`) are unaffected.
+
+### Components MUI documents but does not ship
+
+`NumberField` and `Menubar` appear in the MUI docs sidebar marked NEW, but they are **recipes built
+on Base UI** (`@base-ui/react`), not exports of `@mui/material` — and they are not in `@mui/lab`
+either. Don't try to import them.
+
+- **Number Field** — Birdie composes one from `TextField` + `IconButton`; see
+  `Components/Forms/Number Field`. Base UI's spinner arrows are ~16px and break the 48dp floor.
+- **Menubar** — deliberately not built. A desktop menubar needs two-level hover, which a finger
+  can't do. Use the nav rail for destinations and an overflow `Menu` for secondary actions.
+
+`@mui/lab` is **not** a dependency. Don't add it without a specific need — v9 moved `LoadingButton`
+into `Button` (`loading` prop), which was the main reason to reach for it.
+
 ### Styling
 
 Use the `sx` prop and semantic palette tokens — `bgcolor: "background.paper"`, `color:
@@ -112,6 +140,14 @@ The taxonomy mirrors the Buck design system so the two read the same way. Sort o
 | `Components/*` | Actions · Forms · Feedback & Status · Layout & Structure · Charts & Data · Media & Visuals · Navigation |
 | `App Chrome/*` | The persistent POS frame |
 | `App Screens/*` | Register · Tickets · Payments · Tee Sheet · F & B · Pro Shop · Customers · Reports · Settings |
+| `Sign in ∕ Sign up/*` | Log in · PIN Unlock · Sign up · Forgot password · Verification |
+
+**The separator in `Sign in ∕ Sign up` is `∕` (U+2215 division slash), not `/`.** A real slash would
+split it into two nested sidebar folders. Copy the string from `preview.tsx` rather than retyping it.
+
+Auth has two distinct layers, and stories should respect the split: **terminal sign-in** (email +
+password, run once by a manager) and **operator PIN unlock** (4-digit, run dozens of times a shift).
+A forgotten PIN is cleared by a shift lead on the spot — it never goes through the email flow.
 
 When adding a story:
 
