@@ -133,8 +133,20 @@ export const Tile = ({ item, onAdd }: { item: Sellable; onAdd: () => void }) => 
             "&:hover": { borderColor: appColors.green },
         }}
     >
-        <Box sx={{ height: 118, bgcolor: "#fff", display: "grid", placeItems: "center", p: 0.5 }}>
-            <Box component="img" src={item.image} alt="" sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+        {/*
+         * Absolutely positioned rather than max-height constrained. A percentage
+         * max-height resolves against an auto-sized row and computes to `none`,
+         * so `maxHeight: "100%"` here did nothing and tall product shots
+         * overflowed onto the label below.
+         */}
+        <Box sx={{ position: "relative", height: 118, flexShrink: 0, bgcolor: "#fff", overflow: "hidden" }}>
+            <Box
+                component="img"
+                src={item.image}
+                alt=""
+                loading="lazy"
+                sx={{ position: "absolute", inset: 4, width: "calc(100% - 8px)", height: "calc(100% - 8px)", objectFit: "contain" }}
+            />
         </Box>
         <Stack sx={{ px: 1, py: 0.75, borderTop: "1px solid", borderColor: appColors.divider, minHeight: 56, justifyContent: "center" }}>
             <Typography sx={{ fontSize: 12, lineHeight: 1.25, textAlign: "center" }} noWrap={false}>

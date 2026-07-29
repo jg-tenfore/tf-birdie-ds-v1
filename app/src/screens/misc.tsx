@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
@@ -12,9 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { members } from "@/data/pos-data";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
-import { assetUrl } from "@/utils/asset-url";
 import { Shell } from "../pos-shell";
-import { money, useActions, useStore, type Ticket } from "../store";
+import { money, useActions, useStore } from "../store";
 
 /**
  * Tabs, tables, and the back-office screens.
@@ -54,103 +52,6 @@ const Row = ({ children, onClick }: { children: React.ReactNode; onClick?: () =>
 );
 
 /* ------------------------------ Tabs ------------------------------ */
-
-const TicketRow = ({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) => {
-    const total = ticket.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0) * 1.06;
-    return (
-        <Row onClick={onOpen}>
-            <Box component="img" src={assetUrl("logos/tf-square-black.svg")} alt="" sx={{ width: 44, height: 41, opacity: 0.75, mr: 2 }} />
-            <Stack sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: 19 }}>{ticket.name}</Typography>
-                <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
-                    {ticket.number} · {ticket.source} · {ticket.lines.length} items · opened {ticket.opened}
-                </Typography>
-            </Stack>
-            <Stack sx={{ alignItems: "flex-end", gap: 0.5 }}>
-                <Typography sx={{ fontSize: 19 }}>{money(total)}</Typography>
-                <Chip
-                    size="small"
-                    label={ticket.status}
-                    sx={{
-                        bgcolor: ticket.status === "paid" ? appColors.greenTee : appColors.navy,
-                        color: "#fff",
-                        textTransform: "capitalize",
-                    }}
-                />
-            </Stack>
-        </Row>
-    );
-};
-
-export const TabsScreen = () => {
-    const { heldTickets, paidTickets } = useStore();
-    const { openTicket } = useActions();
-    const navigate = useNavigate();
-    const [q, setQ] = useState("");
-
-    const open = (t: Ticket) => {
-        openTicket(t.id);
-        navigate("/proshop");
-    };
-
-    const match = (t: Ticket) => t.name.toLowerCase().includes(q.toLowerCase()) || t.number.includes(q);
-
-    return (
-        <Shell
-            title="Tabs"
-            active="tabs"
-            showOverflow={false}
-            subBar={
-                <InputBase
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Start typing a customer or employee name to filter…"
-                    sx={{ width: "100%", bgcolor: appColors.filterBar, px: 2, py: 1.5, fontSize: 16 }}
-                />
-            }
-            actionBar={
-                <>
-                    <ActionButton onClick={() => navigate(-1)}>Back</ActionButton>
-                    <ActionButton tone="danger">Pop</ActionButton>
-                    <ActionButton onClick={() => navigate("/quickorder")}>Quick Order</ActionButton>
-                    <ActionButton onClick={() => navigate("/tables")}>Tables</ActionButton>
-                    <ActionButton tone="primary" onClick={() => navigate("/proshop")}>
-                        Create a Tab
-                    </ActionButton>
-                </>
-            }
-        >
-            {heldTickets.filter(match).length === 0 && paidTickets.filter(match).length === 0 ? (
-                <Page title="No open tabs" subtitle="Hold a ticket from the register and it will appear here." />
-            ) : (
-                <Box>
-                    {heldTickets.filter(match).map((t) => (
-                        <TicketRow key={t.id} ticket={t} onOpen={() => open(t)} />
-                    ))}
-                    {paidTickets.filter(match).length > 0 && (
-                        <>
-                            <Typography
-                                sx={{
-                                    px: 2,
-                                    py: 1.5,
-                                    fontSize: 12,
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                    color: appColors.textSecondary,
-                                }}
-                            >
-                                Paid today
-                            </Typography>
-                            {paidTickets.filter(match).map((t) => (
-                                <TicketRow key={t.id} ticket={t} onOpen={() => {}} />
-                            ))}
-                        </>
-                    )}
-                </Box>
-            )}
-        </Shell>
-    );
-};
 
 /* ---------------------------- Tables ------------------------------ */
 

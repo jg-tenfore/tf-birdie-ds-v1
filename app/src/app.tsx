@@ -5,18 +5,14 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-d
 import { appReplicaTheme } from "@/theme/app-replica-theme";
 import { StoreProvider, useStore } from "./store";
 import { PaymentScreen } from "./screens/payment";
-import { ProShopScreen, QuickOrderScreen } from "./screens/selling";
+import { QuickOrderScreen } from "./screens/quick-order";
+import { ProShopScreen } from "./screens/selling";
+import { TabDetailScreen, TabsScreen } from "./screens/tabs";
+import { BaySheetScreen } from "./screens/bay-sheet";
+import { CourtSheetScreen } from "./screens/court-sheet";
 import { TeeSheetScreen, TeeTimeDetailScreen } from "./screens/tee-sheet";
 import { SignInScreen } from "./screens/sign-in";
-import {
-    CustomerSearchScreen,
-    OrderLookupScreen,
-    ShiftScreen,
-    StubScreen,
-    TablesScreen,
-    TabsScreen,
-    TimeClockScreen,
-} from "./screens/misc";
+import { CustomerSearchScreen, OrderLookupScreen, ShiftScreen, StubScreen, TablesScreen, TimeClockScreen } from "./screens/misc";
 
 /** Everything past sign-in requires an operator, as the real terminal does. */
 const RequireOperator = ({ children }: { children: React.ReactNode }) => {
@@ -33,13 +29,14 @@ const routes: [string, React.ReactNode][] = [
     ["/teesheet", <TeeSheetScreen />],
     ["/teesheet/:time", <TeeTimeDetailScreen />],
     ["/tabs", <TabsScreen />],
+    ["/tabs/:id", <TabDetailScreen />],
     ["/tables", <TablesScreen />],
     ["/customersearch", <CustomerSearchScreen />],
     ["/orderlookup", <OrderLookupScreen />],
     ["/timeclock", <TimeClockScreen />],
     ["/shift", <ShiftScreen />],
-    ["/coursheet", <StubScreen title="Court Sheet" active="courtsheet" note="Tennis and pickleball courts." />],
-    ["/baysheet", <StubScreen title="Bay Sheet" active="baysheet" note="Simulator bays." />],
+    ["/coursheet", <CourtSheetScreen />],
+    ["/baysheet", <BaySheetScreen />],
     ["/reservations", <StubScreen title="Reservations" active="reservations" note="Restaurant reservations." />],
     ["/orderstips", <StubScreen title="Orders & Tips" active="orderstips" note="Tip adjustment on closed card sales." />],
     ["/tablechart", <StubScreen title="Table Chart" active="tablechart" note="Floor-plan editor." />],
