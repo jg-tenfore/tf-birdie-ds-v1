@@ -70,9 +70,7 @@ export const TimeClockLog = ({ punches }: { punches: TimeClockPunch[] }) => (
                     bgcolor: appColors.surface,
                 }}
             >
-                <Typography sx={{ fontSize: 15, color: appColors.textSecondary, textAlign: "right" }}>
-                    {punch.timestamp}
-                </Typography>
+                <Typography sx={{ fontSize: 15, color: appColors.textSecondary, textAlign: "right" }}>{punch.timestamp}</Typography>
                 <Typography sx={{ fontSize: 15, color: appColors.textSecondary, pl: 2 }}>{punch.type}</Typography>
             </Box>
         ))}

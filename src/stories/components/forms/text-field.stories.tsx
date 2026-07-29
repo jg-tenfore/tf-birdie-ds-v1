@@ -79,8 +79,8 @@ export const CurrencyAndNumbers: Story = {
                 }}
             />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Money fields use monospace with tabular figures and set <code>inputMode</code> so the tablet
-                raises the numeric keypad rather than the full keyboard — one less tap, every single time.
+                Money fields use monospace with tabular figures and set <code>inputMode</code> so the tablet raises the numeric keypad
+                rather than the full keyboard — one less tap, every single time.
             </Typography>
             <TextField label="Quantity" defaultValue="2" slotProps={{ htmlInput: { inputMode: "numeric" } }} sx={{ maxWidth: 160 }} />
         </Stack>
@@ -105,8 +105,7 @@ export const SelectAndToggles: Story = {
                 ))}
             </TextField>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Menu items are {touchTarget.comfortable}dp so a dropdown is scrollable-and-tappable, not a
-                precision exercise.
+                Menu items are {touchTarget.comfortable}dp so a dropdown is scrollable-and-tappable, not a precision exercise.
             </Typography>
             <FormControlLabel control={<Checkbox defaultChecked />} label="Print receipt" />
             <FormControlLabel control={<Switch defaultChecked />} label="Email receipt to member" />

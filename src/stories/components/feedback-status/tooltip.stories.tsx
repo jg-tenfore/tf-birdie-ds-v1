@@ -72,13 +72,12 @@ export const TouchBehavior: Story = {
                 </Tooltip>
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                The theme sets <code>enterTouchDelay=&#123;400&#125;</code> and{" "}
-                <code>leaveTouchDelay=&#123;3000&#125;</code> — long-press for 400ms, then it stays up for 3
-                seconds, long enough to actually read standing up.
+                The theme sets <code>enterTouchDelay=&#123;400&#125;</code> and <code>leaveTouchDelay=&#123;3000&#125;</code> — long-press
+                for 400ms, then it stays up for 3 seconds, long enough to actually read standing up.
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Note both icon buttons still carry an <code>aria-label</code>. That's what a screen reader
-                announces and what makes the control identifiable without the tooltip ever appearing.
+                Note both icon buttons still carry an <code>aria-label</code>. That's what a screen reader announces and what makes the
+                control identifiable without the tooltip ever appearing.
             </Typography>
         </Stack>
     ),
@@ -112,8 +111,8 @@ export const CorrectUse: Story = {
                     </IconButton>
                 </Tooltip>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    A destructive action identified only by an icon and a hover string. On a tablet, this is an
-                    unlabeled red button. Put the word "Void" on it.
+                    A destructive action identified only by an icon and a hover string. On a tablet, this is an unlabeled red button. Put
+                    the word "Void" on it.
                 </Typography>
             </Stack>
         </Stack>

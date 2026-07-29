@@ -29,7 +29,12 @@ const TabDemo = ({ labels, variant }: { labels: string[]; variant?: "standard" |
 
     return (
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs value={value} onChange={(_, next) => setValue(next)} variant={variant} scrollButtons={variant === "scrollable" ? "auto" : false}>
+            <Tabs
+                value={value}
+                onChange={(_, next) => setValue(next)}
+                variant={variant}
+                scrollButtons={variant === "scrollable" ? "auto" : false}
+            >
                 {labels.map((label) => (
                     <Tab key={label} label={label} />
                 ))}
@@ -43,8 +48,8 @@ export const Standard: Story = {
         <Stack spacing={3} sx={{ p: 3 }}>
             <TabDemo labels={["Open tickets", "Paid today", "Voided", "All"]} />
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 720 }}>
-                Tabs are {touchTarget.comfortable}dp tall and sentence case. On a 1280px-wide canvas there is
-                room for six or seven before scrolling — past that, the grouping is wrong, not the component.
+                Tabs are {touchTarget.comfortable}dp tall and sentence case. On a 1280px-wide canvas there is room for six or seven before
+                scrolling — past that, the grouping is wrong, not the component.
             </Typography>
         </Stack>
     ),
@@ -56,8 +61,7 @@ export const FullWidth: Story = {
         <Stack spacing={3} sx={{ p: 3, maxWidth: 560 }}>
             <TabDemo labels={["Cash", "Card", "Member"]} variant="fullWidth" />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Full width inside a fixed panel — the order panel or a dialog — where each target should be as
-                large as the space allows.
+                Full width inside a fixed panel — the order panel or a dialog — where each target should be as large as the space allows.
             </Typography>
         </Stack>
     ),
@@ -71,8 +75,8 @@ export const Scrollable: Story = {
                 variant="scrollable"
             />
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 720 }}>
-                Scrollable tabs are a last resort: anything off-screen is effectively invisible to an operator
-                working at speed. Prefer to re-group, or move the long list into the nav rail.
+                Scrollable tabs are a last resort: anything off-screen is effectively invisible to an operator working at speed. Prefer to
+                re-group, or move the long list into the nav rail.
             </Typography>
         </Stack>
     ),

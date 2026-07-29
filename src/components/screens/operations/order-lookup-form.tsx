@@ -65,9 +65,7 @@ export const OrderLookupScope = ({ course, date }: { course: string; date: strin
                 }}
             >
                 <CalendarMonthIcon sx={{ position: "absolute", left: 16, color: "#fff", fontSize: 22 }} />
-                <Typography sx={{ fontSize: 14, fontWeight: 500, letterSpacing: "0.08em", color: "#fff" }}>
-                    {date}
-                </Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 500, letterSpacing: "0.08em", color: "#fff" }}>{date}</Typography>
             </Box>
         </Box>
     </Box>

@@ -73,7 +73,16 @@ export const WithAvatars: Story = {
                         <Box key={member.id}>
                             <ListItemButton sx={{ minHeight: 72 }}>
                                 <ListItemAvatar>
-                                    <Avatar sx={{ width: 44, height: 44, bgcolor: "grey.300", color: "grey.800", fontSize: 15, fontWeight: 600 }}>
+                                    <Avatar
+                                        sx={{
+                                            width: 44,
+                                            height: 44,
+                                            bgcolor: "grey.300",
+                                            color: "grey.800",
+                                            fontSize: 15,
+                                            fontWeight: 600,
+                                        }}
+                                    >
                                         {member.initials}
                                     </Avatar>
                                 </ListItemAvatar>
@@ -98,11 +107,7 @@ export const WithSecondaryActions: Story = {
             <Paper variant="outlined" sx={{ borderRadius: 2 }}>
                 <List>
                     {["Auto-print on close", "Print merchant copy", "Open drawer on cash"].map((label, i) => (
-                        <ListItem
-                            key={label}
-                            secondaryAction={<Switch defaultChecked={i !== 1} />}
-                            sx={{ minHeight: touchTarget.large }}
-                        >
+                        <ListItem key={label} secondaryAction={<Switch defaultChecked={i !== 1} />} sx={{ minHeight: touchTarget.large }}>
                             <ListItemText primary={label} />
                         </ListItem>
                     ))}
@@ -130,8 +135,8 @@ export const WithSecondaryActions: Story = {
             </Paper>
 
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                The overflow button sits outside the `ListItemButton`, so tapping the row and tapping the menu
-                are genuinely separate targets rather than nested ones.
+                The overflow button sits outside the `ListItemButton`, so tapping the row and tapping the menu are genuinely separate
+                targets rather than nested ones.
             </Typography>
         </Stack>
     ),
@@ -154,8 +159,7 @@ export const WithSelection: Story = {
                 </List>
             </Paper>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2 }}>
-                Tapping anywhere in the row toggles the checkbox — the whole 64dp row is the target, not the
-                24px glyph.
+                Tapping anywhere in the row toggles the checkbox — the whole 64dp row is the target, not the 24px glyph.
             </Typography>
         </Box>
     ),

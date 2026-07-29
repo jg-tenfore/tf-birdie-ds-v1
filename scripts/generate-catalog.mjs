@@ -89,7 +89,7 @@ const lines = [
     "export interface StoreProduct {",
     "    /** Display name from the source catalog. */",
     "    title: string;",
-    "    /** Path under /store-images, e.g. \"equipment/golf-balls/foo.webp\". */",
+    '    /** Path under /store-images, e.g. "equipment/golf-balls/foo.webp". */',
     "    path: string;",
     "    category: string;",
     "    subcategory: string;",

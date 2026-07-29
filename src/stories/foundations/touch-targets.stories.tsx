@@ -25,10 +25,30 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const tiers = [
-    { key: "min", size: touchTarget.min, name: "Minimum", use: "Icon buttons, list rows, tabs, table row actions. The absolute floor — nothing tappable goes below it." },
-    { key: "comfortable", size: touchTarget.comfortable, name: "Comfortable", use: "The default. Buttons, text fields, select menus, menu items." },
-    { key: "large", size: touchTarget.large, name: "Large", use: "Tender keys, numeric keypad, order-grid product tiles — repeated eyes-off taps." },
-    { key: "critical", size: touchTarget.critical, name: "Critical", use: "Irreversible or money-moving: Charge, Void, Refund, Close register." },
+    {
+        key: "min",
+        size: touchTarget.min,
+        name: "Minimum",
+        use: "Icon buttons, list rows, tabs, table row actions. The absolute floor — nothing tappable goes below it.",
+    },
+    {
+        key: "comfortable",
+        size: touchTarget.comfortable,
+        name: "Comfortable",
+        use: "The default. Buttons, text fields, select menus, menu items.",
+    },
+    {
+        key: "large",
+        size: touchTarget.large,
+        name: "Large",
+        use: "Tender keys, numeric keypad, order-grid product tiles — repeated eyes-off taps.",
+    },
+    {
+        key: "critical",
+        size: touchTarget.critical,
+        name: "Critical",
+        use: "Irreversible or money-moving: Charge, Void, Refund, Close register.",
+    },
 ] as const;
 
 export const Sizes: Story = {
@@ -63,7 +83,9 @@ export const Sizes: Story = {
                                 </Box>
                                 <Stack spacing={0.25} sx={{ minWidth: 160 }}>
                                     <Typography variant="subtitle2">{name}</Typography>
-                                    <Token>touchTarget.{key} — {size}dp</Token>
+                                    <Token>
+                                        touchTarget.{key} — {size}dp
+                                    </Token>
                                 </Stack>
                                 <Typography variant="body2" sx={{ color: "text.secondary", flex: "1 1 300px" }}>
                                     {use}
@@ -86,10 +108,7 @@ export const Sizes: Story = {
                         <IconButton aria-label="Backspace">
                             <BackspaceOutlinedIcon />
                         </IconButton>
-                        <Button
-                            size="large"
-                            sx={{ minHeight: touchTarget.critical, minWidth: 240, fontSize: 20 }}
-                        >
+                        <Button size="large" sx={{ minHeight: touchTarget.critical, minWidth: 240, fontSize: 20 }}>
                             Charge $248.00
                         </Button>
                     </Stack>
@@ -132,7 +151,8 @@ export const Sizes: Story = {
             >
                 <Card sx={{ borderColor: "warning.main" }}>
                     <Typography variant="body2">
-                        Rule: if an action can only be found by hovering, it cannot be found. Put it in the row, the overflow menu, or a long-press.
+                        Rule: if an action can only be found by hovering, it cannot be found. Put it in the row, the overflow menu, or a
+                        long-press.
                     </Typography>
                 </Card>
             </DocSection>

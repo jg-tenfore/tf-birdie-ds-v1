@@ -141,9 +141,8 @@ export const PrinterRouting: Story = {
                 </Stack>
 
                 <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 720 }}>
-                    The transfer buttons are 56×56 with real icons and <code>aria-label</code>s — MUI's own
-                    demo uses tiny <code>&gt;</code> and <code>&lt;</code> glyphs that are impossible to hit
-                    and unreadable to a screen reader.
+                    The transfer buttons are 56×56 with real icons and <code>aria-label</code>s — MUI's own demo uses tiny <code>&gt;</code>{" "}
+                    and <code>&lt;</code> glyphs that are impossible to hit and unreadable to a screen reader.
                 </Typography>
             </Stack>
         );

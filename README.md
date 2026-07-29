@@ -15,14 +15,14 @@ npm run storybook      # http://localhost:6020
 
 ## Scripts
 
-| Script | What it does |
-| --- | --- |
-| `npm run storybook` | Dev server on port 6020 |
-| `npm run build-storybook` | Builds Storybook into `dist/storybook` |
-| `npm run build-site` | Assembles the landing page, logos, and prototypes into `dist` |
-| `npm run build` | Both of the above — what CI runs |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run format` | Prettier |
+| Script                    | What it does                                                  |
+| ------------------------- | ------------------------------------------------------------- |
+| `npm run storybook`       | Dev server on port 6020                                       |
+| `npm run build-storybook` | Builds Storybook into `dist/storybook`                        |
+| `npm run build-site`      | Assembles the landing page, logos, and prototypes into `dist` |
+| `npm run build`           | Both of the above — what CI runs                              |
+| `npm run typecheck`       | `tsc --noEmit`                                                |
+| `npm run format`          | Prettier                                                      |
 
 ## What's here
 
@@ -56,7 +56,7 @@ responsive collapse to a hamburger. Three rules follow:
   irreversible actions 80dp. Hover is never load-bearing.
 - **Height is scarce.** Chrome is capped at 136px (64 app bar + 72 action bar). The page never
   scrolls; regions scroll internally.
-- **16px body minimum.** Buttons are sentence case. Brand green is reserved for *the* action.
+- **16px body minimum.** Buttons are sentence case. Brand green is reserved for _the_ action.
 
 These are enforced in `src/theme/birdie-theme.ts` as MUI component defaults, so a screen built from
 plain MUI components is tablet-correct without anyone remembering the rules.

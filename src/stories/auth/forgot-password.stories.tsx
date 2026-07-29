@@ -45,8 +45,7 @@ export const Request: Story = {
                     Send reset link
                 </Button>
                 <Alert severity="info">
-                    Locked out of a <strong>PIN</strong> instead? Ask a shift lead to clear it from Settings →
-                    Employees — no email needed.
+                    Locked out of a <strong>PIN</strong> instead? Ask a shift lead to clear it from Settings → Employees — no email needed.
                 </Alert>
             </Stack>
         </AuthLayout>
@@ -71,8 +70,7 @@ export const CheckEmail: Story = {
                     Resend email
                 </Button>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Wrong address, or no longer have access to it? Any shift lead with admin rights can move the
-                    terminal to a new account.
+                    Wrong address, or no longer have access to it? Any shift lead with admin rights can move the terminal to a new account.
                 </Typography>
             </Stack>
         </AuthLayout>
@@ -82,7 +80,11 @@ export const CheckEmail: Story = {
 export const SetNewPassword: Story = {
     name: "Set new password",
     render: () => (
-        <AuthLayout title="Set a new password" subtitle="At least 12 characters. This unlocks the terminal, not the till." footer={BackToSignIn}>
+        <AuthLayout
+            title="Set a new password"
+            subtitle="At least 12 characters. This unlocks the terminal, not the till."
+            footer={BackToSignIn}
+        >
             <Stack spacing={3}>
                 <TextField
                     label="New password"
@@ -136,8 +138,7 @@ export const PasswordReset: Story = {
                     }}
                 >
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        Open tickets were preserved. Nothing in the queue was lost — 6 tickets are waiting on
-                        Register 2.
+                        Open tickets were preserved. Nothing in the queue was lost — 6 tickets are waiting on Register 2.
                     </Typography>
                 </Box>
             </Stack>

@@ -74,8 +74,8 @@ export const Overflow: Story = {
                     </MenuItem>
                 </Menu>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 680 }}>
-                    Menu items are 56dp with 20px side padding. The destructive item is separated by a divider
-                    and colored — it must never sit flush against a routine action in a list you tap quickly.
+                    Menu items are 56dp with 20px side padding. The destructive item is separated by a divider and colored — it must never
+                    sit flush against a routine action in a list you tap quickly.
                 </Typography>
             </Box>
         );
@@ -136,8 +136,8 @@ export const Positioning: Story = {
                     </Menu>
                 </Box>
                 <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                    For controls near the bottom of the canvas, open the menu upward. A menu that drops down
-                    from the action bar lands under the operator's own hand.
+                    For controls near the bottom of the canvas, open the menu upward. A menu that drops down from the action bar lands under
+                    the operator's own hand.
                 </Typography>
             </Stack>
         );

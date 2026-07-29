@@ -54,16 +54,11 @@ export const Default: Story = {
             >
                 <Typography variant="h5">Ticket #4127</Typography>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 1, maxWidth: 520 }}>
-                    Secondary ticket actions. Charge stays in the action bar — only the things an operator
-                    reaches for occasionally live in here.
+                    Secondary ticket actions. Charge stays in the action bar — only the things an operator reaches for occasionally live in
+                    here.
                 </Typography>
 
-                <SpeedDial
-                    ariaLabel="Ticket actions"
-                    sx={{ position: "absolute", bottom: 24, right: 24 }}
-                    icon={<SpeedDialIcon />}
-                    open
-                >
+                <SpeedDial ariaLabel="Ticket actions" sx={{ position: "absolute", bottom: 24, right: 24 }} icon={<SpeedDialIcon />} open>
                     {actions.map((action) => (
                         <SpeedDialAction key={action.name} icon={action.icon} slotProps={{ tooltip: { title: action.name, open: true } }} />
                     ))}
@@ -79,9 +74,9 @@ export const AlwaysLabeled: Story = {
         <Stack spacing={2} sx={{ p: 3, maxWidth: 680 }}>
             <Typography variant="h6">Keep tooltips open</Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Pass <code>slotProps=&#123;&#123; tooltip: &#123; open: true &#125; &#125;&#125;</code> so every
-                action is labeled the moment the dial expands. The default reveals labels on hover, and a
-                finger never hovers — without this the operator gets four unlabeled circles.
+                Pass <code>slotProps=&#123;&#123; tooltip: &#123; open: true &#125; &#125;&#125;</code> so every action is labeled the
+                moment the dial expands. The default reveals labels on hover, and a finger never hovers — without this the operator gets
+                four unlabeled circles.
             </Typography>
         </Stack>
     ),

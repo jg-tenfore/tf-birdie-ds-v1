@@ -84,12 +84,7 @@ export interface AppShellProps {
 const NavDrawerContent = ({ active, onNavigate }: { active?: NavKey; onNavigate?: (key: NavKey) => void }) => (
     <Box sx={{ width: appLayout.drawerWidth, height: "100%", bgcolor: appColors.surface }}>
         <Box sx={{ bgcolor: appColors.slate, color: "#fff", px: 3, pt: 3, pb: 3 }}>
-            <Box
-                component="img"
-                src={assetUrl("logos/tf-square-white.svg")}
-                alt=""
-                sx={{ width: 56, height: 52, mb: 2, opacity: 0.95 }}
-            />
+            <Box component="img" src={assetUrl("logos/tf-square-white.svg")} alt="" sx={{ width: 56, height: 52, mb: 2, opacity: 0.95 }} />
             <Typography sx={{ fontSize: 26, fontWeight: 400, mb: 1 }}>{appIdentity.product}</Typography>
             {[appIdentity.version, appIdentity.account, appIdentity.facility, appIdentity.device].map((line) => (
                 <Typography key={line} sx={{ fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.88)" }}>
@@ -244,7 +239,12 @@ export const AppShell = ({
             <AppBar position="static" sx={{ bgcolor: isDark ? "#0F0F0F" : appColors.slate }}>
                 <Toolbar sx={{ gap: 1 }}>
                     {showMenuButton && (
-                        <IconButton edge="start" aria-label="Open navigation" onClick={() => setDrawerOpen(true)} sx={{ color: "#fff", mr: 1 }}>
+                        <IconButton
+                            edge="start"
+                            aria-label="Open navigation"
+                            onClick={() => setDrawerOpen(true)}
+                            sx={{ color: "#fff", mr: 1 }}
+                        >
                             <MenuIcon sx={{ fontSize: 28 }} />
                         </IconButton>
                     )}

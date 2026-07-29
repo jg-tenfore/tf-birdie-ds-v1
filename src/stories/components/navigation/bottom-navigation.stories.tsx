@@ -46,18 +46,13 @@ export const Reference: Story = {
             <Stack spacing={3} sx={{ p: 3, maxWidth: 720 }}>
                 <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "warning.main", bgcolor: "warning.light" }}>
                     <Typography variant="body2" sx={{ color: "warning.dark", fontWeight: 600 }}>
-                        Not used in Birdie — the action bar owns the bottom edge, and a landscape tablet
-                        doesn't have the one-handed-reach problem this pattern solves.
+                        Not used in Birdie — the action bar owns the bottom edge, and a landscape tablet doesn't have the one-handed-reach
+                        problem this pattern solves.
                     </Typography>
                 </Box>
 
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                    <BottomNavigation
-                        value={value}
-                        onChange={(_, next) => setValue(next)}
-                        showLabels
-                        sx={{ height: touchTarget.large }}
-                    >
+                    <BottomNavigation value={value} onChange={(_, next) => setValue(next)} showLabels sx={{ height: touchTarget.large }}>
                         <BottomNavigationAction label="Register" icon={<PointOfSaleOutlinedIcon />} />
                         <BottomNavigationAction label="Tickets" icon={<ReceiptLongOutlinedIcon />} />
                         <BottomNavigationAction label="Payments" icon={<CreditCardOutlinedIcon />} />
@@ -66,8 +61,8 @@ export const Reference: Story = {
                 </Paper>
 
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    If it were ever used: always <code>showLabels</code>. The default hides labels on inactive
-                    items, which turns three of the four into unlabeled icons.
+                    If it were ever used: always <code>showLabels</code>. The default hides labels on inactive items, which turns three of
+                    the four into unlabeled icons.
                 </Typography>
             </Stack>
         );

@@ -116,8 +116,8 @@ export const Sortable: Story = {
                 </Table>
             </TableContainer>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 720 }}>
-                Sort headers are small targets by default. They're acceptable here because sorting is a
-                back-office nicety — never put a required action in a header label.
+                Sort headers are small targets by default. They're acceptable here because sorting is a back-office nicety — never put a
+                required action in a header label.
             </Typography>
         </Box>
     ),
@@ -154,11 +154,18 @@ export const WithPagination: Story = {
                         ))}
                     </TableBody>
                 </Table>
-                <TablePagination component="div" count={47} page={0} rowsPerPage={8} rowsPerPageOptions={[8, 16, 24]} onPageChange={() => {}} />
+                <TablePagination
+                    component="div"
+                    count={47}
+                    page={0}
+                    rowsPerPage={8}
+                    rowsPerPageOptions={[8, 16, 24]}
+                    onPageChange={() => {}}
+                />
             </TableContainer>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 720 }}>
-                Eight rows is what fits the 664px canvas at 72px each. Pagination beats infinite scroll here —
-                an operator returning to this screen needs the same rows in the same place.
+                Eight rows is what fits the 664px canvas at 72px each. Pagination beats infinite scroll here — an operator returning to this
+                screen needs the same rows in the same place.
             </Typography>
         </Box>
     ),
@@ -200,8 +207,8 @@ export const Dense: Story = {
                 </Table>
             </TableContainer>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 720 }}>
-                Dense tables are read-only summaries — a receipt preview, a report breakdown. The moment a row
-                becomes tappable it goes back to 72px.
+                Dense tables are read-only summaries — a receipt preview, a report breakdown. The moment a row becomes tappable it goes back
+                to 72px.
             </Typography>
         </Stack>
     ),

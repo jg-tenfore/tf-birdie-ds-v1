@@ -5,11 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
-import {
-    ShiftCloseOutForm,
-    ShiftHistoryTable,
-    shiftHistoryRows,
-} from "@/components/screens/operations/shift-summary";
+import { ShiftCloseOutForm, ShiftHistoryTable, shiftHistoryRows } from "@/components/screens/operations/shift-summary";
 
 /**
  * Shift — close out the till and review past shifts.
@@ -54,11 +50,7 @@ export const OpenShift: Story = {
             }
         >
             <Stack direction="row" sx={{ minHeight: "100%", bgcolor: "#fff" }}>
-                <ShiftCloseOutForm
-                    userName="Test Test Account"
-                    shiftDate="7/29/2026 8:51 AM"
-                    endingCheckTotal="0"
-                />
+                <ShiftCloseOutForm userName="Test Test Account" shiftDate="7/29/2026 8:51 AM" endingCheckTotal="0" />
                 <ShiftHistoryTable rows={shiftHistoryRows} />
             </Stack>
         </AppShell>

@@ -43,16 +43,22 @@ export const PaperElevation: Story = {
                     <Paper
                         key={level}
                         elevation={level}
-                        sx={{ height: 96, display: "grid", placeItems: "center", borderRadius: 2, border: level === 0 ? "1px solid" : "none", borderColor: "divider" }}
+                        sx={{
+                            height: 96,
+                            display: "grid",
+                            placeItems: "center",
+                            borderRadius: 2,
+                            border: level === 0 ? "1px solid" : "none",
+                            borderColor: "divider",
+                        }}
                     >
                         <Typography variant="subtitle2">{level}</Typography>
                     </Paper>
                 ))}
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 680 }}>
-                Levels above 8 are for overlays only. In dark mode MUI normally lightens the surface with
-                elevation — the theme disables that (<code>backgroundImage: none</code>) so a card doesn't
-                drift a different grey from its neighbour.
+                Levels above 8 are for overlays only. In dark mode MUI normally lightens the surface with elevation — the theme disables
+                that (<code>backgroundImage: none</code>) so a card doesn't drift a different grey from its neighbour.
             </Typography>
         </Box>
     ),
@@ -83,8 +89,8 @@ export const AppBars: Story = {
                     </Toolbar>
                 </AppBar>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Default color, not primary. A solid green bar across the top of every screen would spend
-                    the brand color on chrome — it's reserved for the action to take.
+                    Default color, not primary. A solid green bar across the top of every screen would spend the brand color on chrome —
+                    it's reserved for the action to take.
                 </Typography>
             </Stack>
 
@@ -130,8 +136,8 @@ export const Accordions: Story = {
                 </Accordion>
             ))}
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Summaries are 64dp. Use accordions in Settings and reports, not on selling screens — hiding
-                sellable items behind a disclosure adds a tap to every sale.
+                Summaries are 64dp. Use accordions in Settings and reports, not on selling screens — hiding sellable items behind a
+                disclosure adds a tap to every sale.
             </Typography>
         </Stack>
     ),
@@ -165,7 +171,12 @@ export const Dividers: Story = {
 
             <Stack spacing={2}>
                 <Typography variant="h6">Vertical</Typography>
-                <Stack direction="row" spacing={2} sx={{ height: 56, alignItems: "center" }} divider={<Divider orientation="vertical" flexItem />}>
+                <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ height: 56, alignItems: "center" }}
+                    divider={<Divider orientation="vertical" flexItem />}
+                >
                     <Button variant="text">Print</Button>
                     <Button variant="text">Email</Button>
                     <Button variant="text">Text</Button>

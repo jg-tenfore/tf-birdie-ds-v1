@@ -80,7 +80,11 @@ export const OrderLineRow = ({ line }: { line: OrderLineItem }) => (
         <Stack sx={{ flex: 1, minWidth: 0 }}>
             <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
                 <Typography sx={{ fontSize: 15, fontWeight: 500 }}>{line.name}</Typography>
-                {line.hasTimer && <Box component="span" sx={{ fontSize: 13 }}>⏱</Box>}
+                {line.hasTimer && (
+                    <Box component="span" sx={{ fontSize: 13 }}>
+                        ⏱
+                    </Box>
+                )}
             </Stack>
             {line.meta && (
                 <Stack direction="row" spacing={1}>

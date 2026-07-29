@@ -33,7 +33,18 @@ export const Default: Story = {
 
             <Stack spacing={1}>
                 <Typography variant="h6">Tip suggestion</Typography>
-                <Slider defaultValue={18} min={0} max={30} step={1} valueLabelDisplay="on" marks={[{ value: 0, label: "0%" }, { value: 15, label: "15%" }, { value: 30, label: "30%" }]} />
+                <Slider
+                    defaultValue={18}
+                    min={0}
+                    max={30}
+                    step={1}
+                    valueLabelDisplay="on"
+                    marks={[
+                        { value: 0, label: "0%" },
+                        { value: 15, label: "15%" },
+                        { value: 30, label: "30%" },
+                    ]}
+                />
             </Stack>
         </Stack>
     ),
@@ -56,8 +67,8 @@ export const Range: Story = {
                 ]}
             />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Two thumbs need ~44px between them at minimum value, or a finger can't grab the one it wants.
-                Set a `step` and a sensible `min`/`max` so the thumbs can't fully collide.
+                Two thumbs need ~44px between them at minimum value, or a finger can't grab the one it wants. Set a `step` and a sensible
+                `min`/`max` so the thumbs can't fully collide.
             </Typography>
         </Stack>
     ),
@@ -83,8 +94,8 @@ export const Discrete: Story = {
             />
             <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Snapping to labeled marks (`step=&#123;null&#125;`) is far more forgiving on a touch screen
-                    than a continuous track — the operator can be sloppy and still land on a valid value.
+                    Snapping to labeled marks (`step=&#123;null&#125;`) is far more forgiving on a touch screen than a continuous track —
+                    the operator can be sloppy and still land on a valid value.
                 </Typography>
             </Box>
         </Stack>
@@ -97,8 +108,8 @@ export const Vertical: Story = {
             <Slider orientation="vertical" defaultValue={60} />
             <Slider orientation="vertical" defaultValue={[20, 80]} />
             <Typography variant="body2" sx={{ color: "text.secondary", alignSelf: "center", maxWidth: 380 }}>
-                Vertical sliders are rare in landscape — height is the scarce axis, so a vertical control
-                spends the resource we have least of.
+                Vertical sliders are rare in landscape — height is the scarce axis, so a vertical control spends the resource we have least
+                of.
             </Typography>
         </Stack>
     ),

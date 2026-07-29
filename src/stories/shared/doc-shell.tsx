@@ -42,7 +42,10 @@ export const DocSection = ({ title, note, children }: { title: string; note?: Re
 
 /** Monospaced token name, so the reader can copy the exact identifier. */
 export const Token = ({ children }: { children: ReactNode }) => (
-    <Box component="code" sx={{ fontFamily: "var(--birdie-font-mono, monospace)", fontSize: 13, color: "text.secondary", wordBreak: "break-all" }}>
+    <Box
+        component="code"
+        sx={{ fontFamily: "var(--birdie-font-mono, monospace)", fontSize: 13, color: "text.secondary", wordBreak: "break-all" }}
+    >
         {children}
     </Box>
 );

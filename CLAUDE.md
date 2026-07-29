@@ -39,14 +39,14 @@ When writing any component or screen here:
 
 This repo holds two distinct visual systems, and mixing them is the easiest way to do real damage.
 
-| | `birdieTheme` (`src/theme/birdie-theme.ts`) | `appReplicaTheme` (`src/theme/app-replica-theme.ts`) |
-| --- | --- | --- |
-| Represents | **Target state** — the design system | **Current state** — the shipping app, as-is |
-| Applies to | Foundations, Components, App Chrome | `App Screens/*` only |
-| Buttons | Sentence case | ALL CAPS (MD2) |
-| Radius | 10–14px | 4px |
-| Touch floor | 48dp enforced | Not enforced — documents what ships |
-| Tokens | `tokens.ts` | `app-replica-tokens.ts` |
+|             | `birdieTheme` (`src/theme/birdie-theme.ts`) | `appReplicaTheme` (`src/theme/app-replica-theme.ts`) |
+| ----------- | ------------------------------------------- | ---------------------------------------------------- |
+| Represents  | **Target state** — the design system        | **Current state** — the shipping app, as-is          |
+| Applies to  | Foundations, Components, App Chrome         | `App Screens/*` only                                 |
+| Buttons     | Sentence case                               | ALL CAPS (MD2)                                       |
+| Radius      | 10–14px                                     | 4px                                                  |
+| Touch floor | 48dp enforced                               | Not enforced — documents what ships                  |
+| Tokens      | `tokens.ts`                                 | `app-replica-tokens.ts`                              |
 
 `.storybook/preview.tsx` switches on `context.title.startsWith("App Screens")` — **stories must not wrap
 themselves in a `ThemeProvider`.**
@@ -184,14 +184,14 @@ Theme toolbar control.
 The taxonomy mirrors the Buck design system so the two read the same way. Sort order is set in
 `.storybook/preview.tsx`.
 
-| Category | Contents |
-| --- | --- |
-| `Introduction` | The intro MDX page |
-| `Foundations/*` | Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos |
-| `Components/*` | Actions · Forms · Feedback & Status · Layout & Structure · Charts & Data · Media & Visuals · Navigation |
-| `App Chrome/*` | The persistent POS frame |
-| `App Screens/*` | Register · Tickets · Payments · Tee Sheet · F & B · Pro Shop · Customers · Reports · Settings |
-| `Sign in ∕ Sign up/*` | Log in · PIN Unlock · Sign up · Forgot password · Verification |
+| Category              | Contents                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Introduction`        | The intro MDX page                                                                                      |
+| `Foundations/*`       | Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos                   |
+| `Components/*`        | Actions · Forms · Feedback & Status · Layout & Structure · Charts & Data · Media & Visuals · Navigation |
+| `App Chrome/*`        | The persistent POS frame                                                                                |
+| `App Screens/*`       | Register · Tickets · Payments · Tee Sheet · F & B · Pro Shop · Customers · Reports · Settings           |
+| `Sign in ∕ Sign up/*` | Log in · PIN Unlock · Sign up · Forgot password · Verification                                          |
 
 **The separator in `Sign in ∕ Sign up` is `∕` (U+2215 division slash), not `/`.** A real slash would
 split it into two nested sidebar folders. Copy the string from `preview.tsx` rather than retyping it.
@@ -206,7 +206,7 @@ When adding a story:
 - File goes in `src/stories/components/<category-kebab>/<name>.stories.tsx`.
 - `parameters: { layout: "fullscreen" }` for anything screen- or panel-shaped; the preview default
   is already fullscreen.
-- Write the doc comment as *why this is shaped this way for a POS*, not *what the component is*.
+- Write the doc comment as _why this is shaped this way for a POS_, not _what the component is_.
   The audience is whoever builds the Expo version.
 
 `Charts & Data` is reserved in the sort order but has no stories yet — no charting library is

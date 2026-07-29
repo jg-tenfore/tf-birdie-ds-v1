@@ -40,8 +40,8 @@ export const Default: Story = {
                 ))}
             </TextField>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Menu items are 56dp so the open list is tappable, not a precision exercise. Seven options is
-                about the point where this beats a toggle group.
+                Menu items are 56dp so the open list is tappable, not a precision exercise. Seven options is about the point where this
+                beats a toggle group.
             </Typography>
         </Stack>
     ),
@@ -74,8 +74,8 @@ export const Multiple: Story = {
                 </Select>
             </FormControl>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Multi-select needs an explicit checkbox in each row. Without one, "selected" is conveyed only
-                by a subtle background tint — invisible in sunlight through a pro shop window.
+                Multi-select needs an explicit checkbox in each row. Without one, "selected" is conveyed only by a subtle background tint —
+                invisible in sunlight through a pro shop window.
             </Typography>
         </Stack>
     ),
@@ -112,8 +112,8 @@ export const Native: Story = {
                 <option value="exec">Executive 9</option>
             </TextField>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                The native variant hands off to Android's own picker — a genuinely good option on a tablet,
-                since the system wheel is large, familiar, and needs no touch-target work from us.
+                The native variant hands off to Android's own picker — a genuinely good option on a tablet, since the system wheel is large,
+                familiar, and needs no touch-target work from us.
             </Typography>
         </Stack>
     ),

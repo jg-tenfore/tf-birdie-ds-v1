@@ -66,8 +66,8 @@ export const Standard: Story = {
                 ))}
             </ImageList>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 720 }}>
-                Four columns at 1280px gives ~200px tiles — big enough that the whole tile is a comfortable
-                target and the garment is actually identifiable.
+                Four columns at 1280px gives ~200px tiles — big enough that the whole tile is a comfortable target and the garment is
+                actually identifiable.
             </Typography>
         </Box>
     ),
@@ -78,15 +78,20 @@ export const Quilted: Story = {
         <Box sx={{ p: 3 }}>
             <ImageList variant="quilted" cols={4} rowHeight={140} gap={12} sx={{ maxWidth: 760, m: 0 }}>
                 {merchandise.map((item, i) => (
-                    <ImageListItem key={item.name} cols={i === 0 ? 2 : 1} rows={i === 0 ? 2 : 1} sx={{ borderRadius: 2, overflow: "hidden" }}>
+                    <ImageListItem
+                        key={item.name}
+                        cols={i === 0 ? 2 : 1}
+                        rows={i === 0 ? 2 : 1}
+                        sx={{ borderRadius: 2, overflow: "hidden" }}
+                    >
                         <img src={swatch(item.fill, item.short)} alt={item.name} loading="lazy" />
                         <ImageListItemBar title={item.name} />
                     </ImageListItem>
                 ))}
             </ImageList>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 720 }}>
-                Quilted layouts read as editorial. Fine for a featured-merchandise shelf; wrong for a working
-                catalog, where inconsistent tile sizes break the scan pattern.
+                Quilted layouts read as editorial. Fine for a featured-merchandise shelf; wrong for a working catalog, where inconsistent
+                tile sizes break the scan pattern.
             </Typography>
         </Box>
     ),
@@ -98,10 +103,9 @@ export const Masonry: Story = {
         <Stack spacing={2} sx={{ p: 3, maxWidth: 720 }}>
             <Typography variant="h6">Other variants</Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                <code>variant="woven"</code> and <code>variant="masonry"</code> both produce ragged rows.
-                Neither is used in Birdie: a ragged grid means the price sits in a different place on every
-                tile, and the operator's eye has to re-find it each time. The standard variant keeps price
-                anchored bottom-left across the whole grid.
+                <code>variant="woven"</code> and <code>variant="masonry"</code> both produce ragged rows. Neither is used in Birdie: a
+                ragged grid means the price sits in a different place on every tile, and the operator's eye has to re-find it each time. The
+                standard variant keeps price anchored bottom-left across the whole grid.
             </Typography>
         </Stack>
     ),

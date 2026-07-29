@@ -6,11 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
 import { EventsList, eventRows } from "@/components/screens/operations/events-list";
-import {
-    EventCategoryGrid,
-    EventOrderLineRow,
-    eventOrderLines,
-} from "@/components/screens/operations/events-order";
+import { EventCategoryGrid, EventOrderLineRow, eventOrderLines } from "@/components/screens/operations/events-order";
 
 /**
  * Events — pick a tournament or outing, then sell against its tab.

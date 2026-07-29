@@ -58,8 +58,8 @@ export const Confirmation: Story = {
                     <DialogTitle>Void ticket #4127?</DialogTitle>
                     <DialogContent>
                         <Typography variant="body1" sx={{ color: "text.secondary" }}>
-                            This removes all 7 line items and $324.36 from today's totals. The void is logged
-                            against Dana Kim and can't be undone.
+                            This removes all 7 line items and $324.36 from today's totals. The void is logged against Dana Kim and can't be
+                            undone.
                         </Typography>
                     </DialogContent>
                     <DialogActions>
@@ -178,11 +178,10 @@ export const Sizing: Story = {
         <Stack spacing={2} sx={{ p: 3, maxWidth: 680 }}>
             <Typography variant="h6">Sizing guidance</Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Use <code>maxWidth="sm"</code> (600px) for confirmations and <code>maxWidth="md"</code> (900px)
-                for forms. Avoid <code>fullScreen</code>: at 1280×800 it hides the ticket the operator is
-                deciding about, and the guest sees a screen that looks like the app crashed and restarted.
+                Use <code>maxWidth="sm"</code> (600px) for confirmations and <code>maxWidth="md"</code> (900px) for forms. Avoid{" "}
+                <code>fullScreen</code>: at 1280×800 it hides the ticket the operator is deciding about, and the guest sees a screen that
+                looks like the app crashed and restarted.
             </Typography>
         </Stack>
     ),
 };
-

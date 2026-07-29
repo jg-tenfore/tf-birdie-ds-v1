@@ -78,8 +78,8 @@ export const TicketGridLoading: Story = {
                 ))}
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 680 }}>
-                The skeleton mirrors the real card's dimensions exactly — 148px tall, same grid. That's the
-                whole point: when the tickets load, nothing under the operator's finger moves.
+                The skeleton mirrors the real card's dimensions exactly — 148px tall, same grid. That's the whole point: when the tickets
+                load, nothing under the operator's finger moves.
             </Typography>
         </Box>
     ),
@@ -107,9 +107,8 @@ export const BackdropBlocking: Story = {
                     </Stack>
                 </Backdrop>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 680 }}>
-                    A backdrop always says what it's doing and why waiting matters. A bare spinner over a dimmed
-                    screen just looks like the app froze — and an operator's next move is to force-quit it.
-                    (Tap to dismiss in this demo.)
+                    A backdrop always says what it's doing and why waiting matters. A bare spinner over a dimmed screen just looks like the
+                    app froze — and an operator's next move is to force-quit it. (Tap to dismiss in this demo.)
                 </Typography>
             </Box>
         );

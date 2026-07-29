@@ -4,11 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
 import { GiftCardSearchBar } from "@/components/screens/operations/gift-cards-search-bar";
-import {
-    GiftCardTableBody,
-    GiftCardTableHeader,
-    type GiftCardRow,
-} from "@/components/screens/operations/gift-cards-table";
+import { GiftCardTableBody, GiftCardTableHeader, type GiftCardRow } from "@/components/screens/operations/gift-cards-table";
 
 /**
  * Gift Cards — look up a customer's cards by name or number.

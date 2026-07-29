@@ -10,15 +10,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
-import {
-    InventoryCategoryMenu,
-    InventoryCountList,
-    inventoryCountRows,
-} from "@/components/screens/operations/inventory-count-list";
-import {
-    InventoryCountDetail,
-    accessoriesCountLines,
-} from "@/components/screens/operations/inventory-count-detail";
+import { InventoryCategoryMenu, InventoryCountList, inventoryCountRows } from "@/components/screens/operations/inventory-count-list";
+import { InventoryCountDetail, accessoriesCountLines } from "@/components/screens/operations/inventory-count-detail";
 import { InventoryNewCountForm } from "@/components/screens/operations/inventory-new-count-form";
 
 /**

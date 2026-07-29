@@ -67,7 +67,9 @@ export const Library: Story = {
                     {sizes.map(({ px, name, use }) => (
                         <Stack key={px} direction="row" spacing={3} sx={{ alignItems: "center" }}>
                             <Box sx={{ width: 180 }}>
-                                <Token>fontSize: {px}px — {name}</Token>
+                                <Token>
+                                    fontSize: {px}px — {name}
+                                </Token>
                             </Box>
                             <PointOfSaleOutlinedIcon sx={{ fontSize: px }} />
                             <Typography variant="caption" sx={{ color: "text.secondary" }}>
@@ -84,7 +86,18 @@ export const Library: Story = {
             >
                 <Grid min={160}>
                     {coreIcons.map(({ Icon, name, use }) => (
-                        <Stack key={name} spacing={1} sx={{ alignItems: "center", p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
+                        <Stack
+                            key={name}
+                            spacing={1}
+                            sx={{
+                                alignItems: "center",
+                                p: 2,
+                                borderRadius: 2,
+                                border: "1px solid",
+                                borderColor: "divider",
+                                bgcolor: "background.paper",
+                            }}
+                        >
                             <Icon sx={{ fontSize: 32 }} />
                             <Typography variant="caption" sx={{ fontWeight: 600, textAlign: "center" }}>
                                 {use}

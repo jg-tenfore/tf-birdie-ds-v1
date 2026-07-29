@@ -50,8 +50,8 @@ export const Checkboxes: Story = {
             </Stack>
 
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                The theme pads checkboxes to 48dp total (24px glyph + 12px each side). The tappable area is
-                the label too — `FormControlLabel` wires that up, which nearly doubles the target.
+                The theme pads checkboxes to 48dp total (24px glyph + 12px each side). The tappable area is the label too —
+                `FormControlLabel` wires that up, which nearly doubles the target.
             </Typography>
         </Stack>
     ),
@@ -77,8 +77,8 @@ export const Radios: Story = {
                     <FormControlLabel value="18" control={<Radio />} label="18 holes" />
                 </RadioGroup>
                 <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                    For two or three short options like this, a Toggle Button group is usually the better
-                    tablet control — bigger targets, and the selection reads from across the counter.
+                    For two or three short options like this, a Toggle Button group is usually the better tablet control — bigger targets,
+                    and the selection reads from across the counter.
                 </Typography>
             </Stack>
         </Stack>
@@ -97,8 +97,8 @@ export const Switches: Story = {
 
             <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    These are all settings that apply the instant they're tapped — no Save button in sight.
-                    That's the test for whether something should be a switch at all.
+                    These are all settings that apply the instant they're tapped — no Save button in sight. That's the test for whether
+                    something should be a switch at all.
                 </Typography>
             </Box>
         </Stack>
@@ -118,8 +118,8 @@ export const Sizes: Story = {
                 <FormControlLabel control={<Switch />} label="Medium switch" />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Prefer the default. `size="small"` shrinks the glyph but the theme keeps the 48dp hit area, so
-                the only thing you lose is legibility.
+                Prefer the default. `size="small"` shrinks the glyph but the theme keeps the 48dp hit area, so the only thing you lose is
+                legibility.
             </Typography>
         </Stack>
     ),

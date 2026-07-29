@@ -58,8 +58,8 @@ export const Dots: Story = {
                 </Badge>
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                On an operator avatar the dot means "shift open", not chat presence — it's what makes a
-                mis-attributed drawer visible at close-out.
+                On an operator avatar the dot means "shift open", not chat presence — it's what makes a mis-attributed drawer visible at
+                close-out.
             </Typography>
         </Stack>
     ),
@@ -82,9 +82,8 @@ export const OnInteractive: Story = {
                 </IconButton>
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                The badge rides *inside* the button, so the 48dp target is unchanged — the count is never its
-                own tap target. Put the number in the <code>aria-label</code> too; a badge is invisible to a
-                screen reader otherwise.
+                The badge rides *inside* the button, so the 48dp target is unchanged — the count is never its own tap target. Put the number
+                in the <code>aria-label</code> too; a badge is invisible to a screen reader otherwise.
             </Typography>
         </Stack>
     ),

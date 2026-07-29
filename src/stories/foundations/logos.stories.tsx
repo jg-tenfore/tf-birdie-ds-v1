@@ -51,9 +51,24 @@ export const Marks: Story = {
                 note="Used where there is horizontal room and the brand needs to be named: the login screen, printed receipts, the register close-out summary. Not used in the app bar, where the square mark and the course name do the job in less space."
             >
                 <Grid min={260}>
-                    <LogoTile src={assetUrl("logos/tf-logo.svg")} name="Tenfore wordmark, color" bg={neutral[50]} note="Default. Light backgrounds only." />
-                    <LogoTile src={assetUrl("logos/tf-logo-black.svg")} name="Tenfore wordmark, black" bg="#ffffff" note="Mono contexts: receipts, faxed reports, single-color print." />
-                    <LogoTile src={assetUrl("logos/tf-logo-white.svg")} name="Tenfore wordmark, white" bg={neutral[900]} note="Dark mode, brand-colored headers, photo overlays." />
+                    <LogoTile
+                        src={assetUrl("logos/tf-logo.svg")}
+                        name="Tenfore wordmark, color"
+                        bg={neutral[50]}
+                        note="Default. Light backgrounds only."
+                    />
+                    <LogoTile
+                        src={assetUrl("logos/tf-logo-black.svg")}
+                        name="Tenfore wordmark, black"
+                        bg="#ffffff"
+                        note="Mono contexts: receipts, faxed reports, single-color print."
+                    />
+                    <LogoTile
+                        src={assetUrl("logos/tf-logo-white.svg")}
+                        name="Tenfore wordmark, white"
+                        bg={neutral[900]}
+                        note="Dark mode, brand-colored headers, photo overlays."
+                    />
                 </Grid>
             </DocSection>
 
@@ -62,9 +77,24 @@ export const Marks: Story = {
                 note="The workhorse. It is what fits the 88px nav rail, the Android launcher icon, the tab favicon, and any place the wordmark would be illegible below ~120px wide."
             >
                 <Grid min={260}>
-                    <LogoTile src={assetUrl("logos/tf-square-color.svg")} name="Tenfore mark, color" bg={neutral[50]} note="Default. Nav rail, launcher, favicon." />
-                    <LogoTile src={assetUrl("logos/tf-square-black.svg")} name="Tenfore mark, black" bg="#ffffff" note="Mono contexts and watermarks." />
-                    <LogoTile src={assetUrl("logos/tf-square-white.svg")} name="Tenfore mark, white" bg={neutral[900]} note="Dark mode and brand-green surfaces." />
+                    <LogoTile
+                        src={assetUrl("logos/tf-square-color.svg")}
+                        name="Tenfore mark, color"
+                        bg={neutral[50]}
+                        note="Default. Nav rail, launcher, favicon."
+                    />
+                    <LogoTile
+                        src={assetUrl("logos/tf-square-black.svg")}
+                        name="Tenfore mark, black"
+                        bg="#ffffff"
+                        note="Mono contexts and watermarks."
+                    />
+                    <LogoTile
+                        src={assetUrl("logos/tf-square-white.svg")}
+                        name="Tenfore mark, white"
+                        bg={neutral[900]}
+                        note="Dark mode and brand-green surfaces."
+                    />
                 </Grid>
             </DocSection>
 
@@ -74,8 +104,22 @@ export const Marks: Story = {
             >
                 <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap", rowGap: 3 }}>
                     <Stack spacing={1}>
-                        <Box sx={{ position: "relative", p: "27px", border: "1px dashed", borderColor: "primary.main", borderRadius: 1, bgcolor: "background.paper" }}>
-                            <Box component="img" src={assetUrl("logos/tf-logo.svg")} alt="Clear space" sx={{ display: "block", width: 200 }} />
+                        <Box
+                            sx={{
+                                position: "relative",
+                                p: "27px",
+                                border: "1px dashed",
+                                borderColor: "primary.main",
+                                borderRadius: 1,
+                                bgcolor: "background.paper",
+                            }}
+                        >
+                            <Box
+                                component="img"
+                                src={assetUrl("logos/tf-logo.svg")}
+                                alt="Clear space"
+                                sx={{ display: "block", width: 200 }}
+                            />
                         </Box>
                         <Typography variant="caption" sx={{ color: "text.secondary" }}>
                             Wordmark — 27px clear space (½ mark height)
@@ -109,7 +153,18 @@ export const Marks: Story = {
                         { label: "Don't add effects", sx: { filter: "drop-shadow(0 4px 6px rgba(0,0,0,.5))" } },
                     ].map(({ label, sx }) => (
                         <Stack key={label} spacing={1}>
-                            <Box sx={{ height: 100, display: "grid", placeItems: "center", borderRadius: 2, border: "1px solid", borderColor: "error.main", bgcolor: "background.paper", overflow: "hidden" }}>
+                            <Box
+                                sx={{
+                                    height: 100,
+                                    display: "grid",
+                                    placeItems: "center",
+                                    borderRadius: 2,
+                                    border: "1px solid",
+                                    borderColor: "error.main",
+                                    bgcolor: "background.paper",
+                                    overflow: "hidden",
+                                }}
+                            >
                                 <Box component="img" src={assetUrl("logos/tf-logo.svg")} alt={label} sx={{ width: 140, ...sx }} />
                             </Box>
                             <Typography variant="caption" sx={{ color: "error.main", fontWeight: 600 }}>

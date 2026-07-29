@@ -13,13 +13,7 @@ import { appColors } from "@/theme/app-replica-tokens";
  * caret pinned far right, while "Count Title" is a conventional left-aligned
  * underlined input. From `references/072926/16-inventory/`.
  */
-export const InventoryNewCountForm = ({
-    category = "Merchandise",
-    title,
-}: {
-    category?: string;
-    title?: string;
-}) => (
+export const InventoryNewCountForm = ({ category = "Merchandise", title }: { category?: string; title?: string }) => (
     <Stack sx={{ minHeight: "100%", bgcolor: appColors.canvas, pt: 4.5 }}>
         <Typography sx={{ px: 4.5, fontSize: 16, color: appColors.textPrimary }}>Product Category</Typography>
 

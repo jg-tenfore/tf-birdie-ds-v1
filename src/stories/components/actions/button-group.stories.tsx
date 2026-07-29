@@ -85,8 +85,8 @@ export const WhenNotToUse: Story = {
                     <Button>Refund</Button>
                 </ButtonGroup>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    No gap between two irreversible actions. A finger landing on the seam picks one of them
-                    and the operator can't tell which until it's done.
+                    No gap between two irreversible actions. A finger landing on the seam picks one of them and the operator can't tell
+                    which until it's done.
                 </Typography>
             </Stack>
 

@@ -27,12 +27,7 @@ type Story = StoryObj<typeof meta>;
 /** The Tenfore Golf lockup: antler roundel over "TENFORE" / "GOLF". */
 const TenforeGolfMark = () => (
     <Stack sx={{ alignItems: "center", gap: 1.5 }}>
-        <Box
-            component="svg"
-            viewBox="0 0 64 60"
-            sx={{ width: 82, height: 77 }}
-            aria-hidden
-        >
+        <Box component="svg" viewBox="0 0 64 60" sx={{ width: 82, height: 77 }} aria-hidden>
             <circle cx="32" cy="30" r="28" fill="none" stroke={appColors.green} strokeWidth="2.4" />
             {/* Simplified antler-and-head mark matching the app's roundel. */}
             <path

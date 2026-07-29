@@ -44,8 +44,8 @@ export const Sizes: Story = {
                 <Rating defaultValue={4} size="large" />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                Only `large` (and up) is safe for input on a tablet — five adjacent stars at `small` puts each
-                target near 20px, well under the floor. `small` is fine read-only.
+                Only `large` (and up) is safe for input on a tablet — five adjacent stars at `small` puts each target near 20px, well under
+                the floor. `small` is fine read-only.
             </Typography>
         </Stack>
     ),
@@ -75,7 +75,17 @@ export const GuestPrompt: Story = {
     name: "Guest prompt",
     render: () => (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ p: 5, borderRadius: 3, border: "1px solid", borderColor: "divider", bgcolor: "background.paper", textAlign: "center", maxWidth: 640 }}>
+            <Box
+                sx={{
+                    p: 5,
+                    borderRadius: 3,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    textAlign: "center",
+                    maxWidth: 640,
+                }}
+            >
                 <Stack spacing={3} sx={{ alignItems: "center" }}>
                     <Typography variant="h3">How was your round?</Typography>
                     <Rating
@@ -91,8 +101,8 @@ export const GuestPrompt: Story = {
                 </Stack>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 640 }}>
-                56px icons with an 8px gap. A guest gets one shot at this while picking up their receipt, so
-                every target is unmissable and the whole thing reads from standing height.
+                56px icons with an 8px gap. A guest gets one shot at this while picking up their receipt, so every target is unmissable and
+                the whole thing reads from standing height.
             </Typography>
         </Box>
     ),

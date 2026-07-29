@@ -41,8 +41,8 @@ export const Sizes: Story = {
                 ))}
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 720 }}>
-                Member avatars run larger than operator avatars. The operator knows who they are; the point of
-                a member avatar is face-matching the person standing at the counter, and that needs pixels.
+                Member avatars run larger than operator avatars. The operator knows who they are; the point of a member avatar is
+                face-matching the person standing at the counter, and that needs pixels.
             </Typography>
         </Stack>
     ),
@@ -55,12 +55,7 @@ export const InContext: Story = {
             <Stack spacing={1.5}>
                 <Typography variant="h6">Operator — app bar</Typography>
                 <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
-                    <Badge
-                        overlap="circular"
-                        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                        variant="dot"
-                        color="success"
-                    >
+                    <Badge overlap="circular" anchorOrigin={{ vertical: "bottom", horizontal: "right" }} variant="dot" color="success">
                         <Avatar sx={{ width: 48, height: 48, bgcolor: brand[600] }}>DK</Avatar>
                     </Badge>
                     <Stack spacing={0}>
@@ -71,8 +66,8 @@ export const InContext: Story = {
                     </Stack>
                 </Stack>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    The dot is a shift indicator, not a chat presence — it answers "is this till open under my
-                    name?", which matters at close-out when the drawer has to reconcile to a person.
+                    The dot is a shift indicator, not a chat presence — it answers "is this till open under my name?", which matters at
+                    close-out when the drawer has to reconcile to a person.
                 </Typography>
             </Stack>
 
@@ -85,9 +80,21 @@ export const InContext: Story = {
                     ].map((member) => (
                         <Box
                             key={member.name}
-                            sx={{ display: "flex", gap: 2, alignItems: "center", p: 1.5, minHeight: 64, borderRadius: 2, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}
+                            sx={{
+                                display: "flex",
+                                gap: 2,
+                                alignItems: "center",
+                                p: 1.5,
+                                minHeight: 64,
+                                borderRadius: 2,
+                                border: "1px solid",
+                                borderColor: "divider",
+                                bgcolor: "background.paper",
+                            }}
                         >
-                            <Avatar sx={{ width: 56, height: 56, bgcolor: "grey.300", color: "grey.800", fontWeight: 600 }}>{member.initials}</Avatar>
+                            <Avatar sx={{ width: 56, height: 56, bgcolor: "grey.300", color: "grey.800", fontWeight: 600 }}>
+                                {member.initials}
+                            </Avatar>
                             <Stack spacing={0.25}>
                                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                     {member.name}

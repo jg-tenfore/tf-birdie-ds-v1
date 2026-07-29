@@ -38,8 +38,8 @@ export const StatusLabels: Story = {
                 <Chip label="Queued offline" color="warning" variant="outlined" />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                Never rely on color alone — each of these carries a word. A red/green pair is exactly what a
-                colorblind operator can't separate, and it's the pair a POS leans on hardest.
+                Never rely on color alone — each of these carries a word. A red/green pair is exactly what a colorblind operator can't
+                separate, and it's the pair a POS leans on hardest.
             </Typography>
         </Stack>
     ),
@@ -66,8 +66,8 @@ export const FilterControls: Story = {
                 <Chip label="Dana K." onDelete={() => {}} onClick={() => {}} sx={{ minHeight: touchTarget.min }} />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                Careful with <code>onDelete</code>: the ✕ is a second target inside the first. At 48dp there's
-                room, but below that the delete and the chip body overlap into a coin flip.
+                Careful with <code>onDelete</code>: the ✕ is a second target inside the first. At 48dp there's room, but below that the
+                delete and the chip body overlap into a coin flip.
             </Typography>
         </Stack>
     ),
@@ -79,7 +79,11 @@ export const WithAvatar: Story = {
         <Stack direction="row" spacing={1.5} sx={{ p: 3, flexWrap: "wrap", rowGap: 1.5 }}>
             <Chip avatar={<Avatar>JE</Avatar>} label="Jordan Ellis" onDelete={() => {}} sx={{ minHeight: touchTarget.min }} />
             <Chip avatar={<Avatar>MV</Avatar>} label="Morgan Vale" onDelete={() => {}} sx={{ minHeight: touchTarget.min }} />
-            <Chip avatar={<Avatar sx={{ bgcolor: "primary.main" }}>+2</Avatar>} label="2 more players" sx={{ minHeight: touchTarget.min }} />
+            <Chip
+                avatar={<Avatar sx={{ bgcolor: "primary.main" }}>+2</Avatar>}
+                label="2 more players"
+                sx={{ minHeight: touchTarget.min }}
+            />
         </Stack>
     ),
 };
@@ -93,8 +97,7 @@ export const Sizes: Story = {
                 <Chip label="Tappable — 48dp" onClick={() => {}} sx={{ minHeight: touchTarget.min }} />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                `small` is for inside dense table cells only. It's below the legibility floor for anything a
-                guest might read.
+                `small` is for inside dense table cells only. It's below the legibility floor for anything a guest might read.
             </Typography>
         </Stack>
     ),

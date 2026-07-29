@@ -66,10 +66,9 @@ export const Contents: Story = {
             <Box sx={{ p: 4, maxWidth: 520 }}>
                 <Typography sx={{ fontSize: 20, mb: 2 }}>Structure</Typography>
                 <Typography sx={{ color: appColors.textSecondary, fontSize: 15, lineHeight: 1.7 }}>
-                    Dark identity header, then three groups. "Pro Shop" and "Restaurant" carry grey headings
-                    and are separated by dividers; the final block — Customer Search through Settings — has no
-                    heading. Log Out sits inside that last block rather than in the header, one row above
-                    Settings.
+                    Dark identity header, then three groups. "Pro Shop" and "Restaurant" carry grey headings and are separated by dividers;
+                    the final block — Customer Search through Settings — has no heading. Log Out sits inside that last block rather than in
+                    the header, one row above Settings.
                 </Typography>
             </Box>
         </Box>
@@ -96,9 +95,7 @@ export const Closed: Story = {
             }
         >
             <Box sx={{ p: 3 }}>
-                <Typography sx={{ color: appColors.textSecondary }}>
-                    Tap the hamburger at top left to open the drawer.
-                </Typography>
+                <Typography sx={{ color: appColors.textSecondary }}>Tap the hamburger at top left to open the drawer.</Typography>
             </Box>
         </AppShell>
     ),

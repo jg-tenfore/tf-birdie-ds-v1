@@ -51,8 +51,8 @@ export const Exclusive: Story = {
                     </ToggleButton>
                 </ToggleButtonGroup>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Exclusive: exactly one stays selected. `onChange` fires with `null` when the active button
-                    is tapped again — guard it, or the operator can deselect into an invalid state.
+                    Exclusive: exactly one stays selected. `onChange` fires with `null` when the active button is tapped again — guard it,
+                    or the operator can deselect into an invalid state.
                 </Typography>
             </Stack>
         );
@@ -98,8 +98,8 @@ export const WithIcons: Story = {
                 </ToggleButton>
             </ToggleButtonGroup>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                Keep the text label alongside the icon. An icon-only toggle is ambiguous under time pressure,
-                and there is horizontal room to spare on a landscape tablet.
+                Keep the text label alongside the icon. An icon-only toggle is ambiguous under time pressure, and there is horizontal room
+                to spare on a landscape tablet.
             </Typography>
         </Stack>
     ),

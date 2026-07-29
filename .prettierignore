@@ -1,0 +1,14 @@
+# Build output
+dist
+storybook-static
+
+# Vendor content — product catalogue metadata and reference screenshots are
+# supplied as-is and are not ours to reformat.
+store
+references
+
+# Generated — rewritten by `npm run generate:catalog`, so formatting it by hand
+# would be undone on the next run.
+src/data/store-catalog.ts
+
+package-lock.json

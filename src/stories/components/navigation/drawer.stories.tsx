@@ -83,8 +83,8 @@ export const Permanent: Story = {
                 </Box>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                88px, icon plus label, always on screen. Every destination is one tap from every other
-                destination — which is the entire argument against a hamburger on a tablet.
+                88px, icon plus label, always on screen. Every destination is one tap from every other destination — which is the entire
+                argument against a hamburger on a tablet.
             </Typography>
         </Stack>
     ),
@@ -121,8 +121,8 @@ export const Temporary: Story = {
                     </Box>
                 </Drawer>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 680 }}>
-                    Right anchor for contextual detail — it slides in beside the ticket rather than covering
-                    it, and the operator keeps their place.
+                    Right anchor for contextual detail — it slides in beside the ticket rather than covering it, and the operator keeps
+                    their place.
                 </Typography>
             </Box>
         );
@@ -160,8 +160,8 @@ export const ExpandedRail: Story = {
                     </Box>
                 </Drawer>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 680 }}>
-                    {layout.navDrawerWidth}px expanded. This is an *enhancement* of the rail, not a replacement
-                    — the rail's icons and labels remain visible underneath at all times.
+                    {layout.navDrawerWidth}px expanded. This is an *enhancement* of the rail, not a replacement — the rail's icons and
+                    labels remain visible underneath at all times.
                 </Typography>
             </Box>
         );

@@ -57,8 +57,7 @@ export const Circular: Story = {
                 <CircularProgress variant="determinate" value={72} size={64} thickness={5} />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                40px is the minimum readable size at counter distance. The 24px variant is for inline use
-                beside text only.
+                40px is the minimum readable size at counter distance. The 24px variant is for inline use beside text only.
             </Typography>
         </Stack>
     ),
@@ -86,8 +85,8 @@ export const WithLabel: Story = {
                 </Stack>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Count and time remaining, not just a bar. The operator's real question is "can I take the next
-                payment yet", and only the numbers answer it.
+                Count and time remaining, not just a bar. The operator's real question is "can I take the next payment yet", and only the
+                numbers answer it.
             </Typography>
         </Stack>
     ),
@@ -98,10 +97,9 @@ export const InlineInButton: Story = {
     render: () => (
         <Stack spacing={2} sx={{ p: 3, maxWidth: 640 }}>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                MUI v9's <code>Button</code> has a built-in <code>loading</code> prop — the old{" "}
-                <code>LoadingButton</code> from <code>@mui/lab</code> is gone. Keep the label visible with{" "}
-                <code>loadingIndicator</code> so the button doesn't change width mid-transaction and shift the
-                action bar under the operator's thumb.
+                MUI v9's <code>Button</code> has a built-in <code>loading</code> prop — the old <code>LoadingButton</code> from{" "}
+                <code>@mui/lab</code> is gone. Keep the label visible with <code>loadingIndicator</code> so the button doesn't change width
+                mid-transaction and shift the action bar under the operator's thumb.
             </Typography>
         </Stack>
     ),

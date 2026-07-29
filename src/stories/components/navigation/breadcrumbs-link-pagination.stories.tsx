@@ -48,7 +48,10 @@ export const BreadcrumbTrail: Story = {
                 <Typography variant="h6">Tablet-sized</Typography>
                 <Breadcrumbs
                     separator={<NavigateNextIcon />}
-                    sx={{ "& .MuiBreadcrumbs-li": { display: "flex", alignItems: "center" }, "& a": { minHeight: touchTarget.min, display: "flex", alignItems: "center", px: 1 } }}
+                    sx={{
+                        "& .MuiBreadcrumbs-li": { display: "flex", alignItems: "center" },
+                        "& a": { minHeight: touchTarget.min, display: "flex", alignItems: "center", px: 1 },
+                    }}
                 >
                     <Link underline="hover" color="inherit" href="#" variant="body1">
                         Settings
@@ -61,8 +64,8 @@ export const BreadcrumbTrail: Story = {
                     </Typography>
                 </Breadcrumbs>
                 <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                    Each crumb gets a 48dp row height and horizontal padding. Untouched, breadcrumb links are
-                    ~20px tall — unusable standing at a counter.
+                    Each crumb gets a 48dp row height and horizontal padding. Untouched, breadcrumb links are ~20px tall — unusable standing
+                    at a counter.
                 </Typography>
             </Stack>
         </Stack>
@@ -88,14 +91,14 @@ export const Links: Story = {
             </Stack>
 
             <Typography variant="body1">
-                Inline links inside body copy — like <Link href="#">this one</Link> — are acceptable for
-                reference material in Settings, but never for an action in a selling flow. Use a Button.
+                Inline links inside body copy — like <Link href="#">this one</Link> — are acceptable for reference material in Settings, but
+                never for an action in a selling flow. Use a Button.
             </Typography>
 
             <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "warning.main" }}>
                 <Typography variant="body2">
-                    Always keep the underline (<code>underline="hover"</code> resolves to underlined on touch
-                    anyway). Color alone doesn't mark a link for a colorblind operator.
+                    Always keep the underline (<code>underline="hover"</code> resolves to underlined on touch anyway). Color alone doesn't
+                    mark a link for a colorblind operator.
                 </Typography>
             </Box>
         </Stack>
@@ -135,8 +138,8 @@ export const Paginations: Story = {
             </Stack>
 
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 680 }}>
-                Pagination beats infinite scroll for back-office tables: an operator who leaves and comes back
-                needs the same rows in the same place, and "page 3" is a position they can hold in their head.
+                Pagination beats infinite scroll for back-office tables: an operator who leaves and comes back needs the same rows in the
+                same place, and "page 3" is a position they can hold in their head.
             </Typography>
         </Stack>
     ),

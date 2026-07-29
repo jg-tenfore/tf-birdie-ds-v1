@@ -53,13 +53,11 @@ export const GiftCardTableRow = ({ row }: { row: GiftCardRow }) => {
                 borderColor: appColors.divider,
             }}
         >
-            {[row.id, row.customerName, row.type, row.expirationDate, row.awarded, row.spent, row.balance, row.upc].map(
-                (value, index) => (
-                    <Typography key={columns[index]} sx={{ ...cellSx, fontSize: 15, color }} noWrap>
-                        {value}
-                    </Typography>
-                ),
-            )}
+            {[row.id, row.customerName, row.type, row.expirationDate, row.awarded, row.spent, row.balance, row.upc].map((value, index) => (
+                <Typography key={columns[index]} sx={{ ...cellSx, fontSize: 15, color }} noWrap>
+                    {value}
+                </Typography>
+            ))}
         </Box>
     );
 };

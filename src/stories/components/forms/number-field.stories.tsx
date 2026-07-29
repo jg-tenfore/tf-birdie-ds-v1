@@ -90,9 +90,8 @@ export const Stepper: Story = {
                 </Stack>
 
                 <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                    No keyboard is ever summoned. Changing a 2 to a 3 is one tap, and the value can't be typed
-                    into an invalid state — the buttons disable at the bounds instead of validating after the
-                    fact.
+                    No keyboard is ever summoned. Changing a 2 to a 3 is one tap, and the value can't be typed into an invalid state — the
+                    buttons disable at the bounds instead of validating after the fact.
                 </Typography>
             </Stack>
         );
@@ -116,8 +115,8 @@ export const KeyedEntry: Story = {
                 }}
             />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Inventory counts run to hundreds — a stepper would be absurd. Set{" "}
-                <code>inputMode="numeric"</code> so Android raises the number pad, not the full keyboard.
+                Inventory counts run to hundreds — a stepper would be absurd. Set <code>inputMode="numeric"</code> so Android raises the
+                number pad, not the full keyboard.
             </Typography>
         </Stack>
     ),
@@ -139,8 +138,8 @@ export const Currency: Story = {
             />
             <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Money uses <code>inputMode="decimal"</code>, 24px monospace, and a leading adornment rather
-                    than a placeholder — the currency symbol must survive the field having a value.
+                    Money uses <code>inputMode="decimal"</code>, 24px monospace, and a leading adornment rather than a placeholder — the
+                    currency symbol must survive the field having a value.
                 </Typography>
             </Box>
         </Stack>

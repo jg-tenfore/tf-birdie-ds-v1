@@ -36,9 +36,7 @@ export interface CustomerResult {
 /** The heading plus the underlined, centre-aligned search field. */
 export const CustomerSearchField = ({ value }: { value?: string }) => (
     <Box sx={{ width: "82.5%", mx: "auto", pt: 13 }}>
-        <Typography sx={{ fontSize: 17, fontWeight: 600, textAlign: "center", color: appColors.textPrimary }}>
-            Customer Search
-        </Typography>
+        <Typography sx={{ fontSize: 17, fontWeight: 600, textAlign: "center", color: appColors.textPrimary }}>Customer Search</Typography>
 
         <Box
             sx={{
@@ -253,9 +251,7 @@ export const TeeTimeHistoryTable = ({ rows }: { rows: TeeTimeHistoryRow[] }) => 
             <Box key={row.id} sx={{ display: "grid", gridTemplateColumns: "100px 210px 90px", py: 0.25 }}>
                 <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{row.id}</Typography>
                 <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{row.date}</Typography>
-                <Typography sx={{ fontSize: 13, color: appColors.textSecondary, textAlign: "center" }}>
-                    {row.players}
-                </Typography>
+                <Typography sx={{ fontSize: 13, color: appColors.textSecondary, textAlign: "center" }}>{row.players}</Typography>
             </Box>
         ))}
     </Box>
@@ -274,10 +270,7 @@ export const PunchCardsTable = () => (
             }}
         >
             {["Rounds", "Purchased", "Used", "Remaining"].map((heading, index) => (
-                <Typography
-                    key={heading}
-                    sx={{ fontSize: 14, fontWeight: 700, color: "#fff", textAlign: index === 0 ? "left" : "center" }}
-                >
+                <Typography key={heading} sx={{ fontSize: 14, fontWeight: 700, color: "#fff", textAlign: index === 0 ? "left" : "center" }}>
                     {heading}
                 </Typography>
             ))}

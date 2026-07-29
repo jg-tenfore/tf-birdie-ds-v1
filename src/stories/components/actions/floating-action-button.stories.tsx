@@ -42,8 +42,8 @@ export const Variants: Story = {
                 </Fab>
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                Prefer the extended variant. A bare icon asks the operator to remember what it does; the label
-                costs 100px of a 1280px canvas.
+                Prefer the extended variant. A bare icon asks the operator to remember what it does; the label costs 100px of a 1280px
+                canvas.
             </Typography>
         </Stack>
     ),
@@ -88,8 +88,8 @@ export const InPlace: Story = {
             >
                 <Typography variant="h5">Members</Typography>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 1, maxWidth: 460 }}>
-                    A list screen with no action bar — the only action is "add", so the FAB is the whole
-                    affordance and doesn't compete with anything.
+                    A list screen with no action bar — the only action is "add", so the FAB is the whole affordance and doesn't compete with
+                    anything.
                 </Typography>
 
                 <Fab variant="extended" color="primary" sx={{ position: "absolute", right: 24, bottom: 24 }}>

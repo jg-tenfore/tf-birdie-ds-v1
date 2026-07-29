@@ -70,8 +70,7 @@ export const Alternative: Story = {
                 ))}
             </Stepper>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 3, maxWidth: 680 }}>
-                Labels below the dots, which reads better across a wide canvas — the connector lines stay long
-                enough to show direction.
+                Labels below the dots, which reads better across a wide canvas — the connector lines stay long enough to show direction.
             </Typography>
         </Box>
     ),
@@ -89,7 +88,14 @@ export const WithError: Story = {
                     <StepLabel>Reconcile card batch</StepLabel>
                 </Step>
                 <Step>
-                    <StepLabel error optional={<Typography variant="caption" sx={{ color: "error.main" }}>$12.40 short</Typography>}>
+                    <StepLabel
+                        error
+                        optional={
+                            <Typography variant="caption" sx={{ color: "error.main" }}>
+                                $12.40 short
+                            </Typography>
+                        }
+                    >
                         Review voids
                     </StepLabel>
                 </Step>
@@ -98,8 +104,8 @@ export const WithError: Story = {
                 </Step>
             </Stepper>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 3, maxWidth: 680 }}>
-                The error carries the number. "$12.40 short" tells the operator what to go looking for;
-                a red dot alone tells them only that something is wrong.
+                The error carries the number. "$12.40 short" tells the operator what to go looking for; a red dot alone tells them only that
+                something is wrong.
             </Typography>
         </Box>
     ),
@@ -116,8 +122,8 @@ export const Vertical: Story = {
                 ))}
             </Stepper>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 420, alignSelf: "center" }}>
-                Vertical works when it sits *beside* the content rather than above it — a left rail of steps
-                with the form on the right. Stacking steps above content spends height we don't have.
+                Vertical works when it sits *beside* the content rather than above it — a left rail of steps with the form on the right.
+                Stacking steps above content spends height we don't have.
             </Typography>
         </Stack>
     ),

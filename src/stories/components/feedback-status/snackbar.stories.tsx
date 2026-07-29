@@ -57,8 +57,8 @@ export const WithUndo: Story = {
                     }
                 />
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 640 }}>
-                    6 seconds, not the 4s default. An operator mid-conversation with a guest needs longer to
-                    notice, read, and decide to undo.
+                    6 seconds, not the 4s default. An operator mid-conversation with a guest needs longer to notice, read, and decide to
+                    undo.
                 </Typography>
             </Box>
         );
@@ -110,8 +110,8 @@ export const Persistent: Story = {
                     </Alert>
                 </Snackbar>
                 <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 640 }}>
-                    No <code>autoHideDuration</code> here: connection state is a condition, not an event, so it
-                    stays until it's resolved or explicitly dismissed.
+                    No <code>autoHideDuration</code> here: connection state is a condition, not an event, so it stays until it's resolved or
+                    explicitly dismissed.
                 </Typography>
             </Box>
         );
@@ -123,9 +123,8 @@ export const Positioning: Story = {
         <Stack spacing={2} sx={{ p: 3, maxWidth: 680 }}>
             <Typography variant="h6">Positioning</Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Bottom-center is the theme default. Top-center is acceptable for system-level conditions
-                (sync, connectivity) so they don't collide with the action bar. Never bottom-right — on a
-                1280px canvas that puts it directly over the Charge button.
+                Bottom-center is the theme default. Top-center is acceptable for system-level conditions (sync, connectivity) so they don't
+                collide with the action bar. Never bottom-right — on a 1280px canvas that puts it directly over the Charge button.
             </Typography>
         </Stack>
     ),

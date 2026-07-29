@@ -54,7 +54,10 @@ export const MemberLookup: Story = {
                                     {option.number} · {option.tier}
                                 </Typography>
                             </Stack>
-                            <Typography variant="body2" sx={{ fontFamily: fontFamily.mono, color: option.credit < 50 ? "error.main" : "text.secondary" }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ fontFamily: fontFamily.mono, color: option.credit < 50 ? "error.main" : "text.secondary" }}
+                            >
                                 {money(option.credit)}
                             </Typography>
                         </Box>
@@ -62,8 +65,8 @@ export const MemberLookup: Story = {
                 }}
             />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Available credit sits on the right of every row because it decides whether the *next* action
-                — charging to the account — will succeed.
+                Available credit sits on the right of every row because it decides whether the *next* action — charging to the account —
+                will succeed.
             </Typography>
         </Stack>
     ),
@@ -102,8 +105,7 @@ export const FreeSolo: Story = {
                 renderInput={(params) => <TextField {...params} label="Guest name" placeholder="Type or pick" />}
             />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Free-solo matters at a golf POS: most people at the counter are not members, and forcing a
-                selection would block the sale.
+                Free-solo matters at a golf POS: most people at the counter are not members, and forcing a selection would block the sale.
             </Typography>
         </Stack>
     ),
