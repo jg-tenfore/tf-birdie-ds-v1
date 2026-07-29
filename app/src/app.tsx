@@ -18,7 +18,8 @@ import { BaySheetScreen } from "./screens/bay-sheet";
 import { CourtSheetScreen } from "./screens/court-sheet";
 import { TeeSheetScreen, TeeTimeDetailScreen } from "./screens/tee-sheet";
 import { SignInScreen } from "./screens/sign-in";
-import { CustomerSearchScreen, StubScreen } from "./screens/misc";
+import { CustomerRecordScreen, CustomerSearchScreen } from "./screens/customer-search";
+import { StubScreen } from "./screens/misc";
 import { OrderLookupScreen } from "./screens/order-lookup";
 import { OrdersTipsScreen } from "./screens/orders-tips";
 import { RestaurantReservationsScreen } from "./screens/restaurant-reservations";
@@ -44,6 +45,7 @@ const routes: [string, React.ReactNode][] = [
     ["/tabs/:id", <TabDetailScreen />],
     ["/tables", <TablesScreen />],
     ["/customersearch", <CustomerSearchScreen />],
+    ["/customersearch/:id", <CustomerRecordScreen />],
     ["/orderlookup", <OrderLookupScreen />],
     ["/timeclock", <TimeClockScreen />],
     ["/shift", <ShiftScreen />],

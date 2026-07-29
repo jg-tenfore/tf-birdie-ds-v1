@@ -1,4 +1,13 @@
 import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
+import {
+    buildDaySheet,
+    may12Sheet,
+    todaySheet,
+    type Position,
+    type ReservationEvent,
+    type SheetView,
+    type TeeTimeBooking,
+} from "@/data/tee-sheet";
 import { createContext, useContext, useMemo, useReducer, type ReactNode } from "react";
 
 /**
@@ -55,71 +64,20 @@ export interface Ticket {
  * position holds a booking for a party ("(4) Oda Brennevin"), so four positions
  * can represent sixteen golfers. Modelling it as a player list, as an earlier
  * pass did, cannot reproduce the real layout.
+ *
+ * The model and the seeded day live in `src/data/tee-sheet.ts` so the stories can
+ * use them too; this only re-exports.
  */
-export interface ReservationEvent {
-    at: string;
-    by: string;
-    what: string;
-}
+export type { Position, ReservationEvent, SheetView, TeeTimeBooking };
 
-export interface Position {
-    name: string;
-    /** The "(4)" prefix — how many golfers this one booking covers. */
-    party: number;
-    price: number;
-    holes: 18 | 9;
-    rate: string;
-    cart: boolean;
-    paid: boolean;
-    /**
-     * The reservation id. The detail screen prints it as `ID:10390147` and the
-     * history dialog titles itself with it, so it has to be stable per booking
-     * rather than derived at render time.
-     */
-    id: string;
-    /** Green-fee line as the detail screen writes it: `Group Pricing : $1.00`. */
-    rateName: string;
-    /** Transportation line: `Dunes Cart Old : $26.82`, or a walking rate. */
-    cartLabel: string;
-    /** Loyalty points this round earns, printed `+125`. */
-    pointsEarn: number;
-    /** Points it redeems, printed `-1250`. */
-    pointsRedeem: number;
-    /** Free text the device shows for punch-card rounds, e.g. `9 roudns`. */
-    rounds?: string;
-    email?: string;
-    /** Audit trail behind the History button. */
-    history: ReservationEvent[];
-    /** Cart keys signed out — shows the key glyph. */
-    keyed?: boolean;
-    /** On a raincheck — shows the bolt glyph. */
-    raincheck?: boolean;
-    /** Carries a balance — shows the large "$" watermark. */
-    balance?: boolean;
-    /** Booked online rather than at the counter — shows the globe glyph. */
-    online?: boolean;
-    checkedIn?: boolean;
-}
-
-export interface TeeTimeBooking {
-    time: string;
-    /** Always length 4. `null` is an open position. */
-    positions: (Position | null)[];
-    blocked?: boolean;
-    /**
-     * What a blocked row prints in each cell. The device uses more than one —
-     * plain `BLOCKED` for a manual block, `Pre-Sunset Block` for the automatic
-     * evening cutoff — and the difference matters to whoever is trying to sell
-     * the slot.
-     */
-    blockLabel?: string;
-    /** Printed in the detail screen's breadcrumb: `… - 6078027 - FRONT`. */
-    confirmation?: string;
-    nine?: "FRONT" | "BACK";
-}
-
-/** The four renderings of a day the action bar switches between. */
-export type SheetView = "list" | "grid" | "multi" | "back9";
+/**
+ * One playing position on a tee time.
+ *
+ * The sheet is a grid of four positions per time, not a list of players — a
+ * position holds a booking for a party ("(4) Oda Brennevin"), so four positions
+ * can represent sixteen golfers. Modelling it as a player list, as an earlier
+ * pass did, cannot reproduce the real layout.
+ */
 
 /**
  * The app's "today". Fixed rather than read from the clock so the prototype
@@ -224,96 +182,11 @@ const seedTickets: Ticket[] = [
     },
 ];
 
-let nextReservationId = 10390147;
-
-/**
- * Seeds a booking with the detail fields the detail screen prints.
- *
- * The ids run consecutively from the reference's own first one, so a party of
- * four gets 10390147–10390150 exactly as the device shows.
- */
-const pos = (name: string, party: number, price: number, extra: Partial<Position> = {}): Position => {
-    const id = String(nextReservationId++);
-    return {
-        name,
-        party,
-        price,
-        holes: 18,
-        rate: "Group Pricing",
-        cart: true,
-        paid: false,
-        id,
-        rateName: `Group Pricing : ${money(price === 0 ? 1 : Math.min(price, 28.47))}`,
-        cartLabel: extra.cart === false ? "Dunes Walking : $8.58" : "Dunes Cart Old : $26.82",
-        pointsEarn: 125,
-        pointsRedeem: -1250,
-        email: `matt.jensen+test${name.split(" ")[0].toLowerCase()}@gmail.com`,
-        history: [{ at: "5/12/2026 1:36 PM", by: "John Admin", what: "Reservation Edited : $26.33 -> $26.33" }],
-        ...extra,
-    };
-};
-
-const may12: TeeTimeBooking[] = [
-    { time: "5:30 PM", positions: [null, null, null, null] },
-    { time: "5:44 PM", positions: [null, null, null, null] },
-    {
-        time: "5:58 PM",
-        positions: [
-            pos("Oda Brennevin", 4, 24.61, { keyed: true }),
-            pos("Ivar Brennevin", 4, 0.93, { balance: true }),
-            pos("Rufus Brennevin", 4, 34.99),
-            pos("Women's League", 4, 24.61),
-        ],
-    },
-    { time: "6:12 PM", positions: [null, null, null, null] },
-    {
-        time: "6:26 PM",
-        positions: [
-            pos("Ivar Brennevin", 4, 0, { balance: true }),
-            pos("Ivar Brennevin", 4, 0, { balance: true }),
-            pos("Ivar Brennevin", 4, 0, { balance: true }),
-            pos("Women's League", 4, 24.61),
-        ],
-    },
-    { time: "6:40 PM", positions: [null, null, null, null] },
-    {
-        time: "6:54 PM",
-        positions: [
-            pos("Oda Brennevin", 2, 125.0, { paid: true, raincheck: true }),
-            pos("G-Oda Brennevin", 2, 95.42, { paid: true }),
-            null,
-            null,
-        ],
-    },
-    { time: "7:08 PM", positions: [null, null, null, null] },
-    { time: "7:22 PM", blocked: true, positions: [null, null, null, null] },
-    {
-        time: "7:36 PM",
-        positions: [pos("Sutton, K.", 3, 96.0), pos("Doyle, F.", 1, 62.0, { cart: false }), null, null],
-    },
-    { time: "7:50 PM", positions: [null, null, null, null] },
-];
-
-/**
- * Today's sheet on the reference device is empty and runs on a 10-minute
- * interval, where May 12 runs on 14 — the interval is per-day course config,
- * not a constant.
- */
-const today: TeeTimeBooking[] = Array.from({ length: 14 }, (_, i) => {
-    const mins = 15 * 60 + 10 + i * 10;
-    const h24 = Math.floor(mins / 60);
-    const h = h24 % 12 === 0 ? 12 : h24 % 12;
-    return {
-        time: `${h}:${String(mins % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`,
-        positions: [null, null, null, null] as (Position | null)[],
-    };
-});
-
 const initial: State = {
     operator: null,
     tickets: seedTickets,
     activeTicketId: null,
-    teeSheets: { "2026-05-12": may12, [TODAY]: today },
+    teeSheets: { "2026-05-12": may12Sheet, [TODAY]: todaySheet },
     sheetDate: "2026-05-12",
     course: "North Course",
     facility: "The Dunes of Delgado PROD",
@@ -371,17 +244,15 @@ function sheetFor(state: State): TeeTimeBooking[] {
     return state.teeSheets[state.sheetDate] ?? emptySheet();
 }
 
-/** A blank 10-minute sheet, used for any date with no configured times. */
+/**
+ * A blank sheet for any date with no configured times.
+ *
+ * Times are still laid out — an unconfigured day looks like a bookable day with
+ * nothing sold, which is the truth: the course has hours, it just has no
+ * reservations.
+ */
 function emptySheet(): TeeTimeBooking[] {
-    return Array.from({ length: 14 }, (_, i) => {
-        const mins = 15 * 60 + 10 + i * 10;
-        const h24 = Math.floor(mins / 60);
-        const h = h24 % 12 === 0 ? 12 : h24 % 12;
-        return {
-            time: `${h}:${String(mins % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`,
-            positions: [null, null, null, null] as (Position | null)[],
-        };
-    });
+    return buildDaySheet({ density: 0, seed: 1 }).map((t) => ({ ...t, positions: [null, null, null, null] as (Position | null)[] }));
 }
 
 function activeTicket(state: State) {
