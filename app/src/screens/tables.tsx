@@ -34,12 +34,21 @@ import { money, useActions, useStore } from "../store";
  * because the bottom bar on this screen is already four buttons wide.
  */
 
+/** Server initials on the floor plan map to the names the breadcrumb prints. */
+const SERVERS: Record<string, string> = {
+    BT: "Kyler Brooksby",
+    SC: "Sasha Cole",
+    MR: "Maya Reyes",
+    JL: "Jonah Lin",
+    AK: "Amara Kaur",
+};
+
 const CANVAS_W = 1280;
 const CANVAS_H = 760;
 
 export const TablesScreen = () => {
-    const { state, heldTickets } = useStore();
-    const { setFloorRoom, openTicket } = useActions();
+    const { state } = useStore();
+    const { setFloorRoom, openTable } = useActions();
     const navigate = useNavigate();
 
     const [zoom, setZoom] = useState(0.9);
@@ -50,16 +59,20 @@ export const TablesScreen = () => {
     const tables = elements.filter((e) => e.kind === "table");
     const seated = tables.filter((t) => t.party);
 
-    const openTable = (num: string | undefined) => {
-        // A table with a held ticket of the same name reopens that ticket;
-        // anything else drops into the register so a tab can be started.
-        const existing = heldTickets.find((t) => t.name === `Table ${num}`);
-        if (existing) {
-            openTicket(existing.id);
-            navigate(`/tabs/${existing.id}`);
-            return;
-        }
-        navigate("/quickorder");
+    /**
+     * Tapping a table opens its check in the seat editor.
+     *
+     * The label is what the editor's breadcrumb prints — "Table Detached 27699 |
+     * Order ID 4252110 | Kyler Brooksby" — so the number lives in the ticket
+     * name rather than being passed separately.
+     */
+    const open = (el: { num?: string; seats?: number; party?: { server: string } }) => {
+        const label = `Detached ${27600 + Number(el.num?.replace(/\D/g, "") ?? 0) + 99}`;
+        const server = el.party?.server ? SERVERS[el.party.server] ?? el.party.server : "Kyler Brooksby";
+        openTable(label, el.seats ?? 4, server);
+        // /tabs/active resolves to whatever the reducer just opened, so this does
+        // not have to guess the new ticket's id.
+        navigate("/tabs/active");
     };
 
     return (
@@ -98,7 +111,7 @@ export const TablesScreen = () => {
                             key={el.id}
                             element={el}
                             fill={statusFill(el.status)}
-                            onSelect={el.kind === "table" ? () => openTable(el.num) : undefined}
+                            onSelect={el.kind === "table" ? () => open(el) : undefined}
                         />
                     ))}
                 </Box>

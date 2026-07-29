@@ -213,7 +213,14 @@ export const TabDetailScreen = () => {
     const { addItem, removeLine, holdTicket } = useActions();
     const navigate = useNavigate();
 
-    const ticket = state.tickets.find((t) => t.id === id);
+    /**
+     * `/tabs/active` resolves to whatever the store just opened.
+     *
+     * The floor plan navigates here straight after dispatching openTable, and it
+     * cannot know the new ticket's id without racing the reducer — so the route
+     * asks for "the open one" instead.
+     */
+    const ticket = id === "active" ? state.tickets.find((t) => t.id === state.activeTicketId) : state.tickets.find((t) => t.id === id);
     const seats = ticket?.seats ?? 4;
     const [activeSeat, setActiveSeat] = useState(1);
     const [expanded, setExpanded] = useState<number | null>(1);

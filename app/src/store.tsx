@@ -233,6 +233,7 @@ type Action =
     | { type: "checkIn"; time: string }
     | { type: "chargeTeeTime"; time: string; only?: number }
     | { type: "clockToggle"; at: string }
+    | { type: "openTable"; label: string; seats: number; server: string }
     | { type: "setFloorRoom"; room: string }
     | { type: "saveFloorPlan"; room: string; elements: FloorElement[] }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
@@ -459,6 +460,41 @@ function reducer(state: State, action: Action): State {
             };
         }
 
+        /**
+         * Tapping a table on the floor either reopens its check or starts one.
+         *
+         * A table's check is an ordinary ticket with `source: "Table"` — the
+         * seat editor at /tabs/:id is the same screen either way, which is what
+         * the app does: there is no separate "table order" screen, only a ticket
+         * that happens to belong to a table.
+         */
+        case "openTable": {
+            const existing = state.tickets.find((t) => t.name === action.label && t.status !== "paid" && t.status !== "voided");
+            if (existing) return { ...state, activeTicketId: existing.id, tickets: state.tickets.map((t) => (t.id === existing.id ? { ...t, status: "open" } : t)) };
+
+            const id = `t-${state.nextNumber}`;
+            return {
+                ...state,
+                nextNumber: state.nextNumber + 1,
+                activeTicketId: id,
+                tickets: [
+                    ...state.tickets,
+                    {
+                        id,
+                        number: `#${4252110 + state.tickets.length}`,
+                        name: action.label,
+                        lines: [],
+                        status: "open",
+                        opened: "now",
+                        server: action.server,
+                        source: "Table",
+                        seats: action.seats,
+                    },
+                ],
+                toast: `${action.label} opened`,
+            };
+        }
+
         case "setFloorRoom":
             return { ...state, floorRoom: action.room };
 
@@ -568,6 +604,7 @@ export function useActions() {
             checkIn: (time: string) => dispatch({ type: "checkIn", time }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),
             clockToggle: (at: string) => dispatch({ type: "clockToggle", at }),
+            openTable: (label: string, seats: number, server: string) => dispatch({ type: "openTable", label, seats, server }),
             setFloorRoom: (room: string) => dispatch({ type: "setFloorRoom", room }),
             saveFloorPlan: (room: string, elements: FloorElement[]) => dispatch({ type: "saveFloorPlan", room, elements }),
             addBayBooking: (booking: Omit<BayBooking, "id">) => dispatch({ type: "addBayBooking", booking }),
