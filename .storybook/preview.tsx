@@ -61,6 +61,8 @@ const preview: Preview = {
                     // sidebar teaches the real information architecture.
                     "App Screens",
                     [
+                        "App Chrome",
+                        ["PIN Sign In", "Navigation Drawer"],
                         "Pro Shop",
                         ["Pro Shop Order", "Tee Sheet", "Court Sheet", "Bay Sheet"],
                         "Restaurant",

@@ -56,9 +56,42 @@ export const appColors = {
     textSecondary: "#5F6771",
     textDisabled: "#9AA1A9",
 
-    /** Seat colors on the Tables screen — assigned per seat index, cyclic. */
-    seat: ["#3D7FA6", "#E8455F", "#C97B8B", "#6B8E5A", "#B08A3E", "#7A5FA6"],
+    /**
+     * Seat colors on the Tables screen — assigned per seat index, cyclic.
+     * Seat 4 is a saturated blue in the app, not a green (corrected after
+     * measuring `references/072926/6-tabs/`).
+     */
+    seat: ["#3D7FA6", "#E8455F", "#C97B8B", "#2F6BB5", "#B08A3E", "#7A5FA6"],
+
+    /* --- Screen-specific fills measured off individual screenshots --- */
+
+    /** Tee sheet canvas. Mid-grey — every other screen uses `canvas`. */
+    sheetCanvas: "#A8A8A8",
+    /** Paid slot in the tee sheet's Grid view (List uses `greenTee`). */
+    gridPaid: "#7189A3",
+    /** Tee-time detail card fill. */
+    detailCard: "#D8E5EE",
+    /** Back-nine time column. */
+    backNineTime: "#4A6A9E",
+    /** An open table on the Restaurant Tables floor. */
+    tableOpen: "#2E6076",
+    /** Room-picker sheet — lighter than `slate`. */
+    sheetFill: "#3B434B",
+    /** MD2 filled-field grey (reservation form, gift card search). */
+    fieldFill: "#DEDEDE",
+    /** CLOCK OUT red — brighter than `red`. */
+    clockOutRed: "#EE3124",
 } as const;
+
+/**
+ * Scale factor for reading the reference screenshots.
+ *
+ * The captures are ~2580×1616 device px on a 2× display, i.e. ~1290×808 CSS px.
+ * A measurement taken from a screenshot rendered 2000px wide converts to CSS px
+ * by multiplying by this factor. Recorded because several agents needed it and
+ * it is the only way to reconcile measured dimensions with `appLayout`.
+ */
+export const REFERENCE_PX_TO_CSS = 0.645;
 
 /**
  * The shipping app's chrome dimensions, in CSS px at the reference viewport
@@ -69,8 +102,11 @@ export const appLayout = {
     /** Bottom action bar — a single row of equal-width buttons. */
     actionBarHeight: 72,
     actionBarGap: 8,
-    /** Left-hand order/cart panel on the selling screens. */
-    orderPanelWidth: 380,
+    /**
+     * Left-hand order/cart panel on the selling screens. Measured ~390 CSS px;
+     * at 380 the shared line row truncates notes the app shows in full.
+     */
+    orderPanelWidth: 390,
     /** The flyout navigation drawer. */
     drawerWidth: 340,
     /** Dark identity block at the top of the drawer. */

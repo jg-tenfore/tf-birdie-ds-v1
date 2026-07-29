@@ -35,6 +35,44 @@ When writing any component or screen here:
    progressive enhancement only; no flow may depend on one to be discoverable.
 5. **Adjacent targets need ≥8px of gap.**
 
+## TWO THEMES — do not conflate them
+
+This repo holds two distinct visual systems, and mixing them is the easiest way to do real damage.
+
+| | `birdieTheme` (`src/theme/birdie-theme.ts`) | `appReplicaTheme` (`src/theme/app-replica-theme.ts`) |
+| --- | --- | --- |
+| Represents | **Target state** — the design system | **Current state** — the shipping app, as-is |
+| Applies to | Foundations, Components, App Chrome | `App Screens/*` only |
+| Buttons | Sentence case | ALL CAPS (MD2) |
+| Radius | 10–14px | 4px |
+| Touch floor | 48dp enforced | Not enforced — documents what ships |
+| Tokens | `tokens.ts` | `app-replica-tokens.ts` |
+
+`.storybook/preview.tsx` switches on `context.title.startsWith("App Screens")` — **stories must not wrap
+themselves in a `ThemeProvider`.**
+
+`App Screens/*` are a pixel-faithful replica of the shipping app, transcribed from screenshots in
+`references/072926/`. When editing them, match the screenshots — do not "improve" them toward the
+design system, and do not copy their patterns (ALL CAPS, 4px radii, sub-48dp targets) back into
+`Components/*`.
+
+### The shipping app's chrome
+
+`src/components/app-chrome/app-shell.tsx` reproduces it: hamburger **flyout drawer** (not a rail),
+order panel on the **left**, and a bottom bar of equal-width slate `ActionButton`s — green for the
+confirming action, red for POP, grey when disabled. Nav destinations and the identity block live in
+`nav-items.ts`.
+
+`pos-shell.tsx` is the *design-system* shell (permanent 88dp rail, right-hand order panel) and is
+used by `App Chrome/POS Shell`. The two are intentionally different; don't merge them.
+
+### Product imagery
+
+`store/` holds 105 real product photos with `manifest.csv` metadata. `npm run generate:catalog`
+derives `src/data/store-catalog.ts` from it — **that file is generated, don't hand-edit.** Images are
+served at `/store-images`; resolve with `storeImage(product.path)`. There is no food or beverage
+photography; those tiles use inline SVG placeholders.
+
 ## Theme is the deliverable
 
 `src/theme/birdie-theme.ts` encodes the rules above as MUI component defaults — a plain `<Button>`

@@ -33,13 +33,14 @@ export interface OrderLineItem {
 
 export const OrderPanelEmpty = ({ message = "No items in order." }: { message?: string }) => (
     <Stack sx={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 3, px: 4 }}>
-        <Box
-            component="img"
-            src={assetUrl("logos/tf-square-black.svg")}
-            alt=""
-            sx={{ width: 210, height: 195, opacity: 0.18 }}
-        />
-        <Typography sx={{ fontSize: 20, color: appColors.textSecondary }}>{message}</Typography>
+        {/*
+         * Sized from the screenshots via REFERENCE_PX_TO_CSS (0.645). The mark
+         * measures ~275px in a 2000px-wide capture → ~177 CSS px; 150 sits at
+         * the smaller end of the range, since Pro Shop renders it tighter than
+         * Quick Order does.
+         */}
+        <Box component="img" src={assetUrl("logos/tf-square-black.svg")} alt="" sx={{ width: 150, height: 140, opacity: 0.18 }} />
+        <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>{message}</Typography>
     </Stack>
 );
 
