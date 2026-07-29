@@ -62,20 +62,37 @@ await step("PAY routes to tender with the real amount", async () => {
         .getByRole("button", { name: /Pay \$/ })
         .first()
         .click();
-    await page.waitForSelector("text=Amount due", { timeout: 5000 });
-    await page.waitForSelector("text=How is this being paid?", { timeout: 5000 });
+    await page.waitForSelector("text=Credit Card Payment", { timeout: 5000 });
+    await page.waitForSelector("text=Grand Total", { timeout: 5000 });
 });
 
-await step("cash tender computes change", async () => {
-    await page.getByRole("button", { name: "Cash", exact: true }).click();
-    await page.waitForSelector("text=Quick cash", { timeout: 5000 });
-    await page.getByRole("button", { name: /^\$\d/ }).first().click();
-    await page.waitForSelector("text=Change due", { timeout: 5000 });
+await step("checkout shows the ticket pane and the seven tender tabs", async () => {
+    await page.waitForSelector("text=Total Owed", { timeout: 5000 });
+    for (const t of ["CREDIT", "CASH", "GIFT CARD", "RAIN", "CHECK", "MEMBER", "ROOM"])
+        await page.waitForSelector(`text=${t}`, { timeout: 3000 });
 });
 
-await step("tender completes the sale", async () => {
-    await page.getByRole("button", { name: /Tender \$/ }).click();
-    await page.waitForSelector("text=Approved", { timeout: 5000 });
+await step("tender tabs swap the body, typos and all", async () => {
+    await page.getByText("GIFT CARD", { exact: true }).click();
+    await page.waitForSelector("text=Enter UPC code or customer name", { timeout: 4000 });
+    await page.getByText("MEMBER", { exact: true }).click();
+    await page.waitForSelector("text=Csutomer Balance", { timeout: 4000 });
+    await page.getByText("ROOM", { exact: true }).click();
+    await page.waitForSelector("text=LOOK UP ROOM", { timeout: 4000 });
+    await page.getByText("CREDIT", { exact: true }).click();
+    await page.waitForSelector("text=NAY WITH CARD", { timeout: 4000 });
+});
+
+await step("quick-cash keys fill the cash amount", async () => {
+    await page.getByText("CASH", { exact: true }).click();
+    await page.waitForSelector("text=Charge amount", { timeout: 4000 });
+    await page.getByRole("button", { name: "$20.00" }).click();
+    await page.waitForSelector('input[value="$20.00"]', { timeout: 4000 });
+});
+
+await step("PAY closes the ticket", async () => {
+    await page.getByRole("button", { name: "Pay", exact: true }).click();
+    await page.waitForSelector("text=Approved", { timeout: 6000 });
 });
 
 await step("completed sale appears in Order Lookup", async () => {
@@ -87,7 +104,8 @@ await step("drawer navigates to the tee sheet", async () => {
     await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /open navigation/i }).click();
     await page.getByRole("button", { name: "Tee Sheet", exact: true }).click();
-    await page.waitForSelector("text=SATURDAY, JULY 29 2026", { timeout: 5000 });
+    // The sheet opens on its seeded day, not today — the date bar is orange for exactly that reason.
+    await page.waitForSelector("text=TUESDAY, MAY 12 2026", { timeout: 5000 });
 });
 
 await step("tee sheet renders four positions per time", async () => {
@@ -122,8 +140,68 @@ await step("bay sheet renders the time-axis calendar", async () => {
 
 await step("quick order drills a category into a product list", async () => {
     await page.goto(`${BASE}#/quickorder`, { waitUntil: "networkidle" });
-    await page.getByText("Beer", { exact: true }).first().click();
-    await page.waitForSelector("text=Pearl Beer", { timeout: 5000 });
+    await page.getByText("Steaks", { exact: true }).first().click();
+    await page.waitForSelector("text=Tomahawk Ribeye 45 oz", { timeout: 5000 });
+});
+
+const bg = (locator) => locator.evaluate((el) => getComputedStyle(el).backgroundColor);
+const rgb = (c) => c.match(/\d+/g).map(Number);
+const dateBar = () => page.getByRole("button", { name: /2026$/ }).first();
+
+await step("tee sheet date bar is orange away from today", async () => {
+    await page.goto(`${BASE}#/teesheet`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=TUESDAY, MAY 12 2026", { timeout: 5000 });
+    const [r, g, b] = rgb(await bg(dateBar()));
+    if (!(r > 200 && g > 130 && g < 190 && b < 110)) throw new Error(`not orange: ${r},${g},${b}`);
+});
+
+await step("GO TO TODAY jumps to today, turns the bar slate and greys itself out", async () => {
+    await page.getByRole("button", { name: "GO TO TODAY" }).click();
+    await page.waitForSelector("text=WEDNESDAY, JULY 29 2026", { timeout: 5000 });
+    const [r] = rgb(await bg(dateBar()));
+    if (r > 150) throw new Error("date bar still orange on today");
+    const [tr, tg, tb] = rgb(await bg(page.getByRole("button", { name: "GO TO TODAY" })));
+    if (!(Math.abs(tr - tg) < 8 && Math.abs(tg - tb) < 8 && tr > 130)) throw new Error("GO TO TODAY not disabled");
+});
+
+await step("date arrows move a day at a time", async () => {
+    await page.getByRole("button", { name: "Next day" }).click();
+    await page.waitForSelector("text=THURSDAY, JULY 30 2026", { timeout: 5000 });
+    await page.getByRole("button", { name: "Previous day" }).click();
+    await page.waitForSelector("text=WEDNESDAY, JULY 29 2026", { timeout: 5000 });
+});
+
+await step("the date picker opens on the sheet's own month and drives the sheet", async () => {
+    await dateBar().click();
+    await page.waitForSelector("text=Selected date", { timeout: 5000 });
+    await page.waitForSelector("text=JULY 2026", { timeout: 3000 });
+    const ok = page.getByRole("button", { name: "OK", exact: true });
+    if (!(await ok.isDisabled())) throw new Error("OK is live before a day is chosen");
+    await page.getByRole("button", { name: "18", exact: true }).first().click();
+    await ok.click();
+    await page.waitForSelector("text=SATURDAY, JULY 18 2026", { timeout: 5000 });
+});
+
+await step("COMBOS rings a bundle up as its component lines", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Combos" }).click();
+    await page.waitForSelector("text=6 Pack Combo", { timeout: 5000 });
+    await page.getByText("6 Pack Combo").click();
+    for (const l of ["[c] Bud Light", "[c] Stone IPA", "[c] Gratuity"]) {
+        await page.waitForSelector(`text=${l.replace("[", "\\[")}`, { timeout: 4000 }).catch(async () => {
+            if (!(await page.getByText(l, { exact: true }).count())) throw new Error(`${l} missing`);
+        });
+    }
+});
+
+await step("the 19th Hole menu carries real dishes, prices and descriptions", async () => {
+    await page.goto(`${BASE}#/quickorder`, { waitUntil: "networkidle" });
+    await page.getByText("Chops & Seafood", { exact: true }).first().click();
+    await page.waitForSelector("text=Chilean Sea Bass", { timeout: 5000 });
+    await page.waitForSelector("text=Miso-glazed bass over creamed spinach.", { timeout: 3000 });
+    await page.waitForTimeout(900);
+    const broken = await page.evaluate(() => [...document.images].filter((i) => i.complete && !i.naturalWidth).length);
+    if (broken) throw new Error(`${broken} dish photos failed to load`);
 });
 
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");

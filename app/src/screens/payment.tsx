@@ -2,89 +2,282 @@ import { useEffect, useState } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import LinearProgress from "@mui/material/LinearProgress";
+import Divider from "@mui/material/Divider";
+import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
-import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
-import ContactlessOutlinedIcon from "@mui/icons-material/ContactlessOutlined";
-import CreditCardOutlinedIcon from "@mui/icons-material/CreditCardOutlined";
-import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import CloudIcon from "@mui/icons-material/Cloud";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import GroupsIcon from "@mui/icons-material/Groups";
+import HotelIcon from "@mui/icons-material/Hotel";
+import NoteIcon from "@mui/icons-material/Note";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SearchIcon from "@mui/icons-material/Search";
+import StarIcon from "@mui/icons-material/Star";
 import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
-import { appColors, appRadius } from "@/theme/app-replica-tokens";
+import { appColors } from "@/theme/app-replica-tokens";
+import { assetUrl } from "@/utils/asset-url";
 import { Shell } from "../pos-shell";
 import { money, useActions, useStore, type Ticket } from "../store";
 
 /**
- * Tender.
+ * Checkout, from `references/072926/checkoutScreens/`.
  *
- * The one flow that has to feel real, because it is what makes the prototype
- * convincing: the amount is the actual cart total, choosing a tender actually
- * closes the ticket, and the approved screen shows the sale that just happened.
+ * Two panes. The left is the ticket — its lines, then the customer, then the
+ * totals stack ending in a green TOTAL OWED band. The right is the tender
+ * surface: seven icon tabs, only one of which is ever active, over a body that
+ * changes completely per tender.
  *
- * Card runs a short fake authorisation so the waiting state is visible; cash
- * computes real change from the quick-cash denominations.
+ * A few things in here look like mistakes because they are — they are in the
+ * shipping app and this is a replica of it:
+ *
+ *   - the button reads NAY WITH CARD, not PAY WITH CARD;
+ *   - MEMBER and ROOM both head their amount field "Raincheck Amount", because
+ *     the heading is not swapped when the tab changes;
+ *   - MEMBER's third result column reads "Csutomer Balance".
+ *
+ * They are left alone deliberately. Quietly fixing them would make the replica
+ * disagree with the device it is supposed to represent, and these are exactly
+ * the kind of thing a redesign is meant to surface.
  */
 
-type Stage = "select" | "cash" | "card" | "approved";
+type TenderTab = "CREDIT" | "CASH" | "GIFT CARD" | "RAIN" | "CHECK" | "MEMBER" | "ROOM";
 
-const TENDERS = [
-    { key: "Card", label: "Card", Icon: CreditCardOutlinedIcon },
-    { key: "Cash", label: "Cash", Icon: PaymentsOutlinedIcon },
-    { key: "Member account", label: "Member account", Icon: AccountBalanceWalletOutlinedIcon },
-    { key: "Gift card", label: "Gift card", Icon: CardGiftcardOutlinedIcon },
-] as const;
+const TABS: { key: TenderTab; Icon: typeof CreditCardIcon }[] = [
+    { key: "CREDIT", Icon: CreditCardIcon },
+    { key: "CASH", Icon: AttachMoneyIcon },
+    { key: "GIFT CARD", Icon: CardGiftcardIcon },
+    { key: "RAIN", Icon: CloudIcon },
+    { key: "CHECK", Icon: NoteIcon },
+    { key: "MEMBER", Icon: GroupsIcon },
+    { key: "ROOM", Icon: HotelIcon },
+];
 
-const TenderKey = ({ label, Icon, onClick }: { label: string; Icon: typeof CreditCardOutlinedIcon; onClick: () => void }) => (
-    <ButtonBase
-        onClick={onClick}
-        sx={{
-            height: 120,
-            flexDirection: "column",
-            gap: 1,
-            borderRadius: `${appRadius.button}px`,
-            border: "2px solid",
-            borderColor: appColors.divider,
-            bgcolor: "#fff",
-            "&:hover": { borderColor: appColors.green, bgcolor: "#fff" },
-        }}
-    >
-        <Icon sx={{ fontSize: 36 }} />
-        <Typography sx={{ fontSize: 16, fontWeight: 500 }}>{label}</Typography>
-    </ButtonBase>
+/** Fixed quick-cash keys — not derived from the total, as the device is. */
+const QUICK_CASH = [0, 5, 10, 20, 100];
+
+const PANE_BG = "#F4F6F8";
+
+const TabStrip = ({ active, onChange }: { active: TenderTab; onChange: (t: TenderTab) => void }) => (
+    <Stack direction="row" sx={{ bgcolor: "#fff" }}>
+        {TABS.map(({ key, Icon }) => {
+            const isActive = key === active;
+            return (
+                <ButtonBase
+                    key={key}
+                    onClick={() => onChange(key)}
+                    sx={{
+                        flex: 1,
+                        flexDirection: "column",
+                        gap: 0.5,
+                        pt: 1.75,
+                        pb: 1.25,
+                        // Inactive tabs are washed out rather than hidden — every
+                        // tender stays visible so staff can see what is on offer.
+                        color: isActive ? appColors.textPrimary : "#BFC4C9",
+                        borderBottom: "3px solid",
+                        borderColor: isActive ? appColors.textPrimary : "transparent",
+                    }}
+                >
+                    <Icon sx={{ fontSize: 34 }} />
+                    <Typography sx={{ fontSize: 13, letterSpacing: "0.06em" }}>{key}</Typography>
+                </ButtonBase>
+            );
+        })}
+    </Stack>
+);
+
+const AmountField = ({ heading, value, onChange }: { heading: string; value: string; onChange?: (v: string) => void }) => (
+    <>
+        <Typography sx={{ fontSize: 24, textAlign: "center", mt: 4, mb: 2 }}>{heading}</Typography>
+        <InputBase
+            value={value}
+            onChange={(e) => onChange?.(e.target.value)}
+            readOnly={!onChange}
+            sx={{
+                display: "block",
+                width: 344,
+                mx: "auto",
+                bgcolor: "#fff",
+                border: "1px solid",
+                borderColor: appColors.divider,
+                "& input": { textAlign: "center", fontSize: 17, py: 1.75 },
+            }}
+        />
+    </>
+);
+
+/** The grey lookup field the account-style tenders share. */
+const LookupField = ({ label }: { label: string }) => (
+    <Box sx={{ mx: 3, mt: 3, bgcolor: "#E4E6E8", px: 2, pt: 1.25, pb: 1, borderBottom: `1px solid ${appColors.textSecondary}` }}>
+        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{label}</Typography>
+        <Typography sx={{ fontSize: 16 }}>---</Typography>
+    </Box>
+);
+
+/** The green result band. Columns differ per tender; the values never do here. */
+const ResultBand = ({ columns }: { columns: string[] }) => (
+    <Stack direction="row" sx={{ mx: 3, mt: 2, bgcolor: appColors.greenTee, color: "#fff", px: 2, py: 2.5 }}>
+        {columns.map((c) => (
+            <Stack key={c} sx={{ flex: 1, gap: 1 }}>
+                <Typography sx={{ fontSize: 16 }}>{c}</Typography>
+                <Typography sx={{ fontSize: 16 }}>---</Typography>
+            </Stack>
+        ))}
+    </Stack>
+);
+
+/** The two greyed buttons pinned above the action bar on the keyed tenders. */
+const CardButtons = () => (
+    <Stack direction="row" spacing={1} sx={{ mt: "auto", px: 1.5, pb: 1.5 }}>
+        {/* "NAY" is the shipping app's typo — see the note at the top of the file. */}
+        {["NAY WITH CARD", "MANUAL PAYMENT"].map((label) => (
+            <Box
+                key={label}
+                sx={{
+                    flex: 1,
+                    bgcolor: "#DCDEE0",
+                    color: "#8A9096",
+                    textAlign: "center",
+                    py: 2.5,
+                    fontSize: 15,
+                    letterSpacing: "0.06em",
+                }}
+            >
+                {label}
+            </Box>
+        ))}
+    </Stack>
+);
+
+const TenderBody = ({ tab, amount, onAmount }: { tab: TenderTab; amount: string; onAmount: (v: string) => void }) => {
+    switch (tab) {
+        case "CREDIT":
+            return (
+                <>
+                    <AmountField heading="Charge amount" value={amount} onChange={onAmount} />
+                    <CardButtons />
+                </>
+            );
+        case "CASH":
+            return (
+                <>
+                    <AmountField heading="Cash Amount" value={amount} onChange={onAmount} />
+                    <Typography sx={{ fontSize: 20, px: 3, mt: 3, mb: 1.5 }}>Charge amount</Typography>
+                    <Stack direction="row" spacing={1} sx={{ px: 3 }}>
+                        {QUICK_CASH.map((v) => (
+                            <ButtonBase
+                                key={v}
+                                onClick={() => onAmount(money(v))}
+                                sx={{ flex: 1, bgcolor: appColors.slate, color: "#fff", py: 2.5, fontSize: 16 }}
+                            >
+                                {money(v)}
+                            </ButtonBase>
+                        ))}
+                    </Stack>
+                    <CardButtons />
+                </>
+            );
+        case "GIFT CARD":
+            return (
+                <>
+                    <AmountField heading="Gift Card Amount" value={amount} onChange={onAmount} />
+                    <LookupField label="Enter UPC code or customer name" />
+                    <ResultBand columns={["Customer Name", "UPC", "Balance"]} />
+                </>
+            );
+        case "RAIN":
+            return (
+                <>
+                    <AmountField heading="Raincheck Amount" value={amount} onChange={onAmount} />
+                    <LookupField label="Enter Raincheck id, customer name, or email" />
+                    <ResultBand columns={["Customer Name", "UPC", "Balance"]} />
+                </>
+            );
+        case "CHECK":
+            return (
+                <>
+                    <AmountField heading="Cash Amount" value={amount} onChange={onAmount} />
+                    <AmountField heading="Check Number" value={money(0)} />
+                    <CardButtons />
+                </>
+            );
+        case "MEMBER":
+            return (
+                <>
+                    {/* Heading is not swapped for this tab on the device. */}
+                    <AmountField heading="Raincheck Amount" value={amount} onChange={onAmount} />
+                    <LookupField label="Search by customer name, email, or phone...." />
+                    <ResultBand columns={["Customer Name", "Customer ID", "Csutomer Balance"]} />
+                </>
+            );
+        case "ROOM":
+            return (
+                <>
+                    <AmountField heading="Raincheck Amount" value={amount} onChange={onAmount} />
+                    <LookupField label="Search by room" />
+                    <ButtonBase
+                        sx={{
+                            mx: 3,
+                            mt: 2,
+                            bgcolor: appColors.slate,
+                            color: "#fff",
+                            py: 2.5,
+                            gap: 1,
+                            fontSize: 16,
+                            letterSpacing: "0.06em",
+                            boxShadow: 2,
+                        }}
+                    >
+                        <SearchIcon sx={{ fontSize: 22 }} />
+                        LOOK UP ROOM
+                    </ButtonBase>
+                    <ResultBand columns={["Customer Name", "UPC", "Balance"]} />
+                </>
+            );
+    }
+};
+
+const TotalRow = ({ label, value, green }: { label: string; value: string; green?: boolean }) => (
+    <Stack direction="row" sx={{ justifyContent: "space-between", py: 0.6 }}>
+        <Typography sx={{ fontSize: 20, color: green ? appColors.greenTee : appColors.textPrimary }}>{label}</Typography>
+        <Typography sx={{ fontSize: 20, color: green ? appColors.greenTee : appColors.textPrimary }}>{value}</Typography>
+    </Stack>
 );
 
 export const PaymentScreen = () => {
-    const { ticket, lines, total, state } = useStore();
+    const { ticket, lines, total, subtotal, tax, state } = useStore();
     const { pay } = useActions();
     const navigate = useNavigate();
-    const [stage, setStage] = useState<Stage>("select");
-    const [tendered, setTendered] = useState<number | null>(null);
 
-    // A ticket that has already been paid leaves nothing to tender, so fall
-    // back to the approved screen rather than rendering an empty total.
+    const [tab, setTab] = useState<TenderTab>("CASH");
+    const [amount, setAmount] = useState(money(0));
+    const [authorising, setAuthorising] = useState(false);
+
     const sale = state.lastSale;
-    const isApproved = stage === "approved" || (!ticket && sale);
 
+    // Card runs a short fake authorisation so the waiting state is visible.
     useEffect(() => {
-        if (stage !== "card") return;
+        if (!authorising) return;
         const t = setTimeout(() => {
             pay("Card");
-            setStage("approved");
-        }, 1600);
+            setAuthorising(false);
+        }, 1200);
         return () => clearTimeout(t);
-    }, [stage, pay]);
+    }, [authorising, pay]);
 
-    if (!ticket && !sale) {
+    if (!ticket && sale) return <ApprovedScreen sale={sale} />;
+
+    if (!ticket) {
         return (
-            <Shell
-                title="Payments"
-                active="proshop"
-                actionBar={<ActionButton onClick={() => navigate("/proshop")}>Back to register</ActionButton>}
-            >
+            <Shell title="Payments" active="proshop" actionBar={<ActionButton onClick={() => navigate("/proshop")}>Back to register</ActionButton>}>
                 <Stack sx={{ height: "100%", alignItems: "center", justifyContent: "center", gap: 1 }}>
                     <Typography sx={{ fontSize: 22 }}>No open ticket</Typography>
                     <Typography sx={{ color: appColors.textSecondary }}>Ring something up first.</Typography>
@@ -93,116 +286,87 @@ export const PaymentScreen = () => {
         );
     }
 
-    if (isApproved && sale) return <ApprovedScreen sale={sale} />;
-
-    const amountDue = total;
+    const tender = () => {
+        if (tab === "CREDIT") return setAuthorising(true);
+        pay(tab === "CASH" ? "Cash" : tab === "GIFT CARD" ? "Gift card" : "Member account");
+    };
 
     return (
         <Shell
-            title="Payments"
+            title="Credit Card Payment"
             active="proshop"
+            accountLabel="Join Admin"
             actionBar={
                 <>
-                    <ActionButton onClick={() => (stage === "select" ? navigate(-1) : setStage("select"))}>Back</ActionButton>
-                    {stage === "cash" && (
-                        <ActionButton
-                            tone={tendered ? "primary" : "disabled"}
-                            grow={2}
-                            onClick={() => {
-                                if (!tendered) return;
-                                pay("Cash");
-                                setStage("approved");
-                            }}
-                        >
-                            {tendered ? `Tender ${money(tendered)}` : "Choose an amount"}
-                        </ActionButton>
-                    )}
+                    <ActionButton icon={<ArrowBackIosNewIcon />} onClick={() => navigate("/proshop")}>
+                        Pro Shop
+                    </ActionButton>
+                    <ActionButton>West Course</ActionButton>
+                    <ActionButton icon={<CreditCardIcon />}>Grid</ActionButton>
+                    <ActionButton icon={<StarIcon />}>List</ActionButton>
+                    <ActionButton icon={<StarIcon />}>Multi</ActionButton>
+                    <ActionButton icon={<RefreshIcon />} grow={0.4}>
+                        {""}
+                    </ActionButton>
+                    <ActionButton icon={<CheckIcon />} tone="primary" grow={1.6} onClick={tender}>
+                        {authorising ? "Authorising…" : "Pay"}
+                    </ActionButton>
                 </>
             }
         >
-            <Box sx={{ p: 3, maxWidth: 900 }}>
-                <Box sx={{ bgcolor: "#fff", border: "1px solid", borderColor: appColors.divider, p: 3, mb: 3 }}>
-                    <Typography sx={{ fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: appColors.textSecondary }}>
-                        Amount due
-                    </Typography>
-                    <Typography sx={{ fontSize: 44, fontWeight: 500, lineHeight: 1.1 }}>{money(amountDue)}</Typography>
-                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                        Ticket {ticket?.number} · {lines.length} {lines.length === 1 ? "item" : "items"} ·{" "}
-                        {ticket?.customer ?? ticket?.name}
-                    </Typography>
-                </Box>
-
-                {stage === "select" && (
-                    <>
-                        <Typography sx={{ fontSize: 20, mb: 1.5 }}>How is this being paid?</Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2 }}>
-                            {TENDERS.map((t) => (
-                                <TenderKey
-                                    key={t.key}
-                                    label={t.label}
-                                    Icon={t.Icon}
-                                    onClick={() => {
-                                        if (t.key === "Card") return setStage("card");
-                                        if (t.key === "Cash") return setStage("cash");
-                                        pay(t.key);
-                                        setStage("approved");
-                                    }}
+            <Stack direction="row" sx={{ height: "100%", minHeight: 0 }}>
+                {/* Ticket pane. Wider than the register's order rail. */}
+                <Stack sx={{ width: "42%", minWidth: 0, bgcolor: "#fff", borderRight: `1px solid ${appColors.divider}` }}>
+                    <Stack sx={{ flex: 1, overflowY: "auto" }} divider={<Divider />}>
+                        {lines.map((l) => (
+                            <Stack key={`${l.id}-${l.seat ?? "x"}`} direction="row" spacing={2} sx={{ px: 2, py: 1.75, alignItems: "center" }}>
+                                <Box
+                                    component="img"
+                                    src={l.image ?? assetUrl("logos/tf-square-black.svg")}
+                                    alt=""
+                                    sx={{ width: 62, height: 62, objectFit: "contain", flexShrink: 0 }}
                                 />
-                            ))}
-                        </Box>
-                    </>
-                )}
-
-                {stage === "cash" && (
-                    <>
-                        <Typography sx={{ fontSize: 20, mb: 1.5 }}>Quick cash</Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2 }}>
-                            {[amountDue, Math.ceil(amountDue / 10) * 10, Math.ceil(amountDue / 20) * 20, Math.ceil(amountDue / 50) * 50]
-                                .filter((v, i, a) => a.indexOf(v) === i)
-                                .map((amount, i) => (
-                                    <ButtonBase
-                                        key={amount}
-                                        onClick={() => setTendered(amount)}
-                                        sx={{
-                                            minHeight: 88,
-                                            fontSize: 20,
-                                            borderRadius: `${appRadius.button}px`,
-                                            border: "2px solid",
-                                            borderColor: tendered === amount ? appColors.green : appColors.divider,
-                                            bgcolor: tendered === amount ? appColors.green : "#fff",
-                                            color: tendered === amount ? "#fff" : appColors.textPrimary,
-                                        }}
-                                    >
-                                        {i === 0 ? `Exact ${money(amount)}` : money(amount)}
-                                    </ButtonBase>
-                                ))}
-                        </Box>
-
-                        {tendered !== null && (
-                            <Box sx={{ mt: 3, p: 3, bgcolor: "#D9F2E1" }}>
-                                <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: 20, color: appColors.greenTee }}>Change due</Typography>
-                                    <Typography sx={{ fontSize: 40, fontWeight: 500, color: appColors.greenTee }}>
-                                        {money(Math.max(0, tendered - amountDue))}
+                                <Stack sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography sx={{ fontSize: 19, fontWeight: 500 }} noWrap>
+                                        {l.name}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary }} noWrap>
+                                        {l.note ?? `Qty ${l.qty} · ${money(l.unitPrice)} each`}
                                     </Typography>
                                 </Stack>
-                            </Box>
-                        )}
-                    </>
-                )}
-
-                {stage === "card" && (
-                    <Stack sx={{ alignItems: "center", gap: 3, py: 6 }}>
-                        <ContactlessOutlinedIcon sx={{ fontSize: 96, color: appColors.green }} />
-                        <Typography sx={{ fontSize: 28 }}>Tap, insert, or swipe</Typography>
-                        <Typography sx={{ fontSize: 22, color: appColors.textSecondary }}>{money(amountDue)}</Typography>
-                        <Box sx={{ width: 380 }}>
-                            <LinearProgress />
-                        </Box>
-                        <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>Reader SGM-02-R · Connected</Typography>
+                                <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{money(l.qty * l.unitPrice)}</Typography>
+                            </Stack>
+                        ))}
                     </Stack>
-                )}
-            </Box>
+
+                    {/* A heavy rule, not a hairline — it separates ticket from money. */}
+                    <Box sx={{ borderTop: `2px solid ${appColors.textPrimary}`, px: 2, pt: 2 }}>
+                        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                            <Typography sx={{ fontSize: 22 }}>{ticket.customer ?? ticket.name}</Typography>
+                            <Typography sx={{ fontSize: 22 }}>{lines.reduce((n, l) => n + l.qty, 0)}</Typography>
+                        </Stack>
+                        <TotalRow label="Tax" value={money(tax)} />
+                        <TotalRow label="Subtotal" value={money(subtotal)} />
+                        <TotalRow label="Grand Total" value={money(total)} />
+                        <TotalRow label="Total Payments" value={money(0)} green />
+                    </Box>
+                    <Stack
+                        direction="row"
+                        sx={{ justifyContent: "space-between", bgcolor: appColors.greenTee, color: "#fff", px: 2, py: 2, mt: 1.5 }}
+                    >
+                        <Typography sx={{ fontSize: 22 }}>Total Owed</Typography>
+                        <Typography sx={{ fontSize: 22 }}>{money(total)}</Typography>
+                    </Stack>
+                </Stack>
+
+                {/* Tender pane. */}
+                <Stack sx={{ flex: 1, minWidth: 0, bgcolor: PANE_BG }}>
+                    <TabStrip active={tab} onChange={setTab} />
+                    <Stack sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+                        <TenderBody tab={tab} amount={amount} onAmount={setAmount} />
+                    </Stack>
+                </Stack>
+            </Stack>
         </Shell>
     );
 };
