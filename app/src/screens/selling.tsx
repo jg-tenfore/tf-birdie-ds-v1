@@ -13,6 +13,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
+import { foodByCategory } from "@/data/food-catalog";
 import { golfBalls, mens, womens, golfShoes, accessoriesAndTraining } from "@/data/store-catalog";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { storeImage } from "@/utils/asset-url";
@@ -93,16 +94,25 @@ export const proShopCategories: { label: string; items: Sellable[] }[] = [
     },
     {
         label: "F & B",
-        items: [
-            { id: "fb-draft", name: "Draft beer", price: 8, image: plate("Draft beer", "#8a5a2b") },
-            { id: "fb-bottle", name: "Bottled beer", price: 7, image: plate("Bottled beer", "#8a5a2b") },
-            { id: "fb-water", name: "Bottled water", price: 3, image: plate("Water", "#2f6b8a") },
-            { id: "fb-soda", name: "Fountain soda", price: 3.5, image: plate("Soda", "#2f6b8a") },
-            { id: "fb-dog", name: "Hot dog", price: 6.5, image: plate("Hot dog", "#a33d2b") },
-            { id: "fb-burger", name: "Cheeseburger", price: 13, image: plate("Cheeseburger", "#a33d2b") },
-            { id: "fb-club", name: "Turkey club", price: 14, image: plate("Turkey club", "#7a6a3d") },
-            { id: "fb-chips", name: "Chips", price: 2.5, image: plate("Chips", "#7a6a3d") },
-        ],
+        items: [...foodByCategory("Grill"), ...foodByCategory("Sandwiches"), ...foodByCategory("Hamburgers")].map((f) => ({
+            id: f.id,
+            name: f.name,
+            price: f.price,
+            image: storeImage(f.path),
+        })),
+    },
+    {
+        label: "Drinks",
+        items: [...foodByCategory("Beer"), ...foodByCategory("Wine"), ...foodByCategory("Beverages")].map((f) => ({
+            id: f.id,
+            name: f.name,
+            price: f.price,
+            image: storeImage(f.path),
+        })),
+    },
+    {
+        label: "Snacks",
+        items: foodByCategory("Snacks").map((f) => ({ id: f.id, name: f.name, price: f.price, image: storeImage(f.path) })),
     },
     {
         label: "Other",

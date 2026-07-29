@@ -18,7 +18,8 @@ import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { assetUrl } from "@/utils/asset-url";
 import { Shell } from "../pos-shell";
 import { money, useActions, useStore, type Line, type Ticket } from "../store";
-import { plate } from "./selling";
+import { foodByCategory, type FoodCategory } from "@/data/food-catalog";
+import { storeImage } from "@/utils/asset-url";
 
 /**
  * Tabs, from `references/072926/6-tabs/`.
@@ -150,33 +151,8 @@ export const TabsScreen = () => {
 
 /* --------------------------- order editor -------------------------- */
 
-const MENU = [
-    {
-        label: "Beer",
-        tint: "#8a5a2b",
-        items: [
-            ["Pearl Beer", 12],
-            ["Draft — IPA", 9.5],
-        ] as [string, number][],
-    },
-    {
-        label: "Appetizers",
-        tint: "#7a6a3d",
-        items: [
-            ["Potato Skins", 16],
-            ["Wings — 10 pc", 14.5],
-        ] as [string, number][],
-    },
-    { label: "Sandwiches", tint: "#a3762b", items: [["Turkey Club Sandwich", 9.15]] as [string, number][] },
-    {
-        label: "Hamburgers",
-        tint: "#a33d2b",
-        items: [
-            ["Open Burger", 10.32],
-            ["Cheeseburger", 13],
-        ] as [string, number][],
-    },
-];
+/** The seat editor sells the restaurant menu, not the retail catalogue. */
+const MENU_CATEGORIES: FoodCategory[] = ["Sandwiches", "Hamburgers", "Grill", "Beer", "Wine", "Beverages", "Snacks"];
 
 const SeatBandRow = ({ seat, expanded, onToggle }: { seat: number; expanded: boolean; onToggle: () => void }) => (
     <ButtonBase
@@ -304,39 +280,40 @@ export const TabDetailScreen = () => {
                 />
 
                 <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", rowGap: 2 }}>
-                    {MENU.flatMap((c) =>
-                        c.items.map(([name, price]) => (
-                            <ButtonBase
-                                key={name}
-                                onClick={() =>
-                                    addItem(
-                                        { id: name.toLowerCase().replace(/\W+/g, "-"), name, price, image: plate(name, c.tint) },
-                                        "Table",
-                                        activeSeat,
-                                    )
-                                }
-                                sx={{
-                                    width: 148,
-                                    flexDirection: "column",
-                                    bgcolor: "#fff",
-                                    border: "1px solid",
-                                    borderColor: appColors.divider,
-                                    borderRadius: `${appRadius.tile}px`,
-                                }}
-                            >
+                    {MENU_CATEGORIES.flatMap((c) => foodByCategory(c)).map((item) => (
+                        <ButtonBase
+                            key={item.id}
+                            onClick={() =>
+                                addItem(
+                                    { id: item.id, name: item.name, price: item.price, image: storeImage(item.path) },
+                                    "Table",
+                                    activeSeat,
+                                )
+                            }
+                            sx={{
+                                width: 148,
+                                flexDirection: "column",
+                                bgcolor: "#fff",
+                                border: "1px solid",
+                                borderColor: appColors.divider,
+                                borderRadius: `${appRadius.tile}px`,
+                            }}
+                        >
+                            <Box sx={{ width: "100%", height: 128, display: "grid", placeItems: "center", overflow: "hidden", p: 0.75 }}>
                                 <Box
                                     component="img"
-                                    src={plate(name, c.tint)}
+                                    src={storeImage(item.path)}
                                     alt=""
-                                    sx={{ width: "100%", height: 128, objectFit: "cover" }}
+                                    loading="lazy"
+                                    sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                                 />
-                                <Stack sx={{ py: 1, px: 0.5, minHeight: 52, justifyContent: "center" }}>
-                                    <Typography sx={{ fontSize: 13, textAlign: "center" }}>{name}</Typography>
-                                    <Typography sx={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{money(price)}</Typography>
-                                </Stack>
-                            </ButtonBase>
-                        )),
-                    )}
+                            </Box>
+                            <Stack sx={{ py: 1, px: 0.5, minHeight: 52, justifyContent: "center" }}>
+                                <Typography sx={{ fontSize: 13, textAlign: "center" }}>{item.name}</Typography>
+                                <Typography sx={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{money(item.price)}</Typography>
+                            </Stack>
+                        </ButtonBase>
+                    ))}
                 </Stack>
             </Box>
         </Shell>

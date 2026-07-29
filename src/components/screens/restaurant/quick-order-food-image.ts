@@ -1,3 +1,5 @@
+import { resolveFoodPhoto } from "./food-photo";
+
 /**
  * Placeholder imagery for the food and drink tiles on the Restaurant screens.
  *
@@ -5,7 +7,7 @@
  * product row, and every order line. That photography is not in this repo, so
  * these screens draw a tinted, labelled SVG at the same aspect ratio instead.
  * The layout, spacing, and tile proportions stay truthful; only the picture is
- * stand-in. Golf merchandise is the one exception — real product shots for that
+ * stand-in when no photograph matches. Golf merchandise is the one exception — real product shots for that
  * live in `@/data/store-catalog` — but nothing on Quick Order or Tabs is golf
  * merchandise, so nothing here reaches for them.
  */
@@ -62,7 +64,7 @@ export interface FoodImageOptions {
  * Inline SVG rather than a file so the stories stay self-contained and there is
  * no chance of a broken image on the deployed Storybook.
  */
-export const foodImage = (label: string, { width = 240, height = 240, fontSize = 24 }: FoodImageOptions = {}) => {
+const foodImagePlaceholder = (label: string, { width = 240, height = 240, fontSize = 24 }: FoodImageOptions = {}) => {
     const [background, ink] = tintFor(label);
     const lines = wrap(label, 14);
     const lineHeight = fontSize * 1.2;
@@ -83,5 +85,16 @@ export const foodImage = (label: string, { width = 240, height = 240, fontSize =
 
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
+
+/**
+ * The public helper: a real photograph when the catalogue has one, and the
+ * tinted placeholder when it does not.
+ *
+ * Food photography now lives in `store/images/food` and is catalogued in
+ * `@/data/food-catalog`, so most tiles resolve to a real product shot. The
+ * placeholder is kept for the labels that have no plausible match — leaving it
+ * visible is the point, since a stand-in should look like one.
+ */
+export const foodImage = (label: string): string => resolveFoodPhoto(label) ?? foodImagePlaceholder(label);
 
 export default foodImage;

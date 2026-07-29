@@ -1,3 +1,5 @@
+import { resolveFoodPhoto } from "./food-photo";
+
 /**
  * Placeholder tiles for the food menu.
  *
@@ -31,7 +33,7 @@ const escapeXml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, 
  *
  * Same label in, same tint out, so a story re-render never reshuffles colors.
  */
-export const foodTile = (label: string) => {
+const foodTilePlaceholder = (label: string) => {
     const [base, deep] = tints[hash(label) % tints.length];
     const words = label.split(" ");
     // Two lines at most — longer names are the exception on a food menu.
@@ -49,3 +51,14 @@ export const foodTile = (label: string) => {
 
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 };
+
+/**
+ * The public helper: a real photograph when the catalogue has one, and the
+ * tinted placeholder when it does not.
+ *
+ * Food photography now lives in `store/images/food` and is catalogued in
+ * `@/data/food-catalog`, so most tiles resolve to a real product shot. The
+ * placeholder is kept for the labels that have no plausible match — leaving it
+ * visible is the point, since a stand-in should look like one.
+ */
+export const foodTile = (label: string): string => resolveFoodPhoto(label) ?? foodTilePlaceholder(label);

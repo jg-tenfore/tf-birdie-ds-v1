@@ -14,7 +14,6 @@ import { OrderPanelEmpty } from "@/components/app-chrome/order-panel";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
 import { money, useActions, useStore, type Line } from "../store";
-import { plate } from "./selling";
 
 /**
  * Quick Order, from `references/072926/5-quickorder/`.
@@ -30,54 +29,15 @@ import { plate } from "./selling";
  * the item detail pane, not the cart.
  */
 
-interface MenuProduct {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-}
-interface MenuCategory {
-    label: string;
-    image: string;
-    products: MenuProduct[];
-}
+import { foodByCategory, foodCategories, type FoodCategory } from "@/data/food-catalog";
+import { storeImage } from "@/utils/asset-url";
 
-const cat = (label: string, tint: string, products: [string, number][]): MenuCategory => ({
-    label,
-    image: plate(label, tint),
-    products: products.map(([name, price]) => ({
-        id: `${label}-${name}`.toLowerCase().replace(/\W+/g, "-"),
-        name,
-        price,
-        image: plate(name, tint),
-    })),
-});
-
-const MENU_SETS = ["All", "Dinner", "19th Hole Menu"];
-
-const CATEGORIES: MenuCategory[] = [
-    cat("Beer", "#8a5a2b", [
-        ["Pearl Beer", 12.0],
-        ["Draft — Domestic", 8.0],
-        ["Draft — IPA", 9.5],
-        ["Bottled Light", 7.0],
-    ]),
-    cat("Appetizers", "#7a6a3d", [
-        ["Potato Skins", 16.0],
-        ["Wings — 10 pc", 14.5],
-        ["Chips & Salsa", 8.0],
-    ]),
-    cat("Sandwiches", "#a3762b", [
-        ["Turkey Club Sandwich", 9.15],
-        ["Clubhouse BLT", 11.0],
-        ["Chicken Wrap", 12.0],
-    ]),
-    cat("Hamburgers", "#a33d2b", [
-        ["Open Burger", 10.32],
-        ["Cheeseburger", 13.0],
-        ["Double Stack", 16.5],
-    ]),
-];
+/** Menu sets, as the reference device groups them. */
+const MENU_SETS: Record<string, FoodCategory[]> = {
+    All: foodCategories,
+    Dinner: ["Sandwiches", "Hamburgers", "Grill", "Beer", "Wine"],
+    "19th Hole Menu": ["Beer", "Wine", "Beverages", "Snacks"],
+};
 
 /** Quick Order's compact cart row — thumbnail, name, price. No stepper. */
 const QuickLine = ({ line }: { line: Line }) => (
@@ -130,7 +90,7 @@ export const QuickOrderScreen = () => {
     const navigate = useNavigate();
 
     const [menuSet, setMenuSet] = useState("Dinner");
-    const [drilled, setDrilled] = useState<MenuCategory | null>(null);
+    const [drilled, setDrilled] = useState<FoodCategory | null>(null);
     const [query, setQuery] = useState("");
 
     const hasLines = lines.length > 0;
@@ -161,26 +121,32 @@ export const QuickOrderScreen = () => {
         >
             {drilled ? (
                 /* Drilled in: the whole browsing surface is replaced. */
-                <Box sx={{ p: 2, maxWidth: 560 }}>
+                <Box sx={{ p: 2, maxWidth: 620 }}>
                     <Box sx={{ bgcolor: "#fff", height: 196, display: "grid", placeItems: "center", mb: "1px" }}>
-                        <Typography sx={{ fontSize: 34 }}>{drilled.label}</Typography>
+                        <Typography sx={{ fontSize: 34 }}>{drilled}</Typography>
                     </Box>
                     <Stack sx={{ gap: "1px" }}>
-                        {drilled.products.map((p) => (
+                        {foodByCategory(drilled).map((p) => (
                             <ButtonBase
                                 key={p.id}
-                                onClick={() => addItem({ id: p.id, name: p.name, price: p.price, image: p.image }, "Quick Order")}
+                                onClick={() =>
+                                    addItem({ id: p.id, name: p.name, price: p.price, image: storeImage(p.path) }, "Quick Order")
+                                }
                                 sx={{ display: "flex", bgcolor: "#fff", alignItems: "stretch", textAlign: "left" }}
                             >
                                 <Box
                                     component="img"
-                                    src={p.image}
+                                    src={storeImage(p.path)}
                                     alt=""
-                                    sx={{ width: 110, height: 110, objectFit: "cover", flexShrink: 0 }}
+                                    loading="lazy"
+                                    sx={{ width: 110, height: 110, objectFit: "contain", bgcolor: "#fff", flexShrink: 0, p: 0.5 }}
                                 />
-                                <Stack direction="row" sx={{ flex: 1, alignItems: "center", px: 2, gap: 2 }}>
-                                    <Typography sx={{ flex: 1, fontSize: 18, fontWeight: 500 }}>{p.name}</Typography>
-                                    <Typography sx={{ fontSize: 18 }}>{money(p.price)}</Typography>
+                                <Stack sx={{ flex: 1, px: 2, py: 1, minWidth: 0 }}>
+                                    <Stack direction="row" sx={{ alignItems: "baseline", gap: 2 }}>
+                                        <Typography sx={{ flex: 1, fontSize: 18, fontWeight: 500 }}>{p.name}</Typography>
+                                        <Typography sx={{ fontSize: 18 }}>{money(p.price)}</Typography>
+                                    </Stack>
+                                    <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{p.description}</Typography>
                                 </Stack>
                             </ButtonBase>
                         ))}
@@ -196,7 +162,7 @@ export const QuickOrderScreen = () => {
                     />
 
                     <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
-                        {MENU_SETS.map((set) => (
+                        {Object.keys(MENU_SETS).map((set) => (
                             <ButtonBase
                                 key={set}
                                 onClick={() => setMenuSet(set)}
@@ -216,22 +182,47 @@ export const QuickOrderScreen = () => {
                     </Stack>
 
                     <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", rowGap: 2 }}>
-                        {CATEGORIES.filter((c) => !query || c.label.toLowerCase().includes(query.toLowerCase())).map((c) => (
-                            <ButtonBase
-                                key={c.label}
-                                onClick={() => setDrilled(c)}
-                                sx={{
-                                    width: 148,
-                                    flexDirection: "column",
-                                    bgcolor: "#fff",
-                                    border: "1px solid",
-                                    borderColor: appColors.divider,
-                                }}
-                            >
-                                <Box component="img" src={c.image} alt="" sx={{ width: "100%", height: 148, objectFit: "cover" }} />
-                                <Typography sx={{ py: 1.25, fontSize: 14 }}>{c.label}</Typography>
-                            </ButtonBase>
-                        ))}
+                        {(MENU_SETS[menuSet] ?? foodCategories)
+                            .filter((c) => !query || c.toLowerCase().includes(query.toLowerCase()))
+                            .map((c) => {
+                                // The tile art is the category's first product.
+                                const hero = foodByCategory(c)[0];
+                                return (
+                                    <ButtonBase
+                                        key={c}
+                                        onClick={() => setDrilled(c)}
+                                        sx={{
+                                            width: 168,
+                                            flexDirection: "column",
+                                            bgcolor: "#fff",
+                                            border: "1px solid",
+                                            borderColor: appColors.divider,
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                height: 148,
+                                                display: "grid",
+                                                placeItems: "center",
+                                                overflow: "hidden",
+                                                p: 1,
+                                            }}
+                                        >
+                                            {hero && (
+                                                <Box
+                                                    component="img"
+                                                    src={storeImage(hero.path)}
+                                                    alt=""
+                                                    loading="lazy"
+                                                    sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                                                />
+                                            )}
+                                        </Box>
+                                        <Typography sx={{ py: 1.25, fontSize: 14 }}>{c}</Typography>
+                                    </ButtonBase>
+                                );
+                            })}
                     </Stack>
                 </Box>
             )}

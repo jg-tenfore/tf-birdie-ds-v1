@@ -13,7 +13,8 @@
         "generate:catalog": "node scripts/generate-catalog.mjs",
         "dev:app": "vite",
         "build-app": "vite build",
-        "smoke": "node scripts/smoke-test.mjs"
+        "smoke": "node scripts/smoke-test.mjs",
+        "generate:food": "node scripts/generate-food-catalog.mjs"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
