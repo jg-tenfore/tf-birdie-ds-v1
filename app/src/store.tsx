@@ -75,6 +75,13 @@ export interface TeeTimeBooking {
     blocked?: boolean;
 }
 
+/**
+ * The app's "today". Fixed rather than read from the clock so the prototype
+ * behaves identically on every run — and so the orange "not today" date bar can
+ * be demonstrated at all.
+ */
+export const TODAY = "2026-07-29";
+
 /** A simulator-bay reservation. `start` is minutes from midnight. */
 export interface BayBooking {
     id: string;
@@ -97,7 +104,12 @@ interface State {
     operator: Operator | null;
     tickets: Ticket[];
     activeTicketId: string | null;
-    teeTimes: TeeTimeBooking[];
+    /** Sheets keyed by ISO date. Unlisted dates generate an empty sheet. */
+    teeSheets: Record<string, TeeTimeBooking[]>;
+    /** The date currently on screen — not necessarily today. */
+    sheetDate: string;
+    course: string;
+    facility: string;
     /** Rolling counter so new tickets get plausible sequential numbers. */
     nextNumber: number;
     /** Last completed sale, so the approved screen has something to show. */
@@ -168,7 +180,7 @@ const pos = (name: string, party: number, price: number, extra: Partial<Position
     ...extra,
 });
 
-const seedTeeTimes: TeeTimeBooking[] = [
+const may12: TeeTimeBooking[] = [
     { time: "5:30 PM", positions: [null, null, null, null] },
     { time: "5:44 PM", positions: [null, null, null, null] },
     {
@@ -209,11 +221,29 @@ const seedTeeTimes: TeeTimeBooking[] = [
     { time: "7:50 PM", positions: [null, null, null, null] },
 ];
 
+/**
+ * Today's sheet on the reference device is empty and runs on a 10-minute
+ * interval, where May 12 runs on 14 — the interval is per-day course config,
+ * not a constant.
+ */
+const today: TeeTimeBooking[] = Array.from({ length: 14 }, (_, i) => {
+    const mins = 15 * 60 + 10 + i * 10;
+    const h24 = Math.floor(mins / 60);
+    const h = h24 % 12 === 0 ? 12 : h24 % 12;
+    return {
+        time: `${h}:${String(mins % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`,
+        positions: [null, null, null, null] as (Position | null)[],
+    };
+});
+
 const initial: State = {
     operator: null,
     tickets: seedTickets,
     activeTicketId: null,
-    teeTimes: seedTeeTimes,
+    teeSheets: { "2026-05-12": may12, [TODAY]: today },
+    sheetDate: "2026-05-12",
+    course: "North Course",
+    facility: "The Dunes of Delgado PROD",
     nextNumber: 4140,
     lastSale: null,
     bayBookings: [
@@ -248,12 +278,33 @@ type Action =
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
     | { type: "pay"; tender: NonNullable<Ticket["tender"]> }
+    | { type: "setSheetDate"; date: string }
+    | { type: "shiftSheetDate"; days: number }
+    | { type: "setCourse"; course: string }
     | { type: "checkIn"; time: string }
     | { type: "chargeTeeTime"; time: string; only?: number }
     | { type: "clockToggle" }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
     | { type: "endShift" }
     | { type: "toast"; message: string | null };
+
+/** The sheet for the date on screen. Unknown dates render as an empty day. */
+function sheetFor(state: State): TeeTimeBooking[] {
+    return state.teeSheets[state.sheetDate] ?? emptySheet();
+}
+
+/** A blank 10-minute sheet, used for any date with no configured times. */
+function emptySheet(): TeeTimeBooking[] {
+    return Array.from({ length: 14 }, (_, i) => {
+        const mins = 15 * 60 + 10 + i * 10;
+        const h24 = Math.floor(mins / 60);
+        const h = h24 % 12 === 0 ? 12 : h24 % 12;
+        return {
+            time: `${h}:${String(mins % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`,
+            positions: [null, null, null, null] as (Position | null)[],
+        };
+    });
+}
 
 function activeTicket(state: State) {
     return state.tickets.find((t) => t.id === state.activeTicketId) ?? null;
@@ -265,7 +316,7 @@ function reducer(state: State, action: Action): State {
             return { ...state, operator: action.operator, toast: `Signed in as ${action.operator.name}` };
 
         case "signOut":
-            return { ...initial, tickets: state.tickets, teeTimes: state.teeTimes, nextNumber: state.nextNumber };
+            return { ...initial, tickets: state.tickets, teeSheets: state.teeSheets, nextNumber: state.nextNumber };
 
         case "addItem": {
             let tickets = state.tickets;
@@ -387,17 +438,32 @@ function reducer(state: State, action: Action): State {
             };
         }
 
+        case "setSheetDate":
+            return { ...state, sheetDate: action.date };
+
+        case "shiftSheetDate": {
+            const d = new Date(`${state.sheetDate}T12:00:00`);
+            d.setDate(d.getDate() + action.days);
+            return { ...state, sheetDate: d.toISOString().slice(0, 10) };
+        }
+
+        case "setCourse":
+            return { ...state, course: action.course, toast: `${action.course} loaded` };
+
         case "checkIn":
             return {
                 ...state,
-                teeTimes: state.teeTimes.map((t) =>
-                    t.time !== action.time ? t : { ...t, positions: t.positions.map((p) => (p ? { ...p, checkedIn: true } : p)) },
-                ),
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheetFor(state).map((t) =>
+                        t.time !== action.time ? t : { ...t, positions: t.positions.map((p) => (p ? { ...p, checkedIn: true } : p)) },
+                    ),
+                },
                 toast: `${action.time} checked in`,
             };
 
         case "chargeTeeTime": {
-            const slot = state.teeTimes.find((t) => t.time === action.time);
+            const slot = sheetFor(state).find((t) => t.time === action.time);
             const booked = slot?.positions.filter((p): p is Position => Boolean(p)) ?? [];
             // `only` lets a single position be added, which is what the
             // per-player "Add to Cart" on the detail screen does.
@@ -434,9 +500,12 @@ function reducer(state: State, action: Action): State {
                 tickets,
                 activeTicketId: id,
                 nextNumber: existingId ? state.nextNumber : state.nextNumber + 1,
-                teeTimes: state.teeTimes.map((t) =>
-                    t.time === action.time ? { ...t, positions: t.positions.map((p) => (p ? { ...p, checkedIn: true } : p)) } : t,
-                ),
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheetFor(state).map((t) =>
+                        t.time === action.time ? { ...t, positions: t.positions.map((p) => (p ? { ...p, checkedIn: true } : p)) } : t,
+                    ),
+                },
                 toast: `${taking.length} added to ticket`,
             };
         }
@@ -467,6 +536,8 @@ const StoreContext = createContext<{
     dispatch: React.Dispatch<Action>;
     ticket: Ticket | null;
     lines: Line[];
+    teeTimes: TeeTimeBooking[];
+    isToday: boolean;
     subtotal: number;
     tax: number;
     total: number;
@@ -488,6 +559,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             subtotal: subtotalOf(lines),
             tax: taxOf(lines),
             total: totalOf(lines),
+            teeTimes: sheetFor(state),
+            isToday: state.sheetDate === TODAY,
             heldTickets: state.tickets.filter((t) => t.status === "held"),
             paidTickets: state.tickets.filter((t) => t.status === "paid"),
         };
@@ -521,6 +594,10 @@ export function useActions() {
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
             pay: (tender: NonNullable<Ticket["tender"]>) => dispatch({ type: "pay", tender }),
+            setSheetDate: (date: string) => dispatch({ type: "setSheetDate", date }),
+            shiftSheetDate: (days: number) => dispatch({ type: "shiftSheetDate", days }),
+            goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),
+            setCourse: (course: string) => dispatch({ type: "setCourse", course }),
             checkIn: (time: string) => dispatch({ type: "checkIn", time }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),
             clockToggle: () => dispatch({ type: "clockToggle" }),

@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { foodByCategory } from "@/data/food-catalog";
+import { menuItems } from "@/data/steakhouse-menu";
 import { golfBalls, mens, womens, golfShoes, accessoriesAndTraining } from "@/data/store-catalog";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { storeImage } from "@/utils/asset-url";
@@ -109,6 +110,10 @@ export const proShopCategories: { label: string; items: Sellable[] }[] = [
             price: f.price,
             image: storeImage(f.path),
         })),
+    },
+    {
+        label: "19th Hole",
+        items: menuItems.map((m) => ({ id: m.id, name: m.name, price: m.price, image: storeImage(m.path) })),
     },
     {
         label: "Snacks",
@@ -232,8 +237,8 @@ export const SellActionBar = ({ source }: { source: "Pro Shop" | "Quick Order" }
             <ActionButton icon={<PersonIcon />} onClick={() => navigate("/customersearch")}>
                 Anonymous
             </ActionButton>
-            <ActionButton icon={<CategoryIcon />} onClick={() => navigate("/tabs")}>
-                Tabs
+            <ActionButton icon={<CategoryIcon />} onClick={() => navigate("/combos")}>
+                Combos
             </ActionButton>
             <ActionButton icon={<ShoppingCartIcon />} tone={hasLines ? "primary" : "disabled"} onClick={() => hasLines && navigate("/pay")}>
                 {`Pay ${money(total)}`}

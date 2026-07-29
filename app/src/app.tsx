@@ -4,6 +4,7 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-d
 
 import { appReplicaTheme } from "@/theme/app-replica-theme";
 import { StoreProvider, useStore } from "./store";
+import { CombosScreen } from "./screens/combos";
 import { PaymentScreen } from "./screens/payment";
 import { QuickOrderScreen } from "./screens/quick-order";
 import { ProShopScreen } from "./screens/selling";
@@ -25,6 +26,7 @@ const RequireOperator = ({ children }: { children: React.ReactNode }) => {
 
 const routes: [string, React.ReactNode][] = [
     ["/proshop", <ProShopScreen />],
+    ["/combos", <CombosScreen />],
     ["/quickorder", <QuickOrderScreen />],
     ["/pay", <PaymentScreen />],
     ["/teesheet", <TeeSheetScreen />],

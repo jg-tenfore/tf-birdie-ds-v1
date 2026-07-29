@@ -29,14 +29,36 @@ import { money, useActions, useStore, type Line } from "../store";
  * the item detail pane, not the cart.
  */
 
-import { foodByCategory, foodCategories, type FoodCategory } from "@/data/food-catalog";
+import { foodByCategory, foodCategories } from "@/data/food-catalog";
+import { menuByCategory, menuCategories } from "@/data/steakhouse-menu";
 import { storeImage } from "@/utils/asset-url";
 
+/** The shape both catalogues share once a category has been drilled into. */
+interface MenuProduct {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+    path: string;
+}
+
+/**
+ * Categories come from two catalogues: the turn-shack snacks and drinks, and
+ * the 19th Hole kitchen menu. They are indexed together here so the drill-down
+ * does not need to know which source a category belongs to.
+ */
+const CATEGORY_ITEMS: Record<string, MenuProduct[]> = {
+    ...Object.fromEntries(foodCategories.map((c) => [c, foodByCategory(c) as MenuProduct[]])),
+    ...Object.fromEntries(menuCategories.map((c) => [c, menuByCategory(c) as MenuProduct[]])),
+};
+
+const itemsIn = (category: string): MenuProduct[] => CATEGORY_ITEMS[category] ?? [];
+
 /** Menu sets, as the reference device groups them. */
-const MENU_SETS: Record<string, FoodCategory[]> = {
-    All: foodCategories,
-    Dinner: ["Sandwiches", "Hamburgers", "Grill", "Beer", "Wine"],
-    "19th Hole Menu": ["Beer", "Wine", "Beverages", "Snacks"],
+const MENU_SETS: Record<string, string[]> = {
+    All: [...menuCategories, ...foodCategories],
+    Dinner: ["Starters", "Salads", "Steaks", "Chops & Seafood", "Sides", "Desserts"],
+    "19th Hole Menu": [...menuCategories, "Beer", "Wine", "Beverages"],
 };
 
 /** Quick Order's compact cart row — thumbnail, name, price. No stepper. */
@@ -89,8 +111,8 @@ export const QuickOrderScreen = () => {
     const { addItem } = useActions();
     const navigate = useNavigate();
 
-    const [menuSet, setMenuSet] = useState("Dinner");
-    const [drilled, setDrilled] = useState<FoodCategory | null>(null);
+    const [menuSet, setMenuSet] = useState("19th Hole Menu");
+    const [drilled, setDrilled] = useState<string | null>(null);
     const [query, setQuery] = useState("");
 
     const hasLines = lines.length > 0;
@@ -126,7 +148,7 @@ export const QuickOrderScreen = () => {
                         <Typography sx={{ fontSize: 34 }}>{drilled}</Typography>
                     </Box>
                     <Stack sx={{ gap: "1px" }}>
-                        {foodByCategory(drilled).map((p) => (
+                        {itemsIn(drilled).map((p) => (
                             <ButtonBase
                                 key={p.id}
                                 onClick={() =>
@@ -182,11 +204,11 @@ export const QuickOrderScreen = () => {
                     </Stack>
 
                     <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", rowGap: 2 }}>
-                        {(MENU_SETS[menuSet] ?? foodCategories)
+                        {(MENU_SETS[menuSet] ?? MENU_SETS.All)
                             .filter((c) => !query || c.toLowerCase().includes(query.toLowerCase()))
                             .map((c) => {
                                 // The tile art is the category's first product.
-                                const hero = foodByCategory(c)[0];
+                                const hero = itemsIn(c)[0];
                                 return (
                                     <ButtonBase
                                         key={c}

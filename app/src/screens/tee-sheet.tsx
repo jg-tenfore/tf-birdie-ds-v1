@@ -3,6 +3,7 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Dialog from "@mui/material/Dialog";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -34,49 +35,206 @@ import { money, useActions, useStore, type Position, type TeeTimeBooking } from 
 const TIME_COL = 146;
 const GEAR_COL = 130;
 
-const SubBar = () => (
-    <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.sheetCanvas }}>
-        <Box
-            sx={{ bgcolor: appColors.green, width: 116, display: "grid", placeItems: "center", color: "#fff", fontSize: 26, lineHeight: 1 }}
-        >
-            ‹
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DOW = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+const parseDate = (iso: string) => new Date(`${iso}T12:00:00`);
+const longDate = (iso: string) => {
+    const d = parseDate(iso);
+    return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()].toUpperCase()} ${d.getDate()} ${d.getFullYear()}`;
+};
+
+/**
+ * The Material date picker the orange date button opens.
+ *
+ * The left pane is the app's own: a slate block with an "END DATE" eyebrow over
+ * "Selected date", and a pencil that would switch to keyboard entry. OK stays
+ * disabled until a day is chosen, which is why it renders grey on open.
+ */
+const DatePickerDialog = ({ value, open, onClose, onPick }: { value: string; open: boolean; onClose: () => void; onPick: (iso: string) => void }) => {
+    const [cursor, setCursor] = useState(parseDate(value));
+    const [picked, setPicked] = useState<number | null>(null);
+
+    const year = cursor.getFullYear();
+    const month = cursor.getMonth();
+    const first = new Date(year, month, 1).getDay();
+    const days = new Date(year, month + 1, 0).getDate();
+    const shift = (n: number) => setCursor(new Date(year, month + n, 1));
+
+    return (
+        <Dialog open={open} onClose={onClose} slotProps={{ paper: { sx: { borderRadius: 0, maxWidth: "none" } } }}>
+            <Stack direction="row">
+                <Stack sx={{ width: 268, bgcolor: "#4A5560", color: "#fff", p: 3, justifyContent: "space-between" }}>
+                    <Stack>
+                        <Typography sx={{ fontSize: 13, letterSpacing: "0.09em" }}>END DATE</Typography>
+                        <Typography sx={{ fontSize: 30, mt: 2 }}>{picked ? `${MONTHS[month].slice(0, 3)} ${picked}` : "Selected date"}</Typography>
+                    </Stack>
+                    <Typography sx={{ fontSize: 22 }}>✎</Typography>
+                </Stack>
+
+                <Stack sx={{ width: 520, p: 2.5 }}>
+                    <Stack direction="row" sx={{ alignItems: "center", mb: 1.5 }}>
+                        <Typography sx={{ fontSize: 18, letterSpacing: "0.04em", flex: 1 }}>
+                            {MONTHS[month].toUpperCase()} {year} ▾
+                        </Typography>
+                        <ButtonBase onClick={() => shift(-1)} sx={{ px: 2, fontSize: 22 }} aria-label="Previous month">
+                            ‹
+                        </ButtonBase>
+                        <ButtonBase onClick={() => shift(1)} sx={{ px: 2, fontSize: 22 }} aria-label="Next month">
+                            ›
+                        </ButtonBase>
+                    </Stack>
+
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", rowGap: 0.5 }}>
+                        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                            <Typography key={i} sx={{ textAlign: "center", fontSize: 16, py: 1 }}>
+                                {d}
+                            </Typography>
+                        ))}
+                        {Array.from({ length: first }).map((_, i) => (
+                            <Box key={`pad-${i}`} />
+                        ))}
+                        {Array.from({ length: days }, (_, i) => i + 1).map((day) => (
+                            <ButtonBase
+                                key={day}
+                                onClick={() => setPicked(day)}
+                                sx={{
+                                    height: 48,
+                                    borderRadius: "50%",
+                                    fontSize: 20,
+                                    bgcolor: picked === day ? appColors.green : "transparent",
+                                    color: picked === day ? "#fff" : appColors.textPrimary,
+                                }}
+                            >
+                                {day}
+                            </ButtonBase>
+                        ))}
+                    </Box>
+
+                    <Stack direction="row" spacing={2} sx={{ justifyContent: "flex-end", mt: 2 }}>
+                        <ButtonBase onClick={onClose} sx={{ px: 2, py: 1, fontSize: 16, letterSpacing: "0.06em" }}>
+                            CANCEL
+                        </ButtonBase>
+                        <ButtonBase
+                            disabled={picked === null}
+                            onClick={() => {
+                                if (picked === null) return;
+                                onPick(`${year}-${String(month + 1).padStart(2, "0")}-${String(picked).padStart(2, "0")}`);
+                                onClose();
+                            }}
+                            sx={{ px: 2, py: 1, fontSize: 16, letterSpacing: "0.06em", color: picked === null ? appColors.textDisabled : appColors.textPrimary }}
+                        >
+                            OK
+                        </ButtonBase>
+                    </Stack>
+                </Stack>
+            </Stack>
+        </Dialog>
+    );
+};
+
+/**
+ * The date navigation band.
+ *
+ * The date button is **orange only when the sheet is showing a day other than
+ * today** — it is a warning that you are not looking at the live sheet, not
+ * decoration. On today it is slate and GO TO TODAY greys out.
+ */
+const SubBar = () => {
+    const { state, isToday } = useStore();
+    const { shiftSheetDate, setSheetDate, goToToday } = useActions();
+    const [facilityOpen, setFacilityOpen] = useState(false);
+    const [pickerOpen, setPickerOpen] = useState(false);
+
+    return (
+        <Box sx={{ position: "relative" }}>
+            <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.sheetCanvas }}>
+                <ButtonBase
+                    onClick={() => shiftSheetDate(-1)}
+                    aria-label="Previous day"
+                    sx={{ bgcolor: appColors.green, width: 116, color: "#fff", fontSize: 26, lineHeight: 1 }}
+                >
+                    ‹
+                </ButtonBase>
+
+                <ButtonBase
+                    onClick={() => setFacilityOpen((o) => !o)}
+                    sx={{ flex: 1.4, bgcolor: appColors.slate, color: "#fff", py: 1.75, fontSize: 15 }}
+                >
+                    {state.facility}
+                </ButtonBase>
+
+                <ButtonBase
+                    onClick={() => setPickerOpen(true)}
+                    sx={{
+                        flex: 2.4,
+                        bgcolor: isToday ? appColors.slate : appColors.orange,
+                        color: "#fff",
+                        fontSize: 14,
+                        letterSpacing: "0.08em",
+                    }}
+                >
+                    {longDate(state.sheetDate)}
+                </ButtonBase>
+
+                <ButtonBase
+                    onClick={goToToday}
+                    disabled={isToday}
+                    sx={{
+                        flex: 1.6,
+                        bgcolor: isToday ? appColors.grey : appColors.slate,
+                        color: "#fff",
+                        fontSize: 14,
+                        letterSpacing: "0.08em",
+                    }}
+                >
+                    GO TO TODAY
+                </ButtonBase>
+
+                <ButtonBase
+                    onClick={() => shiftSheetDate(1)}
+                    aria-label="Next day"
+                    sx={{ bgcolor: appColors.green, width: 116, color: "#fff", fontSize: 26, lineHeight: 1 }}
+                >
+                    ›
+                </ButtonBase>
+            </Stack>
+
+            {/* Facility list opens downward, left-aligned under its button. */}
+            {facilityOpen && (
+                <ClickAwayListener onClickAway={() => setFacilityOpen(false)}>
+                    <Box sx={{ position: "absolute", top: "100%", left: 128, zIndex: 20, width: 434, bgcolor: appColors.slate, boxShadow: 6 }}>
+                        {[state.facility].map((f) => (
+                            <ButtonBase
+                                key={f}
+                                onClick={() => setFacilityOpen(false)}
+                                sx={{ display: "block", width: "100%", py: 2.75, fontSize: 15, color: "#fff" }}
+                            >
+                                {f}
+                            </ButtonBase>
+                        ))}
+                    </Box>
+                </ClickAwayListener>
+            )}
+
+            {/*
+             * Mounted only while open, and keyed by the date it was opened on.
+             * The month cursor is seeded from `value` in `useState`, so a
+             * long-lived instance would keep showing whatever month the sheet
+             * happened to be on when the screen first rendered.
+             */}
+            {pickerOpen && (
+                <DatePickerDialog
+                    key={state.sheetDate}
+                    value={state.sheetDate}
+                    open
+                    onClose={() => setPickerOpen(false)}
+                    onPick={setSheetDate}
+                />
+            )}
         </Box>
-        <Box sx={{ flex: 1.4, bgcolor: appColors.slate, color: "#fff", display: "grid", placeItems: "center", py: 1.75, fontSize: 15 }}>
-            The Dunes of Delgado PROD
-        </Box>
-        <Box
-            sx={{
-                flex: 2.4,
-                bgcolor: appColors.orange,
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 14,
-                letterSpacing: "0.08em",
-            }}
-        >
-            SATURDAY, JULY 29 2026
-        </Box>
-        <Box
-            sx={{
-                flex: 1.6,
-                bgcolor: appColors.slate,
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 14,
-                letterSpacing: "0.08em",
-            }}
-        >
-            GO TO TODAY
-        </Box>
-        <Box
-            sx={{ bgcolor: appColors.green, width: 116, display: "grid", placeItems: "center", color: "#fff", fontSize: 26, lineHeight: 1 }}
-        >
-            ›
-        </Box>
-    </Stack>
-);
+    );
+};
 
 const Counts = ({ times }: { times: TeeTimeBooking[] }) => {
     const all = times.flatMap((t) => t.positions);
@@ -173,7 +331,7 @@ const SlotMenu = ({ onClose }: { onClose: () => void }) => (
 );
 
 export const TeeSheetScreen = () => {
-    const { state } = useStore();
+    const { state, teeTimes } = useStore();
     const navigate = useNavigate();
     const [menuFor, setMenuFor] = useState<string | null>(null);
 
@@ -188,7 +346,7 @@ export const TeeSheetScreen = () => {
             actionBar={
                 <>
                     <ActionButton onClick={() => navigate("/proshop")}>Pro Shop</ActionButton>
-                    <ActionButton preserveCase>North Course</ActionButton>
+                    <ActionButton preserveCase>{state.course}</ActionButton>
                     <ActionButton>Grid</ActionButton>
                     <ActionButton tone="active">List</ActionButton>
                     <ActionButton>Multi</ActionButton>
@@ -197,10 +355,10 @@ export const TeeSheetScreen = () => {
             }
         >
             <Box sx={{ bgcolor: appColors.sheetCanvas, minHeight: "100%" }}>
-                <Counts times={state.teeTimes} />
+                <Counts times={teeTimes} />
 
                 <Stack spacing="6px" sx={{ px: "6px", pb: "6px" }}>
-                    {state.teeTimes.map((slot) => (
+                    {teeTimes.map((slot) => (
                         <Box
                             key={slot.time}
                             sx={{
@@ -303,11 +461,11 @@ const PlayerAction = ({ label, tone = "dark", onClick }: { label: string; tone?:
 export const TeeTimeDetailScreen = () => {
     const { time = "" } = useParams();
     const decoded = decodeURIComponent(time);
-    const { state } = useStore();
+    const { teeTimes } = useStore();
     const { chargeTeeTime } = useActions();
     const navigate = useNavigate();
 
-    const slot = state.teeTimes.find((t) => t.time === decoded);
+    const slot = teeTimes.find((t) => t.time === decoded);
     const booked = slot?.positions.map((p, i) => ({ p, i })).filter((x): x is { p: Position; i: number } => Boolean(x.p)) ?? [];
     const total = booked.reduce((s, { p }) => s + p.price, 0);
 
