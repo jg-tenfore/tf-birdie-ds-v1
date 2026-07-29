@@ -62,20 +62,37 @@ await step("PAY routes to tender with the real amount", async () => {
         .getByRole("button", { name: /Pay \$/ })
         .first()
         .click();
-    await page.waitForSelector("text=Amount due", { timeout: 5000 });
-    await page.waitForSelector("text=How is this being paid?", { timeout: 5000 });
+    await page.waitForSelector("text=Credit Card Payment", { timeout: 5000 });
+    await page.waitForSelector("text=Grand Total", { timeout: 5000 });
 });
 
-await step("cash tender computes change", async () => {
-    await page.getByRole("button", { name: "Cash", exact: true }).click();
-    await page.waitForSelector("text=Quick cash", { timeout: 5000 });
-    await page.getByRole("button", { name: /^\$\d/ }).first().click();
-    await page.waitForSelector("text=Change due", { timeout: 5000 });
+await step("checkout shows the ticket pane and the seven tender tabs", async () => {
+    await page.waitForSelector("text=Total Owed", { timeout: 5000 });
+    for (const t of ["CREDIT", "CASH", "GIFT CARD", "RAIN", "CHECK", "MEMBER", "ROOM"])
+        await page.waitForSelector(`text=${t}`, { timeout: 3000 });
 });
 
-await step("tender completes the sale", async () => {
-    await page.getByRole("button", { name: /Tender \$/ }).click();
-    await page.waitForSelector("text=Approved", { timeout: 5000 });
+await step("tender tabs swap the body, typos and all", async () => {
+    await page.getByText("GIFT CARD", { exact: true }).click();
+    await page.waitForSelector("text=Enter UPC code or customer name", { timeout: 4000 });
+    await page.getByText("MEMBER", { exact: true }).click();
+    await page.waitForSelector("text=Csutomer Balance", { timeout: 4000 });
+    await page.getByText("ROOM", { exact: true }).click();
+    await page.waitForSelector("text=LOOK UP ROOM", { timeout: 4000 });
+    await page.getByText("CREDIT", { exact: true }).click();
+    await page.waitForSelector("text=NAY WITH CARD", { timeout: 4000 });
+});
+
+await step("quick-cash keys fill the cash amount", async () => {
+    await page.getByText("CASH", { exact: true }).click();
+    await page.waitForSelector("text=Charge amount", { timeout: 4000 });
+    await page.getByRole("button", { name: "$20.00" }).click();
+    await page.waitForSelector('input[value="$20.00"]', { timeout: 4000 });
+});
+
+await step("PAY closes the ticket", async () => {
+    await page.getByRole("button", { name: "Pay", exact: true }).click();
+    await page.waitForSelector("text=Approved", { timeout: 6000 });
 });
 
 await step("completed sale appears in Order Lookup", async () => {
