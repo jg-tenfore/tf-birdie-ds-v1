@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Birdie POS — Prototype</title>
+        <meta name="description" content="Every Birdie POS screen at true tablet scale, in one navigable prototype." />
+        <link rel="icon" href="../logos/tf-square-color.svg" />
+        <style>
+            :root {
+                --rail: 300px;
+                --slate: #37414a;
+                --slate-dark: #2e363e;
+                --green: #5caf6e;
+                --ink: #e9edf1;
+                --ink-dim: #9aa4ae;
+                --line: #2b333b;
+                --bg: #1b2127;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            body {
+                display: flex;
+                background: var(--bg);
+                color: var(--ink);
+                font: 14px/1.5 "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            /* ---------------- Rail ---------------- */
+
+            #rail {
+                width: var(--rail);
+                flex-shrink: 0;
+                background: #151a1f;
+                border-right: 1px solid var(--line);
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            #brand {
+                padding: 18px 20px 14px;
+                border-bottom: 1px solid var(--line);
+            }
+
+            #brand img {
+                height: 26px;
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            #brand h1 {
+                margin: 0;
+                font-size: 15px;
+                font-weight: 600;
+                letter-spacing: 0.01em;
+            }
+
+            #brand p {
+                margin: 2px 0 0;
+                font-size: 12px;
+                color: var(--ink-dim);
+            }
+
+            #filter {
+                margin: 12px 14px 8px;
+                padding: 9px 12px;
+                background: #0f1419;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                color: var(--ink);
+                font-size: 13px;
+                font-family: inherit;
+            }
+
+            #filter:focus {
+                outline: none;
+                border-color: var(--green);
+            }
+
+            #list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 4px 8px 20px;
+                min-height: 0;
+            }
+
+            .group {
+                margin-top: 10px;
+            }
+
+            .group > h2 {
+                margin: 0;
+                padding: 8px 12px 6px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: #6b7680;
+            }
+
+            .screen {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 8px 12px;
+                margin: 1px 0;
+                border: 0;
+                border-radius: 6px;
+                background: transparent;
+                color: var(--ink);
+                font: inherit;
+                cursor: pointer;
+            }
+
+            .screen:hover {
+                background: #1e252c;
+            }
+
+            .screen[aria-current="true"] {
+                background: var(--green);
+                color: #fff;
+                font-weight: 500;
+            }
+
+            .screen small {
+                display: block;
+                color: var(--ink-dim);
+                font-size: 11px;
+            }
+
+            .screen[aria-current="true"] small {
+                color: rgba(255, 255, 255, 0.8);
+            }
+
+            /* ---------------- Stage ---------------- */
+
+            #stage {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                min-height: 0;
+            }
+
+            #bar {
+                height: 52px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 0 18px;
+                background: var(--slate);
+                border-bottom: 1px solid var(--line);
+            }
+
+            #title {
+                flex: 1;
+                min-width: 0;
+                font-size: 14px;
+                font-weight: 500;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            #bar select,
+            #bar button,
+            #bar a {
+                background: var(--slate-dark);
+                color: var(--ink);
+                border: 1px solid var(--line);
+                border-radius: 5px;
+                padding: 6px 10px;
+                font: inherit;
+                font-size: 12px;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            #bar button:hover,
+            #bar a:hover {
+                border-color: var(--green);
+            }
+
+            #scale {
+                min-width: 62px;
+                text-align: center;
+                color: var(--ink-dim);
+                font-variant-numeric: tabular-nums;
+            }
+
+            #viewport {
+                flex: 1;
+                display: grid;
+                place-items: center;
+                overflow: auto;
+                padding: 24px;
+                min-height: 0;
+                background:
+                    radial-gradient(circle at 50% 0%, #232b33 0%, var(--bg) 70%);
+            }
+
+            /* The device itself is always rendered at true pixel size and then
+               scaled as a whole, so the screen inside never reflows. */
+            #device {
+                position: relative;
+                flex-shrink: 0;
+                background: #000;
+                border-radius: 14px;
+                padding: 10px;
+                box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+                transform-origin: center center;
+            }
+
+            #frame {
+                display: block;
+                border: 0;
+                border-radius: 5px;
+                background: #fff;
+            }
+
+            #empty {
+                color: var(--ink-dim);
+                font-size: 14px;
+            }
+
+            kbd {
+                background: #0f1419;
+                border: 1px solid var(--line);
+                border-bottom-width: 2px;
+                border-radius: 4px;
+                padding: 1px 5px;
+                font-size: 11px;
+                font-family: inherit;
+            }
+
+            #hint {
+                padding: 10px 20px;
+                border-top: 1px solid var(--line);
+                color: var(--ink-dim);
+                font-size: 11px;
+            }
+        </style>
+    </head>
+    <body>
+        <nav id="rail">
+            <div id="brand">
+                <img src="../logos/tf-logo-white.svg" alt="Tenfore" />
+                <h1>Birdie POS — Prototype</h1>
+                <p id="count">Loading screens…</p>
+            </div>
+            <input id="filter" type="search" placeholder="Filter screens…" aria-label="Filter screens" />
+            <div id="list"></div>
+            <div id="hint"><kbd>↑</kbd> <kbd>↓</kbd> to step through screens</div>
+        </nav>
+
+        <main id="stage">
+            <div id="bar">
+                <span id="title">—</span>
+                <select id="device-select" aria-label="Device"></select>
+                <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+                <span id="scale">100%</span>
+                <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+                <button id="fit" type="button">Fit</button>
+                <a id="open-sb" href="../storybook/" target="_blank" rel="noopener">Storybook ↗</a>
+            </div>
+            <div id="viewport">
+                <div id="device" hidden><iframe id="frame" title="Prototype screen"></iframe></div>
+                <p id="empty">Loading…</p>
+            </div>
+        </main>
+
+        <script type="module">
+            /**
+             * Standalone prototype viewer.
+             *
+             * Rather than duplicating the screens, this reads Storybook's own
+             * story index and renders each story through `iframe.html`, which
+             * serves a story with no manager chrome. That means the prototype
+             * cannot drift from the component library — adding a story adds a
+             * screen here automatically.
+             */
+
+            // Reference devices, mirroring src/theme/tokens.ts → devices.
+            const DEVICES = [
+                { id: "tablet10", label: '10" landscape — 1280×800', w: 1280, h: 800 },
+                { id: "tablet11", label: '11" landscape — 1366×768', w: 1366, h: 768 },
+                { id: "tablet12", label: '12.4" landscape — 1600×1000', w: 1600, h: 1000 },
+                { id: "tablet8", label: '8" landscape — 1024×768', w: 1024, h: 768 },
+                { id: "counter", label: "Counter display — 1920×1080", w: 1920, h: 1080 },
+            ];
+
+            // Screen order matches references/072926 and the Storybook sidebar.
+            const SCREEN_ORDER = [
+                "1-proshop",
+                "2-teesheet",
+                "3-coursheet",
+                "4-baysheet",
+                "5-quickorder",
+                "6-tabs",
+                "7-tables",
+                "8-reservations",
+                "9-ordersTips",
+                "10-tablechart",
+                "11-customerSearch",
+                "12-orderlookup",
+                "13-timeclock",
+                "14-giftcards",
+                "15-events",
+                "16-inventory",
+                "17-shift",
+            ];
+
+            const el = (id) => document.getElementById(id);
+            const listEl = el("list");
+            const frameEl = el("frame");
+            const deviceEl = el("device");
+
+            let entries = [];
+            let current = null;
+            let device = DEVICES[0];
+            let zoom = null; // null = fit to viewport
+
+            const storyUrl = (id) => `../storybook/iframe.html?id=${encodeURIComponent(id)}&viewMode=story`;
+
+            /** Groups an index entry into a rail section. */
+            function sectionOf(title) {
+                if (title.startsWith("App Screens/")) return title.split("/")[1];
+                if (title.startsWith("App Chrome")) return "App Chrome";
+                if (title.startsWith("Sign in")) return "Sign in";
+                return null;
+            }
+
+            async function load() {
+                const res = await fetch("../storybook/index.json");
+                if (!res.ok) throw new Error(`index.json ${res.status}`);
+                const data = await res.json();
+
+                entries = Object.values(data.entries)
+                    .filter((e) => e.type === "story" && sectionOf(e.title))
+                    .map((e) => {
+                        const parts = e.title.split("/");
+                        // With one story per file the leaf is the state name; for
+                        // combined files it is still the story's own name.
+                        const state = parts.length > 2 ? parts.slice(2).join(" / ") : e.name;
+                        return { id: e.id, section: sectionOf(e.title), state, title: e.title };
+                    });
+
+                const rank = (s) => {
+                    if (s === "Sign in") return -2;
+                    if (s === "App Chrome") return -1;
+                    const i = SCREEN_ORDER.indexOf(s);
+                    return i === -1 ? 999 : i;
+                };
+                entries.sort((a, b) => rank(a.section) - rank(b.section));
+
+                el("count").textContent = `${entries.length} screens`;
+                render();
+
+                const fromHash = location.hash.slice(1);
+                select(entries.find((e) => e.id === fromHash) ?? entries[0]);
+            }
+
+            function render() {
+                const q = el("filter").value.trim().toLowerCase();
+                const visible = q ? entries.filter((e) => (e.section + " " + e.state).toLowerCase().includes(q)) : entries;
+
+                listEl.innerHTML = "";
+                let section = null;
+                let group = null;
+
+                for (const entry of visible) {
+                    if (entry.section !== section) {
+                        section = entry.section;
+                        group = document.createElement("div");
+                        group.className = "group";
+                        const h = document.createElement("h2");
+                        h.textContent = section;
+                        group.append(h);
+                        listEl.append(group);
+                    }
+                    const btn = document.createElement("button");
+                    btn.className = "screen";
+                    btn.type = "button";
+                    btn.dataset.id = entry.id;
+                    btn.textContent = entry.state;
+                    if (entry.id === current?.id) btn.setAttribute("aria-current", "true");
+                    btn.addEventListener("click", () => select(entry));
+                    group.append(btn);
+                }
+            }
+
+            function select(entry) {
+                if (!entry) return;
+                current = entry;
+                history.replaceState(null, "", `#${entry.id}`);
+                el("title").textContent = `${entry.section} — ${entry.state}`;
+                frameEl.src = storyUrl(entry.id);
+                el("empty").hidden = true;
+                deviceEl.hidden = false;
+                applySize();
+                render();
+                listEl.querySelector('[aria-current="true"]')?.scrollIntoView({ block: "nearest" });
+            }
+
+            /** Renders at true device pixels, then scales the whole device. */
+            function applySize() {
+                frameEl.width = device.w;
+                frameEl.height = device.h;
+                frameEl.style.width = `${device.w}px`;
+                frameEl.style.height = `${device.h}px`;
+
+                const vp = el("viewport");
+                const available = { w: vp.clientWidth - 48, h: vp.clientHeight - 48 };
+                const fit = Math.min(available.w / (device.w + 20), available.h / (device.h + 20), 1);
+                const scale = zoom ?? fit;
+
+                deviceEl.style.transform = `scale(${scale})`;
+                // Reserve the post-scale footprint so the scroll container is right.
+                deviceEl.style.margin = `${((scale - 1) * (device.h + 20)) / 2}px ${((scale - 1) * (device.w + 20)) / 2}px`;
+                el("scale").textContent = `${Math.round(scale * 100)}%`;
+            }
+
+            // ---- controls ----
+
+            const select$ = el("device-select");
+            DEVICES.forEach((d) => {
+                const opt = document.createElement("option");
+                opt.value = d.id;
+                opt.textContent = d.label;
+                select$.append(opt);
+            });
+
+            select$.addEventListener("change", () => {
+                device = DEVICES.find((d) => d.id === select$.value) ?? DEVICES[0];
+                zoom = null;
+                applySize();
+            });
+
+            el("zoom-in").addEventListener("click", () => {
+                zoom = Math.min((zoom ?? currentScale()) + 0.1, 2);
+                applySize();
+            });
+            el("zoom-out").addEventListener("click", () => {
+                zoom = Math.max((zoom ?? currentScale()) - 0.1, 0.2);
+                applySize();
+            });
+            el("fit").addEventListener("click", () => {
+                zoom = null;
+                applySize();
+            });
+
+            const currentScale = () => parseFloat(el("scale").textContent) / 100;
+
+            el("filter").addEventListener("input", render);
+
+            window.addEventListener("resize", () => {
+                if (zoom === null) applySize();
+            });
+
+            document.addEventListener("keydown", (e) => {
+                if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+                if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+                e.preventDefault();
+                const i = entries.findIndex((x) => x.id === current?.id);
+                const next = e.key === "ArrowDown" ? i + 1 : i - 1;
+                if (entries[next]) select(entries[next]);
+            });
+
+            window.addEventListener("hashchange", () => {
+                const entry = entries.find((x) => x.id === location.hash.slice(1));
+                if (entry && entry.id !== current?.id) select(entry);
+            });
+
+            load().catch((err) => {
+                el("empty").textContent = `Could not load the story index (${err.message}). Build Storybook first: npm run build`;
+                el("count").textContent = "unavailable";
+            });
+        </script>
+    </body>
+</html>
