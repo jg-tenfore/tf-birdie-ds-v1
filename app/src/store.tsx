@@ -24,6 +24,11 @@ export interface Line {
     note?: string;
 }
 
+export interface Punch {
+    at: string;
+    kind: "Clock In" | "Clock Out";
+}
+
 export type TicketStatus = "open" | "held" | "paid" | "voided";
 
 export interface Ticket {
@@ -117,6 +122,8 @@ interface State {
     bayBookings: BayBooking[];
     shiftOpen: boolean;
     clockedIn: boolean;
+    /** Time-clock punches, newest first — what the Time Clock log renders. */
+    punches: Punch[];
     toast: string | null;
 }
 
@@ -262,6 +269,7 @@ const initial: State = {
     ],
     shiftOpen: true,
     clockedIn: false,
+    punches: [],
     toast: null,
 };
 
@@ -283,7 +291,7 @@ type Action =
     | { type: "setCourse"; course: string }
     | { type: "checkIn"; time: string }
     | { type: "chargeTeeTime"; time: string; only?: number }
-    | { type: "clockToggle" }
+    | { type: "clockToggle"; at: string }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
     | { type: "endShift" }
     | { type: "toast"; message: string | null };
@@ -510,8 +518,16 @@ function reducer(state: State, action: Action): State {
             };
         }
 
-        case "clockToggle":
-            return { ...state, clockedIn: !state.clockedIn, toast: state.clockedIn ? "Clocked out" : "Clocked in" };
+        case "clockToggle": {
+            const kind = state.clockedIn ? "Clock Out" : "Clock In";
+            return {
+                ...state,
+                clockedIn: !state.clockedIn,
+                // Newest punch on top, which is how the device stacks them.
+                punches: [{ at: action.at, kind }, ...state.punches],
+                toast: state.clockedIn ? "Clocked out" : "Clocked in",
+            };
+        }
 
         case "addBayBooking":
             return {
@@ -600,7 +616,7 @@ export function useActions() {
             setCourse: (course: string) => dispatch({ type: "setCourse", course }),
             checkIn: (time: string) => dispatch({ type: "checkIn", time }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),
-            clockToggle: () => dispatch({ type: "clockToggle" }),
+            clockToggle: (at: string) => dispatch({ type: "clockToggle", at }),
             addBayBooking: (booking: Omit<BayBooking, "id">) => dispatch({ type: "addBayBooking", booking }),
             endShift: () => dispatch({ type: "endShift" }),
             toast: (message: string | null) => dispatch({ type: "toast", message }),

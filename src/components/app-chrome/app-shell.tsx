@@ -129,7 +129,8 @@ const NavDrawerContent = ({ active, onNavigate }: { active?: NavKey; onNavigate?
  * A bottom action-bar button.
  *
  * `tone` maps to the app's own vocabulary: `default` slate, `primary` green for
- * the confirming action, `danger` red for POP, `disabled` grey. Buttons share
+ * the confirming action, `danger` red for POP, `destructive` the brighter red
+ * for CLOCK OUT and END SHIFT, `disabled` grey. Buttons share
  * the row equally unless `grow` is set.
  */
 export const ActionButton = ({
@@ -149,7 +150,7 @@ export const ActionButton = ({
     onClick,
 }: {
     children: ReactNode;
-    tone?: "default" | "primary" | "danger" | "disabled" | "active";
+    tone?: "default" | "primary" | "danger" | "destructive" | "disabled" | "active";
     icon?: ReactNode;
     iconEdge?: "left" | "right" | "group";
     preserveCase?: boolean;
@@ -161,6 +162,9 @@ export const ActionButton = ({
         primary: { bg: appColors.green, hover: appColors.greenDark, fg: "#fff" },
         active: { bg: appColors.green, hover: appColors.greenDark, fg: "#fff" },
         danger: { bg: appColors.red, hover: "#C62F43", fg: "#fff" },
+        // Brighter than `danger` — the app reserves this for the two actions that
+        // end something outright: CLOCK OUT and END SHIFT.
+        destructive: { bg: appColors.clockOutRed, hover: "#D42A1E", fg: "#fff" },
         disabled: { bg: appColors.greyLight, hover: appColors.greyLight, fg: "#fff" },
     }[tone];
 

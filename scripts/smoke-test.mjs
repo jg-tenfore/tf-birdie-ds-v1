@@ -95,8 +95,12 @@ await step("PAY closes the ticket", async () => {
     await page.waitForSelector("text=Approved", { timeout: 6000 });
 });
 
-await step("completed sale appears in Order Lookup", async () => {
+await step("Order Lookup searches and finds the closed sale", async () => {
     await page.goto(`${BASE}#/orderlookup`, { waitUntil: "networkidle" });
+    // The screen opens on criteria, not results — nothing runs until SEARCH.
+    await page.waitForSelector("text=Search by Order ID", { timeout: 5000 });
+    await page.getByRole("button", { name: "Search" }).click();
+    await page.waitForSelector("text=/1 order$/", { timeout: 5000 });
     await page.waitForSelector("text=Cash", { timeout: 5000 });
 });
 
