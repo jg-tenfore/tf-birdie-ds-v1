@@ -56,6 +56,12 @@ export interface Ticket {
  * can represent sixteen golfers. Modelling it as a player list, as an earlier
  * pass did, cannot reproduce the real layout.
  */
+export interface ReservationEvent {
+    at: string;
+    by: string;
+    what: string;
+}
+
 export interface Position {
     name: string;
     /** The "(4)" prefix — how many golfers this one booking covers. */
@@ -65,12 +71,33 @@ export interface Position {
     rate: string;
     cart: boolean;
     paid: boolean;
+    /**
+     * The reservation id. The detail screen prints it as `ID:10390147` and the
+     * history dialog titles itself with it, so it has to be stable per booking
+     * rather than derived at render time.
+     */
+    id: string;
+    /** Green-fee line as the detail screen writes it: `Group Pricing : $1.00`. */
+    rateName: string;
+    /** Transportation line: `Dunes Cart Old : $26.82`, or a walking rate. */
+    cartLabel: string;
+    /** Loyalty points this round earns, printed `+125`. */
+    pointsEarn: number;
+    /** Points it redeems, printed `-1250`. */
+    pointsRedeem: number;
+    /** Free text the device shows for punch-card rounds, e.g. `9 roudns`. */
+    rounds?: string;
+    email?: string;
+    /** Audit trail behind the History button. */
+    history: ReservationEvent[];
     /** Cart keys signed out — shows the key glyph. */
     keyed?: boolean;
     /** On a raincheck — shows the bolt glyph. */
     raincheck?: boolean;
     /** Carries a balance — shows the large "$" watermark. */
     balance?: boolean;
+    /** Booked online rather than at the counter — shows the globe glyph. */
+    online?: boolean;
     checkedIn?: boolean;
 }
 
@@ -79,7 +106,20 @@ export interface TeeTimeBooking {
     /** Always length 4. `null` is an open position. */
     positions: (Position | null)[];
     blocked?: boolean;
+    /**
+     * What a blocked row prints in each cell. The device uses more than one —
+     * plain `BLOCKED` for a manual block, `Pre-Sunset Block` for the automatic
+     * evening cutoff — and the difference matters to whoever is trying to sell
+     * the slot.
+     */
+    blockLabel?: string;
+    /** Printed in the detail screen's breadcrumb: `… - 6078027 - FRONT`. */
+    confirmation?: string;
+    nine?: "FRONT" | "BACK";
 }
+
+/** The four renderings of a day the action bar switches between. */
+export type SheetView = "list" | "grid" | "multi" | "back9";
 
 /**
  * The app's "today". Fixed rather than read from the clock so the prototype
@@ -184,16 +224,34 @@ const seedTickets: Ticket[] = [
     },
 ];
 
-const pos = (name: string, party: number, price: number, extra: Partial<Position> = {}): Position => ({
-    name,
-    party,
-    price,
-    holes: 18,
-    rate: "Group Pricing",
-    cart: true,
-    paid: false,
-    ...extra,
-});
+let nextReservationId = 10390147;
+
+/**
+ * Seeds a booking with the detail fields the detail screen prints.
+ *
+ * The ids run consecutively from the reference's own first one, so a party of
+ * four gets 10390147–10390150 exactly as the device shows.
+ */
+const pos = (name: string, party: number, price: number, extra: Partial<Position> = {}): Position => {
+    const id = String(nextReservationId++);
+    return {
+        name,
+        party,
+        price,
+        holes: 18,
+        rate: "Group Pricing",
+        cart: true,
+        paid: false,
+        id,
+        rateName: `Group Pricing : ${money(price === 0 ? 1 : Math.min(price, 28.47))}`,
+        cartLabel: extra.cart === false ? "Dunes Walking : $8.58" : "Dunes Cart Old : $26.82",
+        pointsEarn: 125,
+        pointsRedeem: -1250,
+        email: `matt.jensen+test${name.split(" ")[0].toLowerCase()}@gmail.com`,
+        history: [{ at: "5/12/2026 1:36 PM", by: "John Admin", what: "Reservation Edited : $26.33 -> $26.33" }],
+        ...extra,
+    };
+};
 
 const may12: TeeTimeBooking[] = [
     { time: "5:30 PM", positions: [null, null, null, null] },
