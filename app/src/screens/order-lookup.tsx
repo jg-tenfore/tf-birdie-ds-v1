@@ -71,7 +71,6 @@ export const OrderLookupScreen = () => {
         <Shell
             title="Order Lookup"
             active="orderlookup"
-            showMenuButton={false}
             topBarRight={null}
             actionBar={
                 <>

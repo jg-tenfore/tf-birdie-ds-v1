@@ -58,7 +58,6 @@ export const InventoryScreen = () => {
         <Shell
             title="Inventory Counts"
             active="inventory"
-            showMenuButton={false}
             topBarRight={
                 <Stack direction="row" sx={{ alignItems: "center" }}>
                     <IconButton aria-label="New count" onClick={() => navigate("/inventory/new")} sx={{ color: "#fff" }}>
@@ -138,7 +137,6 @@ export const InventoryNewCountScreen = () => {
         <Shell
             title="Inventory Count"
             active="inventory"
-            showMenuButton={false}
             topActions={["Refresh"]}
             showCart={false}
             showOverflow={false}
@@ -213,7 +211,6 @@ export const InventoryCountScreen = () => {
             // The app bar shows the count's internal id alongside its title.
             title={`3484 - ${decoded}`}
             active="inventory"
-            showMenuButton={false}
             topBarRight={
                 <Stack direction="row" sx={{ alignItems: "center", gap: 1.5, pr: 1 }}>
                     <QrCodeScannerIcon sx={{ fontSize: 26, color: "#fff" }} />

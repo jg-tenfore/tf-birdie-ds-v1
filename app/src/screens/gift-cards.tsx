@@ -49,7 +49,6 @@ export const GiftCardsScreen = () => {
         <Shell
             title="Gift Cards"
             active="giftcards"
-            showMenuButton={false}
             topBarRight={null}
             subBar={
                 <Box sx={{ flexShrink: 0 }}>

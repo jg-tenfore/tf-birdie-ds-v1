@@ -104,7 +104,6 @@ export const ShiftScreen = () => {
         <Shell
             title="Shift"
             active="shift"
-            showMenuButton={false}
             topBarRight={null}
             actionBar={
                 <>

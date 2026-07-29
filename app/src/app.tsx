@@ -11,6 +11,7 @@ import { InventoryCountScreen, InventoryNewCountScreen, InventoryScreen } from "
 import { PaymentScreen } from "./screens/payment";
 import { QuickOrderScreen } from "./screens/quick-order";
 import { ProShopScreen } from "./screens/selling";
+import { TableChartScreen } from "./screens/table-chart";
 import { TablesScreen } from "./screens/tables";
 import { TabDetailScreen, TabsScreen } from "./screens/tabs";
 import { BaySheetScreen } from "./screens/bay-sheet";
@@ -50,7 +51,7 @@ const routes: [string, React.ReactNode][] = [
     ["/baysheet", <BaySheetScreen />],
     ["/reservations", <RestaurantReservationsScreen />],
     ["/orderstips", <OrdersTipsScreen />],
-    ["/tablechart", <StubScreen title="Table Chart" active="tablechart" note="Floor-plan editor." />],
+    ["/tablechart", <TableChartScreen />],
     ["/giftcards", <GiftCardsScreen />],
     ["/events", <EventsScreen />],
     ["/events/:id", <EventDetailScreen />],

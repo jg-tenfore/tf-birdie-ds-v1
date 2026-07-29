@@ -68,7 +68,6 @@ export const TimeClockScreen = () => {
         <Shell
             title="Time Clock"
             active="timeclock"
-            showMenuButton={false}
             showCart={false}
             showOverflow={false}
             actionBar={

@@ -1,3 +1,4 @@
+import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
 import { createContext, useContext, useMemo, useReducer, type ReactNode } from "react";
 
 /**
@@ -124,6 +125,13 @@ interface State {
     clockedIn: boolean;
     /** Time-clock punches, newest first — what the Time Clock log renders. */
     punches: Punch[];
+    /**
+     * Saved floor plans, keyed by room. The Table Chart editor writes here on
+     * SAVE and the live Tables view reads from it, so the two screens are the
+     * same data rather than two hard-coded layouts.
+     */
+    floorPlans: Record<string, FloorElement[]>;
+    floorRoom: string;
     toast: string | null;
 }
 
@@ -270,6 +278,8 @@ const initial: State = {
     shiftOpen: true,
     clockedIn: false,
     punches: [],
+    floorPlans: seededFloorPlans,
+    floorRoom: "bigroom",
     toast: null,
 };
 
@@ -292,6 +302,8 @@ type Action =
     | { type: "checkIn"; time: string }
     | { type: "chargeTeeTime"; time: string; only?: number }
     | { type: "clockToggle"; at: string }
+    | { type: "setFloorRoom"; room: string }
+    | { type: "saveFloorPlan"; room: string; elements: FloorElement[] }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
     | { type: "endShift" }
     | { type: "toast"; message: string | null };
@@ -518,6 +530,16 @@ function reducer(state: State, action: Action): State {
             };
         }
 
+        case "setFloorRoom":
+            return { ...state, floorRoom: action.room };
+
+        case "saveFloorPlan":
+            return {
+                ...state,
+                floorPlans: { ...state.floorPlans, [action.room]: action.elements },
+                toast: `${action.room} layout saved`,
+            };
+
         case "clockToggle": {
             const kind = state.clockedIn ? "Clock Out" : "Clock In";
             return {
@@ -617,6 +639,8 @@ export function useActions() {
             checkIn: (time: string) => dispatch({ type: "checkIn", time }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),
             clockToggle: (at: string) => dispatch({ type: "clockToggle", at }),
+            setFloorRoom: (room: string) => dispatch({ type: "setFloorRoom", room }),
+            saveFloorPlan: (room: string, elements: FloorElement[]) => dispatch({ type: "saveFloorPlan", room, elements }),
             addBayBooking: (booking: Omit<BayBooking, "id">) => dispatch({ type: "addBayBooking", booking }),
             endShift: () => dispatch({ type: "endShift" }),
             toast: (message: string | null) => dispatch({ type: "toast", message }),

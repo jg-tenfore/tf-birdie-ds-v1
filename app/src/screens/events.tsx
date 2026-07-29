@@ -33,7 +33,7 @@ export const EventsScreen = () => {
     const navigate = useNavigate();
 
     return (
-        <Shell title="Events" active="events" showMenuButton={false} topBarRight={null} showOverflow>
+        <Shell title="Events" active="events" topBarRight={null} showOverflow>
             <Box sx={{ bgcolor: appColors.surface, borderTop: `1px solid ${appColors.divider}` }}>
                 {eventRows.map((row) => (
                     <EventsListRow key={row.id} row={row} onSelect={() => navigate(`/events/${row.id}`)} />
@@ -59,7 +59,6 @@ export const EventDetailScreen = () => {
         <Shell
             title={event?.name ?? "Event"}
             active="events"
-            showMenuButton={false}
             topBarRight={null}
             orderPanel={
                 <Box sx={{ flex: 1, overflowY: "auto", bgcolor: appColors.surface }}>
