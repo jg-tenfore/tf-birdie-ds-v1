@@ -24,7 +24,7 @@ import {
  * are communicated purely by dimming the entire row.
  */
 const meta = {
-    title: "App Screens/Operations/Gift Cards",
+    title: "App Screens/14-giftcards",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

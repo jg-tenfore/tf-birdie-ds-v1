@@ -41,7 +41,7 @@ import { appColors } from "@/theme/app-replica-tokens";
  * itself falls back to the antler mark for every one of them.
  */
 const meta = {
-    title: "App Screens/Restaurant/Tabs",
+    title: "App Screens/6-tabs",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

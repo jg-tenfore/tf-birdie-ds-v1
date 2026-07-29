@@ -23,7 +23,7 @@ import { NewReservationDialog } from "@/components/screens/pro-shop/new-reservat
  * Reproduced from `references/072926/4-baysheet/`.
  */
 const meta = {
-    title: "App Screens/Pro Shop/Bay Sheet",
+    title: "App Screens/4-baysheet",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

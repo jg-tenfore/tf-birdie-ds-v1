@@ -19,7 +19,7 @@ import { AntlerEmptyState, ColumnHeaderBand, EdgeLabel } from "@/components/scre
  * Replicated as-is from `references/072926/9-ordersTips/`.
  */
 const meta = {
-    title: "App Screens/Restaurant/Orders & Tips",
+    title: "App Screens/9-ordersTips",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

@@ -25,7 +25,7 @@ import { DateNavBar } from "@/components/screens/pro-shop/date-nav-bar";
  * Reproduced from `references/072926/3-coursheet/`.
  */
 const meta = {
-    title: "App Screens/Pro Shop/Court Sheet",
+    title: "App Screens/3-coursheet",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

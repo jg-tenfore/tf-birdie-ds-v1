@@ -39,7 +39,7 @@ import {
  * payment live, so the record doubles as the customer's payment screen.
  */
 const meta = {
-    title: "App Screens/Operations/Customer Search",
+    title: "App Screens/11-customerSearch",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

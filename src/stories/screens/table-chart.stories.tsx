@@ -28,7 +28,7 @@ import { appColors, appRadius } from "@/theme/app-replica-tokens";
  * Replicated as-is from `references/072926/10-tablechart/`.
  */
 const meta = {
-    title: "App Screens/Restaurant/Table Chart",
+    title: "App Screens/10-tablechart",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

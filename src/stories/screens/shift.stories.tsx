@@ -24,7 +24,7 @@ import {
  * is a red destructive action that is live even with the cash total left blank.
  */
 const meta = {
-    title: "App Screens/Operations/Shift",
+    title: "App Screens/17-shift",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

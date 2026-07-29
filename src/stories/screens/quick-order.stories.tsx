@@ -49,7 +49,7 @@ import { appColors } from "@/theme/app-replica-tokens";
  * `quick-order-food-image.ts`.
  */
 const meta = {
-    title: "App Screens/Restaurant/Quick Order",
+    title: "App Screens/5-quickorder",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

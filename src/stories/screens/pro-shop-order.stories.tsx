@@ -30,7 +30,7 @@ import { storeImage } from "@/utils/asset-url";
  * Reproduced from `references/072926/1-proshop/`.
  */
 const meta = {
-    title: "App Screens/Pro Shop/Pro Shop Order",
+    title: "App Screens/1-proshop",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

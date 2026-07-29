@@ -20,7 +20,7 @@ import { AntlerEmptyState, ColumnHeaderBand, DateBand, EdgeLabel } from "@/compo
  * `references/072926/7-tables/`.
  */
 const meta = {
-    title: "App Screens/Restaurant/Reservations",
+    title: "App Screens/8-reservations",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

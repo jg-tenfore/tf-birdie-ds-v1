@@ -59,17 +59,33 @@ const preview: Preview = {
                     // The shipping app's flyout drawer.
                     "App Chrome",
                     ["Navigation Drawer"],
-                    // Groups and order mirror the shipping app's flyout, which is
-                    // also the order of the reference folders in
-                    // references/072926 (1-proshop … 17-shift).
+                    // Entries are the reference folder names from
+                    // references/072926 verbatim, so every screen traces 1:1 back
+                    // to its screenshots. `0-sidebarnav` is the exception — it
+                    // lives in App Chrome above.
+                    //
+                    // This explicit list is load-bearing: alphabetically
+                    // "10-tablechart" sorts before "2-teesheet", so without it the
+                    // sidebar order would be wrong.
                     "App Screens",
                     [
-                        "Pro Shop",
-                        ["Pro Shop Order", "Tee Sheet", "Court Sheet", "Bay Sheet"],
-                        "Restaurant",
-                        ["Quick Order", "Tabs", "Tables", "Reservations", "Orders & Tips", "Table Chart"],
-                        "Operations",
-                        ["Customer Search", "Order Lookup", "Time Clock", "Gift Cards", "Events", "Inventory", "Shift"],
+                        "1-proshop",
+                        "2-teesheet",
+                        "3-coursheet",
+                        "4-baysheet",
+                        "5-quickorder",
+                        "6-tabs",
+                        "7-tables",
+                        "8-reservations",
+                        "9-ordersTips",
+                        "10-tablechart",
+                        "11-customerSearch",
+                        "12-orderlookup",
+                        "13-timeclock",
+                        "14-giftcards",
+                        "15-events",
+                        "16-inventory",
+                        "17-shift",
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would
                     // split this into two nested folders in the sidebar.

@@ -18,7 +18,7 @@ import { TimeClockPanel, type TimeClockPunch } from "@/components/screens/operat
  * makes this screen a natural landing point at the start of a shift.
  */
 const meta = {
-    title: "App Screens/Operations/Time Clock",
+    title: "App Screens/13-timeclock",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

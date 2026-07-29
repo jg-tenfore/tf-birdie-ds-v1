@@ -24,7 +24,7 @@ import { appColors } from "@/theme/app-replica-tokens";
  * Replicated as-is from `references/072926/7-tables/`.
  */
 const meta = {
-    title: "App Screens/Restaurant/Tables",
+    title: "App Screens/7-tables",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

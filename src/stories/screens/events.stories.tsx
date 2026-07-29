@@ -24,7 +24,7 @@ import {
  * only app-bar affordance is the overflow menu.
  */
 const meta = {
-    title: "App Screens/Operations/Events",
+    title: "App Screens/15-events",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

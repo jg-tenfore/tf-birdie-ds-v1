@@ -33,7 +33,7 @@ import { InventoryNewCountForm } from "@/components/screens/operations/inventory
  * count the bar changes again, to a barcode scanner trigger and REFRESH.
  */
 const meta = {
-    title: "App Screens/Operations/Inventory",
+    title: "App Screens/16-inventory",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

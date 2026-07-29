@@ -18,7 +18,7 @@ import { OrderLookupForm } from "@/components/screens/operations/order-lookup-fo
  * white canvas rather than the grey one every other screen sits on.
  */
 const meta = {
-    title: "App Screens/Operations/Order Lookup",
+    title: "App Screens/12-orderlookup",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

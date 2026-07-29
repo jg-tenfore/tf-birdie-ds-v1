@@ -72,7 +72,7 @@ import { CartSignOutScreen, EditReservationScreen } from "@/components/screens/t
  * Shows 0 / Available 186) are constant across every story here.
  */
 const meta = {
-    title: "App Screens/Pro Shop/Tee Sheet",
+    title: "App Screens/2-teesheet",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 
