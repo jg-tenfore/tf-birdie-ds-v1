@@ -7,12 +7,13 @@ import { StoreProvider, useStore } from "./store";
 import { PaymentScreen } from "./screens/payment";
 import { QuickOrderScreen } from "./screens/quick-order";
 import { ProShopScreen } from "./screens/selling";
+import { TablesScreen } from "./screens/tables";
 import { TabDetailScreen, TabsScreen } from "./screens/tabs";
 import { BaySheetScreen } from "./screens/bay-sheet";
 import { CourtSheetScreen } from "./screens/court-sheet";
 import { TeeSheetScreen, TeeTimeDetailScreen } from "./screens/tee-sheet";
 import { SignInScreen } from "./screens/sign-in";
-import { CustomerSearchScreen, OrderLookupScreen, ShiftScreen, StubScreen, TablesScreen, TimeClockScreen } from "./screens/misc";
+import { CustomerSearchScreen, OrderLookupScreen, ShiftScreen, StubScreen, TimeClockScreen } from "./screens/misc";
 
 /** Everything past sign-in requires an operator, as the real terminal does. */
 const RequireOperator = ({ children }: { children: React.ReactNode }) => {

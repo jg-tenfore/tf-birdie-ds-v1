@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { members } from "@/data/pos-data";
-import { appColors, appRadius } from "@/theme/app-replica-tokens";
+import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
 import { money, useActions, useStore } from "../store";
 
@@ -52,62 +52,6 @@ const Row = ({ children, onClick }: { children: React.ReactNode; onClick?: () =>
 );
 
 /* ------------------------------ Tabs ------------------------------ */
-
-/* ---------------------------- Tables ------------------------------ */
-
-export const TablesScreen = () => {
-    const { heldTickets } = useStore();
-    const { openTicket } = useActions();
-    const navigate = useNavigate();
-    const tables = heldTickets.filter((t) => t.source === "Table");
-
-    return (
-        <Shell
-            title="Restaurant Tables"
-            active="tables"
-            actionBar={
-                <>
-                    <ActionButton onClick={() => navigate("/tabs")}>Tabs</ActionButton>
-                    <ActionButton>[Detached Tables]</ActionButton>
-                    <ActionButton onClick={() => navigate("/tablechart")}>Table Chart</ActionButton>
-                    <ActionButton tone="primary" onClick={() => navigate("/quickorder")}>
-                        Quick Order
-                    </ActionButton>
-                </>
-            }
-        >
-            <Page title="Floor" subtitle="Open tables. Tap one to reopen its ticket.">
-                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 2 }}>
-                    {tables.length === 0 && <Typography sx={{ color: appColors.textSecondary }}>No open tables.</Typography>}
-                    {tables.map((t) => (
-                        <ButtonBase
-                            key={t.id}
-                            onClick={() => {
-                                openTicket(t.id);
-                                navigate("/quickorder");
-                            }}
-                            sx={{
-                                minHeight: 120,
-                                flexDirection: "column",
-                                gap: 0.5,
-                                bgcolor: appColors.tableOpen,
-                                color: "#fff",
-                                borderRadius: `${appRadius.button}px`,
-                                p: 2,
-                            }}
-                        >
-                            <Typography sx={{ fontSize: 16 }}>{t.name}</Typography>
-                            <Typography sx={{ fontSize: 13, opacity: 0.85 }}>{t.seats ?? 4} seats</Typography>
-                            <Typography sx={{ fontSize: 18 }}>
-                                {money(t.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0) * 1.06)}
-                            </Typography>
-                        </ButtonBase>
-                    ))}
-                </Box>
-            </Page>
-        </Shell>
-    );
-};
 
 /* ------------------------- Customer search ------------------------ */
 
