@@ -90,17 +90,40 @@ await step("drawer navigates to the tee sheet", async () => {
     await page.waitForSelector("text=SATURDAY, JULY 29 2026", { timeout: 5000 });
 });
 
+await step("tee sheet renders four positions per time", async () => {
+    await page.waitForSelector("text=/^\\(4\\) Oda Brennevin/", { timeout: 8000 });
+    for (const l of ["Total", "Booked", "Paid", "No Shows", "Available"]) await page.waitForSelector(`text=${l}`, { timeout: 4000 });
+});
+
 await step("tee-sheet check-in creates a ticket in the register", async () => {
-    await page.getByText("Ellis, J.", { exact: false }).first().click();
-    await page.waitForSelector("text=Add all to ticket", { timeout: 5000 });
-    await page.getByRole("button", { name: /Add all to ticket/ }).click();
-    await page.waitForSelector("text=Green fee — 18 · Member", { timeout: 5000 });
+    await page.locator("text=/^\\(4\\) Oda Brennevin/").first().click();
+    await page.waitForSelector('input[placeholder^="Search by customer name"]', { timeout: 6000 });
+    await page.getByRole("button", { name: /Add all to cart/i }).click();
+    await page.waitForSelector("text=/Oda Brennevin — 18 holes/", { timeout: 6000 });
 });
 
 await step("held ticket appears on the tabs list", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Pop", exact: true }).click();
     await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
-    await page.waitForSelector("text=Ellis, J.", { timeout: 5000 });
+    await page.waitForSelector("text=/Oda Brennevin/", { timeout: 6000 });
+});
+
+await step("court sheet renders six resource columns", async () => {
+    await page.goto(`${BASE}#/coursheet`, { waitUntil: "networkidle" });
+    for (const c of ["Tennis Court 1", "Swimming Pool #1"]) await page.waitForSelector(`text=${c}`, { timeout: 5000 });
+});
+
+await step("bay sheet renders the time-axis calendar", async () => {
+    await page.goto(`${BASE}#/baysheet`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=ZOOM OUT", { timeout: 5000 });
+    await page.waitForSelector("text=/\\(2\\) Sutton, K\\./", { timeout: 5000 });
+});
+
+await step("quick order drills a category into a product list", async () => {
+    await page.goto(`${BASE}#/quickorder`, { waitUntil: "networkidle" });
+    await page.getByText("Beer", { exact: true }).first().click();
+    await page.waitForSelector("text=Pearl Beer", { timeout: 5000 });
 });
 
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");
