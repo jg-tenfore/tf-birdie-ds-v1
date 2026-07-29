@@ -56,13 +56,14 @@ const preview: Preview = {
                     ["Overview", "Colors", "Typography", "Spacing & Layout", "Radius & Elevation", "Touch Targets", "Icons", "Logos"],
                     "Components",
                     ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Charts & Data", "Media & Visuals", "Navigation"],
+                    // The shipping app's flyout drawer.
                     "App Chrome",
-                    // Mirrors the shipping app's own flyout grouping so the
-                    // sidebar teaches the real information architecture.
+                    ["Navigation Drawer"],
+                    // Groups and order mirror the shipping app's flyout, which is
+                    // also the order of the reference folders in
+                    // references/072926 (1-proshop … 17-shift).
                     "App Screens",
                     [
-                        "App Chrome",
-                        ["PIN Sign In", "Navigation Drawer"],
                         "Pro Shop",
                         ["Pro Shop Order", "Tee Sheet", "Court Sheet", "Bay Sheet"],
                         "Restaurant",
@@ -72,8 +73,11 @@ const preview: Preview = {
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would
                     // split this into two nested folders in the sidebar.
+                    // "PIN Sign In" is the shipping app's real screen (replica
+                    // theme, via the `replica` parameter); the rest are
+                    // design-system proposals.
                     "Sign in ∕ Sign up",
-                    ["Log in", "PIN Unlock", "Sign up", "Forgot password", "Verification"],
+                    ["PIN Sign In", "Log in", "Sign up", "Forgot password", "Verification"],
                     "*",
                 ],
             },
@@ -114,11 +118,15 @@ const preview: Preview = {
         (Story, context) => {
             const mode = (context.globals.theme as "light" | "dark") ?? "light";
 
-            // `App Screens/*` are an as-is replica of the shipping app, so they
-            // render on the replica theme (MD2, ALL-CAPS, 4px radii). Everything
-            // else — Foundations, Components, App Chrome — is the Birdie design
-            // system and stays on `birdieTheme`. See CLAUDE.md.
-            const isReplica = context.title.startsWith("App Screens");
+            // As-is replicas of the shipping app render on the replica theme
+            // (MD2, ALL-CAPS, 4px radii); everything else is the Birdie design
+            // system on `birdieTheme`. See CLAUDE.md.
+            //
+            // `App Screens/*` opts in by default, but the flag is a parameter so
+            // a replica can live outside that folder — the shipping app's nav
+            // drawer and PIN screen sit under `App Chrome` beside the
+            // design-system POS Shell, and must not inherit its theme.
+            const isReplica = (context.parameters.replica as boolean | undefined) ?? context.title.startsWith("App Screens");
 
             if (isReplica) {
                 return (

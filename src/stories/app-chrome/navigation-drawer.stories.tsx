@@ -22,8 +22,8 @@ import { appColors } from "@/theme/app-replica-tokens";
  *     grouping this Storybook's sidebar mirrors.
  */
 const meta = {
-    title: "App Screens/App Chrome/Navigation Drawer",
-    parameters: { layout: "fullscreen" },
+    title: "App Chrome/Navigation Drawer",
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

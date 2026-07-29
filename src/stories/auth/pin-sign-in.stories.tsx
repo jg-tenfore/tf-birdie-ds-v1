@@ -17,8 +17,8 @@ import { appColors, appRadius } from "@/theme/app-replica-tokens";
  * on the Android soft keyboard.
  */
 const meta = {
-    title: "App Screens/App Chrome/PIN Sign In",
-    parameters: { layout: "fullscreen" },
+    title: "Sign in ∕ Sign up/PIN Sign In",
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

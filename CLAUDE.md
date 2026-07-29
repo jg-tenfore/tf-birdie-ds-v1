@@ -61,10 +61,23 @@ design system, and do not copy their patterns (ALL CAPS, 4px radii, sub-48dp tar
 `src/components/app-chrome/app-shell.tsx` reproduces it: hamburger **flyout drawer** (not a rail),
 order panel on the **left**, and a bottom bar of equal-width slate `ActionButton`s — green for the
 confirming action, red for POP, grey when disabled. Nav destinations and the identity block live in
-`nav-items.ts`.
+`nav-items.ts`, which is the single source of truth for the app's IA.
 
-`pos-shell.tsx` is the *design-system* shell (permanent 88dp rail, right-hand order panel) and is
-used by `App Chrome/POS Shell`. The two are intentionally different; don't merge them.
+There is deliberately **no second, design-system shell**. An earlier `pos-shell.tsx` (invented before
+the references arrived, with a permanent 88dp rail and a right-hand order panel) was removed — it
+described a layout the product does not have and competed with `app-shell.tsx` as a source of truth.
+If a target-state shell is needed later, derive it from `app-shell.tsx` rather than reinventing the
+information architecture.
+
+### Which theme a story gets
+
+The preview decorator reads `parameters.replica`, falling back to `title.startsWith("App Screens")`.
+Set `parameters: { replica: true }` on any replica that lives **outside** `App Screens/*` — currently
+`App Chrome/Navigation Drawer` and `Sign in ∕ Sign up/PIN Sign In`. Without it they would silently
+render in the design-system theme, which looks plausible and is wrong.
+
+`Sign in ∕ Sign up` is intentionally mixed: `PIN Sign In` is the shipping screen (replica), the rest
+are design-system proposals.
 
 ### Product imagery
 
