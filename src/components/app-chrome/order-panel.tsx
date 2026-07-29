@@ -52,25 +52,53 @@ export const SeatBand = ({ label, color, collapsible }: { label: string; color: 
     </Box>
 );
 
+/** Thumbnail size for an order line. Square so every product lines up. */
+const THUMB = 64;
+
 export const OrderLineRow = ({ line }: { line: OrderLineItem }) => (
     <Stack direction="row" spacing={1.5} sx={{ px: 2, py: 1.5, alignItems: "flex-start" }}>
-        <Box sx={{ position: "relative", width: 56, height: 44, flexShrink: 0 }}>
-            {line.image ? (
-                <Box component="img" src={line.image} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-                <Box sx={{ width: "100%", height: "100%", bgcolor: appColors.canvasAlt }} />
+        {/*
+         * A fixed square on white with `objectFit: contain`. The catalogue mixes
+         * wide boxes (a dozen balls) with tall garments (a polo), so `cover`
+         * cropped each one differently and the rows never lined up. Contain
+         * letterboxes them into the same footprint instead.
+         */}
+        <Box
+            sx={{
+                position: "relative",
+                width: THUMB,
+                height: THUMB,
+                flexShrink: 0,
+                bgcolor: line.image ? "#fff" : appColors.canvasAlt,
+                border: "1px solid",
+                borderColor: appColors.divider,
+                overflow: "hidden",
+            }}
+        >
+            {line.image && (
+                <Box
+                    component="img"
+                    src={line.image}
+                    alt=""
+                    sx={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                />
             )}
+            {/* Quantity badge, top-right corner over the image. */}
             <Box
                 sx={{
                     position: "absolute",
-                    inset: "0 auto 0 0",
-                    width: 26,
+                    top: 0,
+                    right: 0,
+                    minWidth: 26,
+                    height: 26,
+                    px: 0.5,
                     bgcolor: appColors.greenTee,
                     color: "#fff",
                     display: "grid",
                     placeItems: "center",
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: 500,
+                    lineHeight: 1,
                 }}
             >
                 {line.qty}
