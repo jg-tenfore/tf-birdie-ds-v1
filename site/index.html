@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Birdie POS — Tenfore Design System</title>
+        <meta name="description" content="Tenfore's point-of-sale design system: Material UI, landscape tablet, documented in Storybook." />
+        <link rel="icon" href="./logos/tf-square-color.svg" />
+        <style>
+            :root {
+                --brand: #227c48;
+                --brand-400: #4ab675;
+                --ink: #101828;
+                --body: #475467;
+                --muted: #98a2b3;
+                --line: #e4e7ec;
+                --surface: #ffffff;
+                --canvas: #f9fafb;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --brand: #4ab675;
+                    --brand-400: #74d098;
+                    --ink: #f9fafb;
+                    --body: #98a2b3;
+                    --muted: #667085;
+                    --line: #1d2939;
+                    --surface: #101828;
+                    --canvas: #0c111d;
+                }
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                background: var(--canvas);
+                color: var(--ink);
+                font: 16px/1.55 "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .wrap {
+                max-width: 940px;
+                margin: 0 auto;
+                padding: 72px 24px 96px;
+            }
+
+            .eyebrow {
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--muted);
+                margin: 0 0 10px;
+            }
+
+            h1 {
+                font-size: clamp(34px, 5vw, 46px);
+                line-height: 1.1;
+                letter-spacing: -0.02em;
+                margin: 0 0 12px;
+            }
+
+            .lede {
+                font-size: 20px;
+                line-height: 1.5;
+                color: var(--body);
+                max-width: 620px;
+                margin: 0;
+            }
+
+            .logo {
+                height: 44px;
+                margin-bottom: 28px;
+            }
+
+            .meta {
+                margin: 22px 0 0;
+                font-size: 14px;
+                color: var(--muted);
+            }
+
+            h2 {
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--muted);
+                margin: 56px 0 16px;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 16px;
+            }
+
+            .card {
+                display: block;
+                padding: 24px;
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                background: var(--surface);
+                text-decoration: none;
+                color: inherit;
+                transition:
+                    border-color 120ms linear,
+                    transform 120ms linear;
+            }
+
+            a.card:hover {
+                border-color: var(--brand);
+                transform: translateY(-2px);
+            }
+
+            .card h3 {
+                margin: 0 0 6px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+
+            .card p {
+                margin: 0;
+                font-size: 15px;
+                color: var(--body);
+            }
+
+            .card .arrow {
+                display: inline-block;
+                margin-top: 14px;
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--brand);
+            }
+
+            .card--soon {
+                opacity: 0.6;
+            }
+
+            .card--soon .arrow {
+                color: var(--muted);
+            }
+
+            footer {
+                margin-top: 64px;
+                padding-top: 24px;
+                border-top: 1px solid var(--line);
+                font-size: 14px;
+                color: var(--muted);
+            }
+
+            footer a {
+                color: var(--brand);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <picture>
+                <source srcset="./logos/tf-logo-white.svg" media="(prefers-color-scheme: dark)" />
+                <img class="logo" src="./logos/tf-logo.svg" alt="Tenfore" />
+            </picture>
+
+            <p class="eyebrow">Tenfore Design System</p>
+            <h1>Birdie POS</h1>
+            <p class="lede">
+                The UI and UX reference for Tenfore's point-of-sale — built on Material UI, designed for a
+                landscape Android tablet, and documented as the spec for the Expo app.
+            </p>
+            <p class="meta">Landscape tablet only &nbsp;·&nbsp; Material UI v9 &nbsp;·&nbsp; 48dp touch floor &nbsp;·&nbsp; WCAG AA</p>
+
+            <h2>Documentation</h2>
+            <div class="grid">
+                <a class="card" href="./storybook/">
+                    <h3>Storybook</h3>
+                    <p>Foundations, components, and app chrome — rendered at real device sizes, in light and dark.</p>
+                    <span class="arrow">Open Storybook →</span>
+                </a>
+                <a class="card" href="./storybook/?path=/docs/introduction--docs">
+                    <h3>Introduction</h3>
+                    <p>What this system is, the one constraint that shapes it, and how it maps to the Expo build.</p>
+                    <span class="arrow">Read the intro →</span>
+                </a>
+                <a class="card" href="./storybook/?path=/docs/foundations-touch-targets--docs">
+                    <h3>Touch targets</h3>
+                    <p>The 48/56/64/80dp tiers, why size tracks the cost of a mis-tap, and how the theme enforces them.</p>
+                    <span class="arrow">See the rules →</span>
+                </a>
+                <a class="card" href="./storybook/?path=/story/app-chrome-pos-shell--register">
+                    <h3>POS shell</h3>
+                    <p>The persistent landscape frame: nav rail, app bar, order panel, action bar — at 1280×800.</p>
+                    <span class="arrow">View the shell →</span>
+                </a>
+            </div>
+
+            <h2>Prototypes</h2>
+            <div class="grid">
+                <div class="card card--soon">
+                    <h3>Register flow</h3>
+                    <p>Ring up, split, tender, receipt — the core loop, end to end.</p>
+                    <span class="arrow">Coming soon</span>
+                </div>
+                <div class="card card--soon">
+                    <h3>Tee sheet check-in</h3>
+                    <p>Arrival to paid, including the walk-up and the group of four.</p>
+                    <span class="arrow">Coming soon</span>
+                </div>
+            </div>
+
+            <footer>
+                <p>
+                    Source:
+                    <a href="https://github.com/jg-tenfore/tf-birdie-ds-v1">github.com/jg-tenfore/tf-birdie-ds-v1</a>
+                    &nbsp;·&nbsp; Related: Buck and Fox design systems
+                </p>
+            </footer>
+        </div>
+    </body>
+</html>

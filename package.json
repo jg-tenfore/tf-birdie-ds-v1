@@ -1,0 +1,36 @@
+{
+    "name": "tf-birdie-ds-v1",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "storybook": "storybook dev -p 6020",
+        "build-storybook": "storybook build -o dist/storybook",
+        "build-site": "node scripts/build-site.mjs",
+        "build": "npm run build-storybook && npm run build-site",
+        "typecheck": "tsc --noEmit",
+        "format": "prettier --write ."
+    },
+    "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@fontsource/roboto": "^5.2.8",
+        "@fontsource/roboto-mono": "^5.2.8",
+        "@mui/icons-material": "^9.2.0",
+        "@mui/material": "^9.2.0",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0"
+    },
+    "devDependencies": {
+        "@storybook/addon-a11y": "^10.5.5",
+        "@storybook/addon-docs": "^10.5.5",
+        "@storybook/addon-themes": "^10.5.5",
+        "@storybook/react-vite": "^10.5.5",
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "prettier": "^3.8.1",
+        "storybook": "^10.5.5",
+        "typescript": "^5.9.3",
+        "vite": "^8.1.5"
+    }
+}
