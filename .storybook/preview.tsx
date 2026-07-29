@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, useColorScheme } from "@mui/material/styles";
 import type { Preview } from "@storybook/react-vite";
 
+import { appReplicaTheme } from "../src/theme/app-replica-theme";
 import { birdieTheme } from "../src/theme/birdie-theme";
 import { devices } from "../src/theme/tokens";
 
@@ -55,10 +56,44 @@ const preview: Preview = {
                     ["Overview", "Colors", "Typography", "Spacing & Layout", "Radius & Elevation", "Touch Targets", "Icons", "Logos"],
                     "Components",
                     ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Charts & Data", "Media & Visuals", "Navigation"],
-                    "Patterns",
+                    // The shipping app's flyout drawer.
                     "App Chrome",
+                    ["Navigation Drawer"],
+                    // Entries are the reference folder names from
+                    // references/072926 verbatim, so every screen traces 1:1 back
+                    // to its screenshots. `0-sidebarnav` is the exception — it
+                    // lives in App Chrome above.
+                    //
+                    // This explicit list is load-bearing: alphabetically
+                    // "10-tablechart" sorts before "2-teesheet", so without it the
+                    // sidebar order would be wrong.
                     "App Screens",
-                    ["Register", "Tickets", "Payments", "Tee Sheet", "F & B", "Pro Shop", "Customers", "Reports", "Settings"],
+                    [
+                        "1-proshop",
+                        "2-teesheet",
+                        "3-coursheet",
+                        "4-baysheet",
+                        "5-quickorder",
+                        "6-tabs",
+                        "7-tables",
+                        "8-reservations",
+                        "9-ordersTips",
+                        "10-tablechart",
+                        "11-customerSearch",
+                        "12-orderlookup",
+                        "13-timeclock",
+                        "14-giftcards",
+                        "15-events",
+                        "16-inventory",
+                        "17-shift",
+                    ],
+                    // "∕" is U+2215 (division slash), not "/" — a real slash would
+                    // split this into two nested folders in the sidebar.
+                    // "PIN Sign In" is the shipping app's real screen (replica
+                    // theme, via the `replica` parameter); the rest are
+                    // design-system proposals.
+                    "Sign in ∕ Sign up",
+                    ["PIN Sign In", "Log in", "Sign up", "Forgot password", "Verification"],
                     "*",
                 ],
             },
@@ -98,6 +133,25 @@ const preview: Preview = {
     decorators: [
         (Story, context) => {
             const mode = (context.globals.theme as "light" | "dark") ?? "light";
+
+            // As-is replicas of the shipping app render on the replica theme
+            // (MD2, ALL-CAPS, 4px radii); everything else is the Birdie design
+            // system on `birdieTheme`. See CLAUDE.md.
+            //
+            // `App Screens/*` opts in by default, but the flag is a parameter so
+            // a replica can live outside that folder — the shipping app's nav
+            // drawer and PIN screen sit under `App Chrome` beside the
+            // design-system POS Shell, and must not inherit its theme.
+            const isReplica = (context.parameters.replica as boolean | undefined) ?? context.title.startsWith("App Screens");
+
+            if (isReplica) {
+                return (
+                    <ThemeProvider theme={appReplicaTheme}>
+                        <CssBaseline />
+                        <Story />
+                    </ThemeProvider>
+                );
+            }
 
             return (
                 <ThemeProvider theme={birdieTheme} defaultMode={mode}>

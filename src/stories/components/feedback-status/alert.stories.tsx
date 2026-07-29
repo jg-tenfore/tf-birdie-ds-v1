@@ -27,13 +27,19 @@ export const Severities: Story = {
             <Alert severity="success">Payment approved — $248.00 on Visa ••4021</Alert>
             <Alert severity="info">Tee sheet synced 2 minutes ago</Alert>
             <Alert severity="warning">Card reader is on battery — 12% remaining</Alert>
-            <Alert severity="error" action={<Button color="inherit" size="small">Retry</Button>}>
+            <Alert
+                severity="error"
+                action={
+                    <Button color="inherit" size="small">
+                        Retry
+                    </Button>
+                }
+            >
                 Payment declined — insufficient funds
             </Alert>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Every alert carries an icon as well as a color. Roughly 1 in 12 men has a color-vision
-                deficiency, and a red/green pair is exactly the one they cannot resolve — which is the pair a
-                POS leans on hardest.
+                Every alert carries an icon as well as a color. Roughly 1 in 12 men has a color-vision deficiency, and a red/green pair is
+                exactly the one they cannot resolve — which is the pair a POS leans on hardest.
             </Typography>
         </Stack>
     ),
@@ -42,12 +48,19 @@ export const Severities: Story = {
 export const Offline: Story = {
     render: () => (
         <Stack spacing={2} sx={{ p: 3, maxWidth: 720 }}>
-            <Alert severity="warning" action={<Button color="inherit" size="small">Details</Button>}>
+            <Alert
+                severity="warning"
+                action={
+                    <Button color="inherit" size="small">
+                        Details
+                    </Button>
+                }
+            >
                 Offline — 3 tickets queued. Card payments unavailable; cash and member accounts still work.
             </Alert>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Connectivity is the POS failure mode that matters. The message names what still works, because
-                the operator's next question is never "what broke" — it is "can I take this person's money".
+                Connectivity is the POS failure mode that matters. The message names what still works, because the operator's next question
+                is never "what broke" — it is "can I take this person's money".
             </Typography>
         </Stack>
     ),
@@ -66,9 +79,8 @@ export const StatusChips: Story = {
                 <Chip label="Queued offline" color="warning" variant="outlined" />
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 720 }}>
-                Read-only chips sit at 36px rather than the 48dp floor — the floor governs things you tap, and
-                forcing a label to 48dp would cost two rows of visible tickets. Tappable chips (filters) do get
-                the full 48.
+                Read-only chips sit at 36px rather than the 48dp floor — the floor governs things you tap, and forcing a label to 48dp would
+                cost two rows of visible tickets. Tappable chips (filters) do get the full 48.
             </Typography>
             <Stack direction="row" spacing={1.5}>
                 <Chip label="All tickets" color="primary" onClick={() => {}} />

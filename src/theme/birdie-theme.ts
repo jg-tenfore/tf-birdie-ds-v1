@@ -60,8 +60,18 @@ export const birdieTheme = createTheme({
                     dark: neutral[900],
                     contrastText: "#ffffff",
                 },
-                success: { light: status.success.light, main: status.success.main, dark: status.success.dark, contrastText: status.success.contrast },
-                warning: { light: status.warning.light, main: status.warning.main, dark: status.warning.dark, contrastText: status.warning.contrast },
+                success: {
+                    light: status.success.light,
+                    main: status.success.main,
+                    dark: status.success.dark,
+                    contrastText: status.success.contrast,
+                },
+                warning: {
+                    light: status.warning.light,
+                    main: status.warning.main,
+                    dark: status.warning.dark,
+                    contrastText: status.warning.contrast,
+                },
                 error: { light: status.error.light, main: status.error.main, dark: status.error.dark, contrastText: status.error.contrast },
                 info: { light: status.info.light, main: status.info.main, dark: status.info.dark, contrastText: status.info.contrast },
                 grey: neutral,
@@ -198,7 +208,13 @@ export const birdieTheme = createTheme({
 
         MuiToggleButton: {
             styleOverrides: {
-                root: { minHeight: touchTarget.comfortable, borderRadius: radius.md, textTransform: "none", fontSize: fontSize.body1, paddingInline: 20 },
+                root: {
+                    minHeight: touchTarget.comfortable,
+                    borderRadius: radius.md,
+                    textTransform: "none",
+                    fontSize: fontSize.body1,
+                    paddingInline: 20,
+                },
             },
         },
 
@@ -212,7 +228,11 @@ export const birdieTheme = createTheme({
 
         MuiOutlinedInput: {
             styleOverrides: {
-                root: { borderRadius: radius.md, minHeight: touchTarget.comfortable, backgroundColor: "var(--mui-palette-background-paper)" },
+                root: {
+                    borderRadius: radius.md,
+                    minHeight: touchTarget.comfortable,
+                    backgroundColor: "var(--mui-palette-background-paper)",
+                },
                 input: { fontSize: fontSize.body1, paddingBlock: 16 },
             },
         },
@@ -222,7 +242,9 @@ export const birdieTheme = createTheme({
         },
 
         MuiSelect: {
-            styleOverrides: { select: { minHeight: `${touchTarget.comfortable - 32}px !important`, display: "flex", alignItems: "center" } },
+            styleOverrides: {
+                select: { minHeight: `${touchTarget.comfortable - 32}px !important`, display: "flex", alignItems: "center" },
+            },
         },
 
         MuiMenuItem: {
@@ -289,7 +311,13 @@ export const birdieTheme = createTheme({
         MuiTableCell: {
             styleOverrides: {
                 root: { fontSize: fontSize.body2, paddingBlock: 12 },
-                head: { fontWeight: 600, fontSize: fontSize.caption, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--mui-palette-text-secondary)" },
+                head: {
+                    fontWeight: 600,
+                    fontSize: fontSize.caption,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    color: "var(--mui-palette-text-secondary)",
+                },
             },
         },
         MuiTableRow: {

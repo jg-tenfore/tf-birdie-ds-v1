@@ -61,9 +61,8 @@ export const ProductTiles: Story = {
                 ))}
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary", mt: 2, maxWidth: 720 }}>
-                Tiles are 120px minimum — well past the {touchTarget.large}dp tier, because the whole card is
-                the target and the operator hits it without looking. Price is bottom-right on every tile so the
-                eye lands in a consistent place across the grid.
+                Tiles are 120px minimum — well past the {touchTarget.large}dp tier, because the whole card is the target and the operator
+                hits it without looking. Price is bottom-right on every tile so the eye lands in a consistent place across the grid.
             </Typography>
         </Box>
     ),

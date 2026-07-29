@@ -35,6 +35,57 @@ When writing any component or screen here:
    progressive enhancement only; no flow may depend on one to be discoverable.
 5. **Adjacent targets need ≥8px of gap.**
 
+## TWO THEMES — do not conflate them
+
+This repo holds two distinct visual systems, and mixing them is the easiest way to do real damage.
+
+|             | `birdieTheme` (`src/theme/birdie-theme.ts`) | `appReplicaTheme` (`src/theme/app-replica-theme.ts`) |
+| ----------- | ------------------------------------------- | ---------------------------------------------------- |
+| Represents  | **Target state** — the design system        | **Current state** — the shipping app, as-is          |
+| Applies to  | Foundations, Components, App Chrome         | `App Screens/*` only                                 |
+| Buttons     | Sentence case                               | ALL CAPS (MD2)                                       |
+| Radius      | 10–14px                                     | 4px                                                  |
+| Touch floor | 48dp enforced                               | Not enforced — documents what ships                  |
+| Tokens      | `tokens.ts`                                 | `app-replica-tokens.ts`                              |
+
+`.storybook/preview.tsx` switches on `context.title.startsWith("App Screens")` — **stories must not wrap
+themselves in a `ThemeProvider`.**
+
+`App Screens/*` are a pixel-faithful replica of the shipping app, transcribed from screenshots in
+`references/072926/`. When editing them, match the screenshots — do not "improve" them toward the
+design system, and do not copy their patterns (ALL CAPS, 4px radii, sub-48dp targets) back into
+`Components/*`.
+
+### The shipping app's chrome
+
+`src/components/app-chrome/app-shell.tsx` reproduces it: hamburger **flyout drawer** (not a rail),
+order panel on the **left**, and a bottom bar of equal-width slate `ActionButton`s — green for the
+confirming action, red for POP, grey when disabled. Nav destinations and the identity block live in
+`nav-items.ts`, which is the single source of truth for the app's IA.
+
+There is deliberately **no second, design-system shell**. An earlier `pos-shell.tsx` (invented before
+the references arrived, with a permanent 88dp rail and a right-hand order panel) was removed — it
+described a layout the product does not have and competed with `app-shell.tsx` as a source of truth.
+If a target-state shell is needed later, derive it from `app-shell.tsx` rather than reinventing the
+information architecture.
+
+### Which theme a story gets
+
+The preview decorator reads `parameters.replica`, falling back to `title.startsWith("App Screens")`.
+Set `parameters: { replica: true }` on any replica that lives **outside** `App Screens/*` — currently
+`App Chrome/Navigation Drawer` and `Sign in ∕ Sign up/PIN Sign In`. Without it they would silently
+render in the design-system theme, which looks plausible and is wrong.
+
+`Sign in ∕ Sign up` is intentionally mixed: `PIN Sign In` is the shipping screen (replica), the rest
+are design-system proposals.
+
+### Product imagery
+
+`store/` holds 105 real product photos with `manifest.csv` metadata. `npm run generate:catalog`
+derives `src/data/store-catalog.ts` from it — **that file is generated, don't hand-edit.** Images are
+served at `/store-images`; resolve with `storeImage(product.path)`. There is no food or beverage
+photography; those tiles use inline SVG placeholders.
+
 ## Theme is the deliverable
 
 `src/theme/birdie-theme.ts` encodes the rules above as MUI component defaults — a plain `<Button>`
@@ -93,6 +144,34 @@ friends are **not** accepted as direct props any more — they must go in `sx`:
 `direction`, `spacing`, `divider`, and `useFlexGap` remain real props. Most MUI examples online are
 still v5–v7 and will hit this.
 
+### MUI v9 gotcha — legacy `*Outline` icons removed
+
+v9 deleted 23 icon exports ending in `Outline` (no "d") because they duplicated their `Outlined`
+counterparts:
+
+```typescript
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; // ❌ gone in v9
+import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined"; // ✅
+```
+
+Affects `CheckCircleOutline`, `MailOutline`, `DeleteOutline`, `InfoOutline`, `ErrorOutline`,
+`HelpOutline`, `PersonOutline`, `PeopleOutline`, `StarOutline`, `LockOutline`, and 13 more. Theme
+variants (`DeleteOutlineSharp`, `InfoOutlineRounded`) are unaffected.
+
+### Components MUI documents but does not ship
+
+`NumberField` and `Menubar` appear in the MUI docs sidebar marked NEW, but they are **recipes built
+on Base UI** (`@base-ui/react`), not exports of `@mui/material` — and they are not in `@mui/lab`
+either. Don't try to import them.
+
+- **Number Field** — Birdie composes one from `TextField` + `IconButton`; see
+  `Components/Forms/Number Field`. Base UI's spinner arrows are ~16px and break the 48dp floor.
+- **Menubar** — deliberately not built. A desktop menubar needs two-level hover, which a finger
+  can't do. Use the nav rail for destinations and an overflow `Menu` for secondary actions.
+
+`@mui/lab` is **not** a dependency. Don't add it without a specific need — v9 moved `LoadingButton`
+into `Button` (`loading` prop), which was the main reason to reach for it.
+
 ### Styling
 
 Use the `sx` prop and semantic palette tokens — `bgcolor: "background.paper"`, `color:
@@ -105,13 +184,21 @@ Theme toolbar control.
 The taxonomy mirrors the Buck design system so the two read the same way. Sort order is set in
 `.storybook/preview.tsx`.
 
-| Category | Contents |
-| --- | --- |
-| `Introduction` | The intro MDX page |
-| `Foundations/*` | Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos |
-| `Components/*` | Actions · Forms · Feedback & Status · Layout & Structure · Charts & Data · Media & Visuals · Navigation |
-| `App Chrome/*` | The persistent POS frame |
-| `App Screens/*` | Register · Tickets · Payments · Tee Sheet · F & B · Pro Shop · Customers · Reports · Settings |
+| Category              | Contents                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Introduction`        | The intro MDX page                                                                                      |
+| `Foundations/*`       | Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos                   |
+| `Components/*`        | Actions · Forms · Feedback & Status · Layout & Structure · Charts & Data · Media & Visuals · Navigation |
+| `App Chrome/*`        | The persistent POS frame                                                                                |
+| `App Screens/*`       | Register · Tickets · Payments · Tee Sheet · F & B · Pro Shop · Customers · Reports · Settings           |
+| `Sign in ∕ Sign up/*` | Log in · PIN Unlock · Sign up · Forgot password · Verification                                          |
+
+**The separator in `Sign in ∕ Sign up` is `∕` (U+2215 division slash), not `/`.** A real slash would
+split it into two nested sidebar folders. Copy the string from `preview.tsx` rather than retyping it.
+
+Auth has two distinct layers, and stories should respect the split: **terminal sign-in** (email +
+password, run once by a manager) and **operator PIN unlock** (4-digit, run dozens of times a shift).
+A forgotten PIN is cleared by a shift lead on the spot — it never goes through the email flow.
 
 When adding a story:
 
@@ -119,7 +206,7 @@ When adding a story:
 - File goes in `src/stories/components/<category-kebab>/<name>.stories.tsx`.
 - `parameters: { layout: "fullscreen" }` for anything screen- or panel-shaped; the preview default
   is already fullscreen.
-- Write the doc comment as *why this is shaped this way for a POS*, not *what the component is*.
+- Write the doc comment as _why this is shaped this way for a POS_, not _what the component is_.
   The audience is whoever builds the Expo version.
 
 `Charts & Data` is reserved in the sort order but has no stories yet — no charting library is

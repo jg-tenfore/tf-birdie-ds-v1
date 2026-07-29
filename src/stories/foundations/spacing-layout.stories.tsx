@@ -62,19 +62,63 @@ export const Spacing: Story = {
                         bgcolor: "background.paper",
                     }}
                 >
-                    <Box sx={{ bgcolor: "primary.main", color: "primary.contrastText", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 600 }}>
+                    <Box
+                        sx={{
+                            bgcolor: "primary.main",
+                            color: "primary.contrastText",
+                            display: "grid",
+                            placeItems: "center",
+                            fontSize: 12,
+                            fontWeight: 600,
+                        }}
+                    >
                         App bar — {layout.appBarHeight}px
                     </Box>
-                    <Box sx={{ display: "grid", gridTemplateColumns: `${(layout.navRailWidth / 1280) * 100}% 1fr ${(layout.orderPanelWidth / 1280) * 100}%`, minHeight: 0 }}>
-                        <Box sx={{ bgcolor: "action.selected", display: "grid", placeItems: "center", fontSize: 10, textAlign: "center", p: 0.5 }}>
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: `${(layout.navRailWidth / 1280) * 100}% 1fr ${(layout.orderPanelWidth / 1280) * 100}%`,
+                            minHeight: 0,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                bgcolor: "action.selected",
+                                display: "grid",
+                                placeItems: "center",
+                                fontSize: 10,
+                                textAlign: "center",
+                                p: 0.5,
+                            }}
+                        >
                             Nav rail {layout.navRailWidth}
                         </Box>
                         <Box sx={{ display: "grid", placeItems: "center", fontSize: 12, color: "text.secondary" }}>Working canvas</Box>
-                        <Box sx={{ bgcolor: "action.hover", borderLeft: "1px solid", borderColor: "divider", display: "grid", placeItems: "center", fontSize: 10, textAlign: "center", p: 0.5 }}>
+                        <Box
+                            sx={{
+                                bgcolor: "action.hover",
+                                borderLeft: "1px solid",
+                                borderColor: "divider",
+                                display: "grid",
+                                placeItems: "center",
+                                fontSize: 10,
+                                textAlign: "center",
+                                p: 0.5,
+                            }}
+                        >
                             Order panel {layout.orderPanelWidth}
                         </Box>
                     </Box>
-                    <Box sx={{ bgcolor: "secondary.main", color: "secondary.contrastText", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 600 }}>
+                    <Box
+                        sx={{
+                            bgcolor: "secondary.main",
+                            color: "secondary.contrastText",
+                            display: "grid",
+                            placeItems: "center",
+                            fontSize: 12,
+                            fontWeight: 600,
+                        }}
+                    >
                         Action bar — {layout.actionBarHeight}px
                     </Box>
                 </Box>
@@ -108,7 +152,9 @@ export const Spacing: Story = {
                         <Card key={key} sx={{ borderColor: isTarget ? "primary.main" : "divider" }}>
                             <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap" }}>
                                 <Box sx={{ minWidth: 130 }}>
-                                    <Token>{key} — {breakpoints[key]}px</Token>
+                                    <Token>
+                                        {key} — {breakpoints[key]}px
+                                    </Token>
                                 </Box>
                                 <Typography variant="body2" sx={{ minWidth: 120, fontWeight: 600 }}>
                                     {m3}

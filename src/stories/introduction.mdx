@@ -3,25 +3,25 @@ import { Meta } from "@storybook/addon-docs/blocks";
 <Meta title="Introduction" />
 
 <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#667085", margin: "0 0 6px" }}>
-  Tenfore
+    Tenfore
 </p>
 
 # Birdie POS Design System
 
 <p style={{ fontSize: 20, lineHeight: 1.55, color: "#475467", maxWidth: 720, margin: "6px 0 0" }}>
-  The UI and UX reference for Birdie — Tenfore's point-of-sale, built on Material UI and
-  documented here as the source of truth for the Expo tablet app.
+    The UI and UX reference for Birdie — Tenfore's point-of-sale, built on Material UI and documented here as the source of truth for the
+    Expo tablet app.
 </p>
 
 <p style={{ fontSize: 14, color: "#98a2b3", margin: "18px 0 0" }}>
-  Landscape tablet only &nbsp;·&nbsp; Material UI v9 &nbsp;·&nbsp; 48dp touch floor &nbsp;·&nbsp; WCAG AA
+    Landscape tablet only &nbsp;·&nbsp; Material UI v9 &nbsp;·&nbsp; 48dp touch floor &nbsp;·&nbsp; WCAG AA
 </p>
 
 ## What this is
 
 This Storybook is a **specification, not a shipping app**. Birdie POS will be built in
 Expo/React Native; this library exists so that the layout, spacing, type scale, color, and
-interaction rules are settled, visible, and testable *before* they are translated to native.
+interaction rules are settled, visible, and testable _before_ they are translated to native.
 
 Material UI is used as the vehicle because it implements Material Design — the same design
 language Android tablets already speak — so patterns proven here carry over to the device
@@ -35,20 +35,20 @@ no responsive collapse to a hamburger menu. The reference device is a 10" Androi
 
 Three consequences run through the whole system:
 
-| Constraint | Rule |
-| --- | --- |
-| **Fingers, not cursors** | Nothing tappable is under **48dp**. Primary actions are 56dp, tender keys 64dp, irreversible actions 80dp. Hover is never load-bearing. |
-| **Wide, not tall** | 800px of height is the scarce resource. Chrome is capped at 136px total; content panels scroll internally, the page never does. |
-| **Glanceable** | Body text starts at **16px**, buttons are sentence case, and the brand green is reserved for *the* action — so the eye finds it without reading. |
+| Constraint               | Rule                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Fingers, not cursors** | Nothing tappable is under **48dp**. Primary actions are 56dp, tender keys 64dp, irreversible actions 80dp. Hover is never load-bearing.          |
+| **Wide, not tall**       | 800px of height is the scarce resource. Chrome is capped at 136px total; content panels scroll internally, the page never does.                  |
+| **Glanceable**           | Body text starts at **16px**, buttons are sentence case, and the brand green is reserved for _the_ action — so the eye finds it without reading. |
 
 ## The map
 
-| Category | What's inside |
-| --- | --- |
-| **Foundations** | Tokens and primitives — Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos. |
-| **Components** | The MUI kit as tuned for Birdie — Actions, Forms, Feedback & Status, Layout & Structure, Media & Visuals, Navigation. |
-| **App Chrome** | The persistent POS frame: nav rail, app bar, order panel, action bar. |
-| **App Screens** | Full-screen flows composed from the above. |
+| Category        | What's inside                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Foundations** | Tokens and primitives — Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos.        |
+| **Components**  | The MUI kit as tuned for Birdie — Actions, Forms, Feedback & Status, Layout & Structure, Media & Visuals, Navigation. |
+| **App Chrome**  | The persistent POS frame: nav rail, app bar, order panel, action bar.                                                 |
+| **App Screens** | Full-screen flows composed from the above.                                                                            |
 
 ## How it's built
 
@@ -68,6 +68,6 @@ remembering the rules**. When these get ported to Expo, port the theme first.
 ---
 
 <p style={{ fontSize: 13, color: "#667085" }}>
-  Use the <strong>Theme</strong> toolbar control to switch light/dark, and the <strong>viewport</strong>
-  control to check a story against the other reference tablets. Press <kbd>/</kbd> to search.
+    Use the <strong>Theme</strong> toolbar control to switch light/dark, and the <strong>viewport</strong>
+    control to check a story against the other reference tablets. Press <kbd>/</kbd> to search.
 </p>

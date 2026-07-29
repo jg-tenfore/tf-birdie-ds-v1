@@ -78,7 +78,15 @@ export const Palette: Story = {
                                 <Stack direction="row" spacing={0.5}>
                                     {(["light", "main", "dark"] as const).map((step) => (
                                         <Box key={step} sx={{ flex: 1 }}>
-                                            <Box sx={{ height: 48, borderRadius: 1, bgcolor: ramp[step], border: "1px solid", borderColor: "divider" }} />
+                                            <Box
+                                                sx={{
+                                                    height: 48,
+                                                    borderRadius: 1,
+                                                    bgcolor: ramp[step],
+                                                    border: "1px solid",
+                                                    borderColor: "divider",
+                                                }}
+                                            />
                                             <Typography variant="caption" sx={{ color: "text.secondary" }}>
                                                 {step}
                                             </Typography>

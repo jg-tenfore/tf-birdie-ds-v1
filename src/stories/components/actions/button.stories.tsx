@@ -43,8 +43,8 @@ export const Variants: Story = {
                 <Button variant="text">Text</Button>
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                One contained button per view. It is the answer to "what do I do next?" — a screen with three
-                contained buttons has no answer.
+                One contained button per view. It is the answer to "what do I do next?" — a screen with three contained buttons has no
+                answer.
             </Typography>
         </Stack>
     ),
@@ -60,8 +60,7 @@ export const Sizes: Story = {
                 <Button size="large">Large — {touchTarget.large}dp</Button>
             </Stack>
             <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 640 }}>
-                Even `small` clears the 48dp Android floor. There is no smaller size, by design — a 36px
-                button is a desktop artifact.
+                Even `small` clears the 48dp Android floor. There is no smaller size, by design — a 36px button is a desktop artifact.
             </Typography>
         </Stack>
     ),
@@ -74,16 +73,12 @@ export const PosActions: Story = {
         <Stack spacing={4} sx={{ p: 3, maxWidth: 720 }}>
             <Stack spacing={1.5}>
                 <Typography variant="h6">Primary commit</Typography>
-                <Button
-                    size="large"
-                    startIcon={<CreditCardOutlinedIcon />}
-                    sx={{ minHeight: touchTarget.critical, fontSize: 20 }}
-                >
+                <Button size="large" startIcon={<CreditCardOutlinedIcon />} sx={{ minHeight: touchTarget.critical, fontSize: 20 }}>
                     Charge $248.00
                 </Button>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    {touchTarget.critical}dp and always in the action bar, in the same place on every screen.
-                    It carries the amount because the operator confirms the number, not the verb.
+                    {touchTarget.critical}dp and always in the action bar, in the same place on every screen. It carries the amount because
+                    the operator confirms the number, not the verb.
                 </Typography>
             </Stack>
 
@@ -98,8 +93,8 @@ export const PosActions: Story = {
                     </Button>
                 </Stack>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Outlined, not contained — a filled red button next to a filled green one is a coin flip at
-                    a glance. Both always confirm in a dialog.
+                    Outlined, not contained — a filled red button next to a filled green one is a coin flip at a glance. Both always confirm
+                    in a dialog.
                 </Typography>
             </Stack>
 
@@ -113,8 +108,8 @@ export const PosActions: Story = {
                     ))}
                 </Box>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Quick-add tiles at {touchTarget.large}dp with an {touchTarget.minGap}px gutter. These get
-                    hit hundreds of times a shift without the operator looking down.
+                    Quick-add tiles at {touchTarget.large}dp with an {touchTarget.minGap}px gutter. These get hit hundreds of times a shift
+                    without the operator looking down.
                 </Typography>
             </Stack>
         </Stack>

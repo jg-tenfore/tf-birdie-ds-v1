@@ -31,8 +31,14 @@ const radiusUsage: Record<keyof typeof radius, string> = {
 
 export const Shape: Story = {
     render: () => (
-        <DocPage title="Radius & Elevation" intro="Softer corners than a desktop system, flatter surfaces, and motion fast enough to disappear.">
-            <DocSection title="Radius" note="Larger radii read as discrete, tappable objects at arm's length — which is exactly what a POS tile needs to be.">
+        <DocPage
+            title="Radius & Elevation"
+            intro="Softer corners than a desktop system, flatter surfaces, and motion fast enough to disappear."
+        >
+            <DocSection
+                title="Radius"
+                note="Larger radii read as discrete, tappable objects at arm's length — which is exactly what a POS tile needs to be."
+            >
                 <Grid min={180}>
                     {(Object.keys(radius) as (keyof typeof radius)[]).map((key) => (
                         <Stack key={key} spacing={1}>
@@ -67,12 +73,25 @@ export const Shape: Story = {
                         <Stack key={level} spacing={1}>
                             <Paper
                                 elevation={level}
-                                sx={{ height: 88, display: "grid", placeItems: "center", borderRadius: 2, border: level === 0 ? "1px solid" : "none", borderColor: "divider" }}
+                                sx={{
+                                    height: 88,
+                                    display: "grid",
+                                    placeItems: "center",
+                                    borderRadius: 2,
+                                    border: level === 0 ? "1px solid" : "none",
+                                    borderColor: "divider",
+                                }}
                             >
                                 <Typography variant="subtitle2">{level}</Typography>
                             </Paper>
                             <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                {level === 0 ? "Cards, panels (default)" : level <= 2 ? "Raised rows, sticky headers" : level <= 8 ? "Menus, popovers" : "Dialogs, sheets"}
+                                {level === 0
+                                    ? "Cards, panels (default)"
+                                    : level <= 2
+                                      ? "Raised rows, sticky headers"
+                                      : level <= 8
+                                        ? "Menus, popovers"
+                                        : "Dialogs, sheets"}
                             </Typography>
                         </Stack>
                     ))}

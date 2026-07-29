@@ -28,7 +28,11 @@ const scale = [
     { variant: "h6", usage: "Sub-heading, emphasized row label.", sample: "Tee time — 9:40 AM" },
     { variant: "subtitle1", usage: "Lead-in copy, item name in the cart.", sample: "Titleist Pro V1 — dozen" },
     { variant: "subtitle2", usage: "Emphasized label inside dense rows.", sample: "Subtotal" },
-    { variant: "body1", usage: "Default body. The floor for anything a operator must read.", sample: "Split the check evenly across four guests." },
+    {
+        variant: "body1",
+        usage: "Default body. The floor for anything a operator must read.",
+        sample: "Split the check evenly across four guests.",
+    },
     { variant: "body2", usage: "Secondary body, table cells.", sample: "Added by Dana at 9:42 AM" },
     { variant: "button", usage: "Button label. Sentence case, never ALL CAPS.", sample: "Charge $248.00" },
     { variant: "caption", usage: "Timestamps, helper text. Never for instructions.", sample: "Synced 2 minutes ago" },
@@ -37,7 +41,10 @@ const scale = [
 
 export const Scale: Story = {
     render: () => (
-        <DocPage title="Typography" intro="Roboto — the Android system face — at sizes tuned for reading a tablet while standing, at speed.">
+        <DocPage
+            title="Typography"
+            intro="Roboto — the Android system face — at sizes tuned for reading a tablet while standing, at speed."
+        >
             <DocSection
                 title="Scale"
                 note="Every step is at least 15px. Button text is 16px and sentence case: ALL CAPS costs word-shape recognition, and POS buttons are scanned, not read."
@@ -93,7 +100,10 @@ export const Scale: Story = {
                             ["Total", "248.00"],
                         ].map(([label, amount], i, arr) => (
                             <Stack key={label} direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
-                                <Typography variant={i === arr.length - 1 ? "subtitle2" : "body2"} sx={{ color: i === arr.length - 1 ? "text.primary" : "text.secondary" }}>
+                                <Typography
+                                    variant={i === arr.length - 1 ? "subtitle2" : "body2"}
+                                    sx={{ color: i === arr.length - 1 ? "text.primary" : "text.secondary" }}
+                                >
                                     {label}
                                 </Typography>
                                 <Typography
