@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, useColorScheme } from "@mui/material/styles";
 import type { Preview } from "@storybook/react-vite";
 
+import { appReplicaTheme } from "../src/theme/app-replica-theme";
 import { birdieTheme } from "../src/theme/birdie-theme";
 import { devices } from "../src/theme/tokens";
 
@@ -56,8 +57,17 @@ const preview: Preview = {
                     "Components",
                     ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Charts & Data", "Media & Visuals", "Navigation"],
                     "App Chrome",
+                    // Mirrors the shipping app's own flyout grouping so the
+                    // sidebar teaches the real information architecture.
                     "App Screens",
-                    ["Register", "Tickets", "Payments", "Tee Sheet", "F & B", "Pro Shop", "Customers", "Reports", "Settings"],
+                    [
+                        "Pro Shop",
+                        ["Pro Shop Order", "Tee Sheet", "Court Sheet", "Bay Sheet"],
+                        "Restaurant",
+                        ["Quick Order", "Tabs", "Tables", "Reservations", "Orders & Tips", "Table Chart"],
+                        "Operations",
+                        ["Customer Search", "Order Lookup", "Time Clock", "Gift Cards", "Events", "Inventory", "Shift"],
+                    ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would
                     // split this into two nested folders in the sidebar.
                     "Sign in ∕ Sign up",
@@ -101,6 +111,21 @@ const preview: Preview = {
     decorators: [
         (Story, context) => {
             const mode = (context.globals.theme as "light" | "dark") ?? "light";
+
+            // `App Screens/*` are an as-is replica of the shipping app, so they
+            // render on the replica theme (MD2, ALL-CAPS, 4px radii). Everything
+            // else — Foundations, Components, App Chrome — is the Birdie design
+            // system and stays on `birdieTheme`. See CLAUDE.md.
+            const isReplica = context.title.startsWith("App Screens");
+
+            if (isReplica) {
+                return (
+                    <ThemeProvider theme={appReplicaTheme}>
+                        <CssBaseline />
+                        <Story />
+                    </ThemeProvider>
+                );
+            }
 
             return (
                 <ThemeProvider theme={birdieTheme} defaultMode={mode}>

@@ -7,3 +7,11 @@
  * only shows up after deploy, so it is centralized here instead.
  */
 export const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+
+/**
+ * Resolves a product photo from the store catalog.
+ *
+ * Takes a `StoreProduct.path` (e.g. `"equipment/golf-balls/foo.webp"`) and
+ * returns a URL under the `/store-images` static dir.
+ */
+export const storeImage = (path: string) => assetUrl(`store-images/${path.replace(/^\//, "")}`);

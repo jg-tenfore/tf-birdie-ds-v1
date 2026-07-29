@@ -12,9 +12,14 @@ const config: StorybookConfig = {
 
     framework: "@storybook/react-vite",
 
-    // Tenfore logos are served at a stable /logos/* URL in both dev and the
-    // static build, so stories and the Pages landing page reference one path.
-    staticDirs: [{ from: "../logos", to: "/logos" }],
+    // Served at stable URLs in both dev and the static build, so stories and the
+    // Pages landing page reference one path. Resolve with `assetUrl()` /
+    // `storeImage()` — never hard-code, since production sits under a subpath.
+    staticDirs: [
+        { from: "../logos", to: "/logos" },
+        // Real product photography for the Pro Shop and Quick Order tiles.
+        { from: "../store/images", to: "/store-images" },
+    ],
 
     viteFinal: async (viteConfig, { configType }) => {
         viteConfig.resolve = {

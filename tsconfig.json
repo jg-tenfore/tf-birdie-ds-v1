@@ -21,9 +21,10 @@
         "skipLibCheck": true,
         "noEmit": true,
 
-        "baseUrl": ".",
+        // No `baseUrl` — it's deprecated as of TS 6 and stops working in TS 7.
+        // `paths` resolves relative to this file's directory without it.
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": ["./src/*"]
         }
     },
     "include": ["src", ".storybook", "scripts"]
