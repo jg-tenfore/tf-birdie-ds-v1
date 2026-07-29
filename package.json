@@ -7,10 +7,13 @@
         "storybook": "storybook dev -p 6020",
         "build-storybook": "storybook build -o dist/storybook",
         "build-site": "node scripts/build-site.mjs",
-        "build": "npm run build-storybook && npm run build-site",
+        "build": "npm run build-storybook && npm run build-app && npm run build-site",
         "typecheck": "tsc --noEmit",
         "format": "prettier --write .",
-        "generate:catalog": "node scripts/generate-catalog.mjs"
+        "generate:catalog": "node scripts/generate-catalog.mjs",
+        "dev:app": "vite",
+        "build-app": "vite build",
+        "smoke": "node scripts/smoke-test.mjs"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
@@ -20,7 +23,8 @@
         "@mui/icons-material": "^9.2.0",
         "@mui/material": "^9.2.0",
         "react": "^19.2.0",
-        "react-dom": "^19.2.0"
+        "react-dom": "^19.2.0",
+        "react-router-dom": "^7.18.2"
     },
     "devDependencies": {
         "@storybook/addon-a11y": "^10.5.5",
@@ -29,6 +33,8 @@
         "@storybook/react-vite": "^10.5.5",
         "@types/react": "^19.2.0",
         "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^6.0.4",
+        "playwright": "^1.62.0",
         "prettier": "^3.8.1",
         "storybook": "^10.5.5",
         "typescript": "^5.9.3",

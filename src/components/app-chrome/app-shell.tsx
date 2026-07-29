@@ -76,6 +76,12 @@ export interface AppShellProps {
     children?: ReactNode;
     /** Drawer starts open — used by the nav story. */
     defaultDrawerOpen?: boolean;
+    /**
+     * Fires when a drawer destination is chosen. Stories leave this unset (the
+     * drawer just closes); the working prototype app passes a router navigate,
+     * which is what turns the shell into real navigation.
+     */
+    onNavigate?: (key: NavKey) => void;
     /** Dark canvas, as on the tee-time detail screens. */
     tone?: "light" | "dark";
 }
@@ -218,6 +224,7 @@ export const AppShell = ({
     showMenuButton = true,
     overlay,
     actionBarBg,
+    onNavigate,
 }: AppShellProps) => {
     const [drawerOpen, setDrawerOpen] = useState(defaultDrawerOpen);
 
@@ -315,7 +322,13 @@ export const AppShell = ({
             )}
 
             <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} slotProps={{ paper: { sx: { width: appLayout.drawerWidth } } }}>
-                <NavDrawerContent active={active} onNavigate={() => setDrawerOpen(false)} />
+                <NavDrawerContent
+                    active={active}
+                    onNavigate={(key) => {
+                        setDrawerOpen(false);
+                        onNavigate?.(key);
+                    }}
+                />
             </Drawer>
 
             {overlay}
