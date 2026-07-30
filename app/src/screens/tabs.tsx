@@ -154,9 +154,20 @@ export const TabsScreen = () => {
 /** The seat editor sells the restaurant menu, not the retail catalogue. */
 const MENU_CATEGORIES: FoodCategory[] = ["Sandwiches", "Hamburgers", "Grill", "Beer", "Wine", "Beverages", "Snacks"];
 
-const SeatBandRow = ({ seat, expanded, onToggle }: { seat: number; expanded: boolean; onToggle: () => void }) => (
+/**
+ * A seat band.
+ *
+ * Tapping it chooses which seat receives the next item — it does not collapse
+ * anything. Lines are always visible: a server reading a table needs to see the
+ * whole check at once, and hiding three seats to look at one is how the wrong
+ * plate gets carried out. The chevron marks the *active* seat rather than an
+ * expanded one.
+ */
+const SeatBandRow = ({ seat, active, onSelect }: { seat: number; active: boolean; onSelect: () => void }) => (
     <ButtonBase
-        onClick={onToggle}
+        onClick={onSelect}
+        aria-label={`Seat ${seat}`}
+        aria-pressed={active}
         sx={{
             width: "100%",
             justifyContent: "space-between",
@@ -164,10 +175,13 @@ const SeatBandRow = ({ seat, expanded, onToggle }: { seat: number; expanded: boo
             color: "#fff",
             px: 2,
             py: 1.25,
+            // The active seat is picked out by a white left edge rather than a
+            // different fill, so the seat's own colour survives.
+            borderLeft: active ? "5px solid #fff" : "5px solid transparent",
         }}
     >
-        <Typography sx={{ fontSize: 16 }}>Seat {seat}</Typography>
-        <Typography sx={{ fontSize: 20, lineHeight: 1 }}>{expanded ? "‹" : "›"}</Typography>
+        <Typography sx={{ fontSize: 16, fontWeight: active ? 700 : 400 }}>Seat {seat}</Typography>
+        {active && <Typography sx={{ fontSize: 20, lineHeight: 1 }}>‹</Typography>}
     </ButtonBase>
 );
 
@@ -224,7 +238,6 @@ export const TabDetailScreen = () => {
     const seats = ticket?.seats ?? 4;
     const fromTable = ticket?.source === "Table";
     const [activeSeat, setActiveSeat] = useState(1);
-    const [expanded, setExpanded] = useState<number | null>(1);
 
     const total = lines.reduce((s, l) => s + l.qty * l.unitPrice, 0) * 1.06;
 
@@ -238,21 +251,18 @@ export const TabDetailScreen = () => {
                         <Box key={seat}>
                             <SeatBandRow
                                 seat={seat}
-                                expanded={expanded === seat}
-                                onToggle={() => {
-                                    setExpanded(expanded === seat ? null : seat);
-                                    setActiveSeat(seat);
-                                }}
+                                active={activeSeat === seat}
+                                onSelect={() => setActiveSeat(seat)}
                             />
-                            {expanded === seat && (
-                                <Stack divider={<Divider />}>
-                                    {lines
-                                        .filter((l) => l.seat === seat)
-                                        .map((l) => (
-                                            <SeatLine key={`${l.id}-${seat}`} line={l} onRemove={() => removeLine(l.id, seat)} />
-                                        ))}
-                                </Stack>
-                            )}
+                            {/* Always rendered. An empty seat simply shows nothing
+                                under its band, which is information too. */}
+                            <Stack divider={<Divider />}>
+                                {lines
+                                    .filter((l) => l.seat === seat)
+                                    .map((l) => (
+                                        <SeatLine key={`${l.id}-${seat}`} line={l} onRemove={() => removeLine(l.id, seat)} />
+                                    ))}
+                            </Stack>
                         </Box>
                     ))}
                 </Box>
@@ -295,7 +305,13 @@ export const TabDetailScreen = () => {
                     sx={{ width: "100%", fontSize: 20, borderBottom: `1px solid ${appColors.textPrimary}`, pb: 1, mb: 3 }}
                 />
 
-                <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", rowGap: 2 }}>
+                {/*
+                 * A real grid. This was a wrapping flex row of fixed-width tiles,
+                 * so the last item in each row left a ragged gap and tiles with
+                 * two-line names grew taller than their neighbours. Equal columns
+                 * and a fixed image box keep every tile the same size.
+                 */}
+                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
                     {MENU_CATEGORIES.flatMap((c) => foodByCategory(c)).map((item) => (
                         <ButtonBase
                             key={item.id}
@@ -307,30 +323,66 @@ export const TabDetailScreen = () => {
                                 )
                             }
                             sx={{
-                                width: 148,
                                 flexDirection: "column",
+                                alignItems: "stretch",
                                 bgcolor: "#fff",
                                 border: "1px solid",
                                 borderColor: appColors.divider,
                                 borderRadius: `${appRadius.tile}px`,
+                                overflow: "hidden",
+                                transition: "border-color 100ms linear",
+                                "&:hover": { borderColor: appColors.green },
                             }}
                         >
-                            <Box sx={{ width: "100%", height: 128, display: "grid", placeItems: "center", overflow: "hidden", p: 0.75 }}>
+                            {/* Absolutely positioned: a percentage max-height
+                                resolves against an auto-sized grid row and computes
+                                to none, which is how tall shots used to overflow
+                                onto the label. */}
+                            <Box sx={{ position: "relative", width: "100%", height: 120, flexShrink: 0, overflow: "hidden" }}>
                                 <Box
                                     component="img"
                                     src={storeImage(item.path)}
                                     alt=""
                                     loading="lazy"
-                                    sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                                    sx={{
+                                        position: "absolute",
+                                        inset: 6,
+                                        width: "calc(100% - 12px)",
+                                        height: "calc(100% - 12px)",
+                                        objectFit: "contain",
+                                    }}
                                 />
                             </Box>
-                            <Stack sx={{ py: 1, px: 0.5, minHeight: 52, justifyContent: "center" }}>
-                                <Typography sx={{ fontSize: 13, textAlign: "center" }}>{item.name}</Typography>
+                            {/* A fixed height, not a minimum: a two-line product
+                                name would otherwise make its tile taller than its
+                                neighbours and break the row. Long names clamp. */}
+                            <Stack
+                                sx={{
+                                    px: 0.75,
+                                    height: 66,
+                                    flexShrink: 0,
+                                    justifyContent: "center",
+                                    borderTop: `1px solid ${appColors.divider}`,
+                                }}
+                            >
+                                <Typography
+                                    sx={{
+                                        fontSize: 13,
+                                        textAlign: "center",
+                                        lineHeight: 1.25,
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: "vertical",
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    {item.name}
+                                </Typography>
                                 <Typography sx={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{money(item.price)}</Typography>
                             </Stack>
                         </ButtonBase>
                     ))}
-                </Stack>
+                </Box>
             </Box>
         </Shell>
     );
