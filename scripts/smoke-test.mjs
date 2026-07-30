@@ -125,10 +125,14 @@ await step("tee-sheet check-in creates a ticket in the register", async () => {
 });
 
 await step("held ticket appears on the tabs list", async () => {
+    await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
+    const before = await page.evaluate(() => document.body.innerText.match(/\d{4} - /g)?.length ?? 0);
     await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Pop", exact: true }).click();
     await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
-    await page.waitForSelector("text=/Oda Brennevin/", { timeout: 6000 });
+    // Asserting a count rather than a name: the checked-in golfer comes from the
+    // generated sheet, so hard-coding one couples this test to the seed.
+    await page.waitForFunction((n) => (document.body.innerText.match(/\d{4} - /g)?.length ?? 0) > n, before, { timeout: 6000 });
 });
 
 await step("court sheet renders six resource columns", async () => {

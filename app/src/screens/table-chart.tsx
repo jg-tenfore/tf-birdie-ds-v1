@@ -4,13 +4,18 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
+import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import CheckIcon from "@mui/icons-material/Check";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutlined";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import RedoIcon from "@mui/icons-material/Redo";
@@ -21,8 +26,6 @@ import { useNavigate } from "react-router-dom";
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import {
     FloorElementView,
-    SEAT_RANGE,
-    TableGraphic,
     clampSeats,
     floorColors,
     floorRoomOrder,
@@ -76,23 +79,172 @@ const ITEMS: PaletteItem[] = [
     { key: "label", label: "Label", make: () => ({ kind: "label", x: 0, y: 0, w: 90, h: 24, text: "Label" }) },
 ];
 
-/** Palette thumbnails reuse the real table renderer, so they cannot drift. */
-const PaletteThumb = ({ item }: { item: PaletteItem }) => {
-    const spec = item.make();
-    if (spec.kind !== "table") {
-        if (spec.kind === "barrier") return <Box sx={{ width: 40, height: 5, bgcolor: floorColors.idle, borderRadius: "2px" }} />;
-        if (spec.kind === "box") return <Box sx={{ width: 40, height: 24, border: `2px solid ${floorColors.idle}`, borderRadius: "3px" }} />;
-        return (
-            <Box sx={{ px: 1, py: 0.25, border: "1px dashed rgba(0,0,0,0.4)", borderRadius: "3px", fontSize: 11 }}>Label</Box>
-        );
+/**
+ * Palette glyphs.
+ *
+ * Purpose-drawn rather than a shrunken `TableGraphic`. The real renderer insets
+ * the table body by a chair's width on every side, so at 44px the body all but
+ * disappears and the chairs read as loose blobs — the rail looked broken. These
+ * are line-art at a fixed 40px: an outlined shape with four seat marks, legible
+ * at rail size and still unmistakably a table with seats.
+ */
+const SEAT = 5;
+
+const seatMarks = (points: [number, number][]) =>
+    points.map(([x, y]) => <rect key={`${x}-${y}`} x={x - SEAT / 2} y={y - SEAT / 2} width={SEAT} height={SEAT} rx={1} fill="currentColor" />);
+
+const glyphBox = { width: 44, height: 44, viewBox: "0 0 44 44" } as const;
+const glyphStroke = { fill: "none", stroke: "currentColor", strokeWidth: 2 } as const;
+
+const PaletteGlyph = ({ kind }: { kind: string }) => {
+    const svg = (children: React.ReactNode) => (
+        <Box component="svg" {...glyphBox} sx={{ color: floorColors.idle, display: "block" }}>
+            {children}
+        </Box>
+    );
+
+    switch (kind) {
+        case "circle":
+            return svg(
+                <>
+                    <circle cx={22} cy={22} r={10} {...glyphStroke} />
+                    {seatMarks([
+                        [22, 7],
+                        [37, 22],
+                        [22, 37],
+                        [7, 22],
+                    ])}
+                </>,
+            );
+        case "square":
+            return svg(
+                <>
+                    <rect x={12} y={12} width={20} height={20} rx={2} {...glyphStroke} />
+                    {seatMarks([
+                        [22, 6],
+                        [38, 22],
+                        [22, 38],
+                        [6, 22],
+                    ])}
+                </>,
+            );
+        case "rectangle":
+            return svg(
+                <>
+                    <rect x={7} y={15} width={30} height={14} rx={2} {...glyphStroke} />
+                    {seatMarks([
+                        [15, 9],
+                        [29, 9],
+                        [15, 35],
+                        [29, 35],
+                    ])}
+                </>,
+            );
+        case "oval":
+            return svg(
+                <>
+                    <ellipse cx={22} cy={22} rx={14} ry={8} {...glyphStroke} />
+                    {seatMarks([
+                        [16, 10],
+                        [28, 10],
+                        [16, 34],
+                        [28, 34],
+                    ])}
+                </>,
+            );
+        case "diamond":
+            return svg(
+                <>
+                    <rect x={13} y={13} width={18} height={18} rx={2} transform="rotate(45 22 22)" {...glyphStroke} />
+                    {seatMarks([
+                        [22, 5],
+                        [39, 22],
+                        [22, 39],
+                        [5, 22],
+                    ])}
+                </>,
+            );
+        case "barrier":
+            return <Box sx={{ width: 32, height: 4, bgcolor: floorColors.idle, borderRadius: "1px" }} />;
+        case "box":
+            return <Box sx={{ width: 32, height: 18, border: `2px solid ${floorColors.idle}`, borderRadius: "2px" }} />;
+        default:
+            return (
+                <Box sx={{ px: 1, py: 0.25, border: "1px dashed rgba(0,0,0,0.45)", borderRadius: "2px", fontSize: 11 }}>Label</Box>
+            );
     }
-    const el = { ...spec, id: "thumb", w: 44, h: spec.shape === "rectangle" || spec.shape === "oval" ? 34 : 44 } as FloorElement;
+};
+
+/** Section label with the hairline the rail uses to separate its two groups. */
+const PaletteHeading = ({ children }: { children: React.ReactNode }) => (
+    <Typography
+        sx={{
+            fontSize: 11,
+            letterSpacing: "0.12em",
+            color: appColors.textSecondary,
+            textAlign: "center",
+            pb: 1,
+            mb: 0.5,
+            mx: 1.5,
+            borderBottom: `1px solid ${appColors.divider}`,
+        }}
+    >
+        {children}
+    </Typography>
+);
+
+/** Selection accent. Blue so it never reads as part of the plan itself. */
+const SELECT_BLUE = "#1A73E8";
+/** Fixed so the toolbar can be centred on the selection before it renders. */
+const TOOLBAR_W = 430;
+const SELECT_BLUE_SOFT = "#E8F0FE";
+
+const SHAPES: TableShape[] = ["circle", "square", "rectangle", "oval", "diamond"];
+
+/** Small outline of each shape for the toolbar's shape switcher. */
+const ShapeIcon = ({ shape }: { shape: TableShape }) => {
+    const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 2 } as const;
     return (
-        <Box sx={{ transform: spec.shape === "diamond" ? "rotate(45deg)" : undefined, display: "grid", placeItems: "center" }}>
-            <TableGraphic element={el} fill={floorColors.idle} />
+        <Box component="svg" width={22} height={22} viewBox="0 0 22 22" sx={{ display: "block" }}>
+            {shape === "circle" && <circle cx={11} cy={11} r={8} {...stroke} />}
+            {shape === "square" && <rect x={3} y={3} width={16} height={16} rx={2} {...stroke} />}
+            {shape === "rectangle" && <rect x={2} y={6} width={18} height={10} rx={2} {...stroke} />}
+            {shape === "oval" && <ellipse cx={11} cy={11} rx={9} ry={6} {...stroke} />}
+            {shape === "diamond" && <rect x={4} y={4} width={14} height={14} rx={2} transform="rotate(45 11 11)" {...stroke} />}
         </Box>
     );
 };
+
+const ToolbarButton = ({
+    label,
+    active,
+    danger,
+    onClick,
+    children,
+}: {
+    label: string;
+    active?: boolean;
+    danger?: boolean;
+    onClick?: () => void;
+    children: React.ReactNode;
+}) => (
+    <ButtonBase
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+        sx={{
+            width: 38,
+            height: 38,
+            flexShrink: 0,
+            borderRadius: 1,
+            color: danger ? "#E53935" : active ? SELECT_BLUE : appColors.textPrimary,
+            bgcolor: active ? SELECT_BLUE_SOFT : "transparent",
+            "&:hover": { bgcolor: active ? SELECT_BLUE_SOFT : appColors.canvas },
+        }}
+    >
+        {children}
+    </ButtonBase>
+);
 
 const HANDLES = [
     { key: "nw", x: 0, y: 0 },
@@ -192,6 +344,19 @@ export const TableChartScreen = () => {
 
     const patch = (id: string, changes: Partial<FloorElement>, live = false) =>
         (live ? nudge : commit)((prev) => prev.map((e) => (e.id === id ? { ...e, ...changes } : e)));
+
+    /** Duplicate lands offset so the copy is visibly a second object. */
+    const duplicate = (el: FloorElement) => {
+        const copy: FloorElement = {
+            ...el,
+            id: `${el.kind}-${Date.now().toString(36)}`,
+            x: Math.min(CANVAS_W - el.w, el.x + GRID * 2),
+            y: Math.min(CANVAS_H - el.h, el.y + GRID * 2),
+            num: el.kind === "table" ? `${el.num ?? ""}·2` : el.num,
+        };
+        commit((prev) => [...prev, copy]);
+        setSelectedId(copy.id);
+    };
 
     const remove = (id: string) => {
         commit((prev) => prev.filter((e) => e.id !== id));
@@ -331,7 +496,14 @@ export const TableChartScreen = () => {
                         icon={<CheckIcon />}
                         tone={dirty ? "primary" : "disabled"}
                         preserveCase
-                        onClick={() => dirty && saveFloorPlan(room, elements)}
+                        onClick={() => {
+                            if (!dirty) return;
+                            saveFloorPlan(room, elements);
+                            // Saving hands off to the live floor — the locked view of
+                            // the same plan. Staying in the editor after a save invites
+                            // edits nobody meant to make.
+                            navigate("/tables");
+                        }}
                     >
                         {dirty ? "SAVE •" : "SAVED"}
                     </ActionButton>
@@ -343,31 +515,40 @@ export const TableChartScreen = () => {
                     the artifact's gesture, but tap-to-place is the reliable one
                     on a tablet with no hover. */}
                 {paletteOpen && (
-                    <Stack sx={{ width: 84, flexShrink: 0, bgcolor: "#fff", borderRight: `1px solid ${appColors.divider}`, py: 1.5, gap: 1.5 }}>
-                        <Typography sx={{ fontSize: 10, letterSpacing: "0.1em", color: appColors.textSecondary, textAlign: "center" }}>
-                            TABLES
-                        </Typography>
+                    <Stack
+                        sx={{
+                            width: 84,
+                            flexShrink: 0,
+                            bgcolor: "#fff",
+                            borderRight: `1px solid ${appColors.divider}`,
+                            py: 1.5,
+                            overflowY: "auto",
+                        }}
+                    >
+                        <PaletteHeading>TABLES</PaletteHeading>
                         {TABLES.map((item) => (
                             <ButtonBase
                                 key={item.key}
                                 aria-label={item.label}
                                 onClick={() => addElement(item)}
-                                sx={{ height: 48, display: "grid", placeItems: "center" }}
+                                // 52px keeps the row above the 48dp touch floor.
+                                sx={{ height: 52, display: "grid", placeItems: "center", "&:hover": { bgcolor: appColors.canvas } }}
                             >
-                                <PaletteThumb item={item} />
+                                <PaletteGlyph kind={item.key} />
                             </ButtonBase>
                         ))}
-                        <Typography sx={{ fontSize: 10, letterSpacing: "0.1em", color: appColors.textSecondary, textAlign: "center", mt: 1 }}>
-                            ITEMS
-                        </Typography>
+
+                        <Box sx={{ mt: 1.5 }}>
+                            <PaletteHeading>ITEMS</PaletteHeading>
+                        </Box>
                         {ITEMS.map((item) => (
                             <ButtonBase
                                 key={item.key}
                                 aria-label={item.label}
                                 onClick={() => addElement(item)}
-                                sx={{ height: 44, display: "grid", placeItems: "center" }}
+                                sx={{ height: 52, display: "grid", placeItems: "center", "&:hover": { bgcolor: appColors.canvas } }}
                             >
-                                <PaletteThumb item={item} />
+                                <PaletteGlyph kind={item.key} />
                             </ButtonBase>
                         ))}
                     </Stack>
@@ -408,7 +589,7 @@ export const TableChartScreen = () => {
                                         top: selected.y - 3,
                                         width: selected.w + 6,
                                         height: selected.h + 6,
-                                        border: `1px solid ${floorColors.idle}`,
+                                        border: `1.5px solid ${SELECT_BLUE}`,
                                         pointerEvents: "none",
                                     }}
                                 />
@@ -420,16 +601,133 @@ export const TableChartScreen = () => {
                                         onPointerDown={(e) => startResize(e, selected, hd.key)}
                                         sx={{
                                             position: "absolute",
-                                            left: selected.x + selected.w * hd.x - 5,
-                                            top: selected.y + selected.h * hd.y - 5,
-                                            width: 10,
-                                            height: 10,
-                                            bgcolor: floorColors.idle,
+                                            left: selected.x + selected.w * hd.x - 6,
+                                            top: selected.y + selected.h * hd.y - 6,
+                                            width: 12,
+                                            height: 12,
+                                            bgcolor: SELECT_BLUE,
+                                            // A white ring so a handle stays visible
+                                            // sitting on a dark table body.
+                                            boxShadow: "0 0 0 1.5px #fff",
                                             cursor: "nwse-resize",
                                             touchAction: "none",
                                         }}
                                     />
                                 ))}
+
+                                {/*
+                                 * The toolbar rides above the selection rather than
+                                 * living in a corner of the screen. On a tablet the
+                                 * hand is already on the table it is editing, so a
+                                 * panel at the bottom means looking one place and
+                                 * reaching another.
+                                 */}
+                                <Stack
+                                    direction="row"
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    sx={{
+                                        position: "absolute",
+                                        left: Math.max(4, Math.min(CANVAS_W - TOOLBAR_W - 4, selected.x + selected.w / 2 - TOOLBAR_W / 2)),
+                                        top: Math.max(4, selected.y - 68),
+                                        alignItems: "center",
+                                        // Never wrap — a toolbar that reflows onto a
+                                        // second line covers the thing it is editing.
+                                        flexWrap: "nowrap",
+                                        whiteSpace: "nowrap",
+                                        gap: 0.25,
+                                        px: 1.5,
+                                        height: 52,
+                                        bgcolor: "#fff",
+                                        borderRadius: 1.5,
+                                        boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
+                                        zIndex: 30,
+                                    }}
+                                >
+                                    {selected.kind === "table" ? (
+                                        <>
+                                            <Typography sx={{ fontSize: 15, flexShrink: 0, color: appColors.textSecondary }}>Table</Typography>
+                                            <InputBase
+                                                value={selected.num ?? ""}
+                                                onChange={(e) => patch(selected.id, { num: e.target.value })}
+                                                inputProps={{ "aria-label": "Table name" }}
+                                                sx={{ width: 54, flexShrink: 0, "& input": { fontSize: 16, fontWeight: 600, p: 0 } }}
+                                            />
+
+                                            <PeopleOutlineIcon sx={{ fontSize: 20, flexShrink: 0, color: appColors.textSecondary, ml: 0.5 }} />
+                                            <ButtonBase
+                                                aria-label="Fewer seats"
+                                                onClick={() => patch(selected.id, { seats: clampSeats((selected.seats ?? 4) - 1) })}
+                                                sx={{ width: 26, height: 34, flexShrink: 0, fontSize: 18, color: appColors.textSecondary }}
+                                            >
+                                                −
+                                            </ButtonBase>
+                                            <Typography sx={{ fontSize: 16, minWidth: 20, flexShrink: 0, textAlign: "center" }}>
+                                                {clampSeats(selected.seats)}
+                                            </Typography>
+                                            <ButtonBase
+                                                aria-label="More seats"
+                                                onClick={() => patch(selected.id, { seats: clampSeats((selected.seats ?? 4) + 1) })}
+                                                sx={{ width: 26, height: 34, flexShrink: 0, fontSize: 18, color: appColors.textSecondary }}
+                                            >
+                                                +
+                                            </ButtonBase>
+
+                                            <Box sx={{ width: "1px", height: 26, flexShrink: 0, bgcolor: appColors.divider, mx: 0.75 }} />
+
+                                            {SHAPES.map((sh) => (
+                                                <ToolbarButton
+                                                    key={sh}
+                                                    label={sh}
+                                                    active={selected.shape === sh}
+                                                    onClick={() =>
+                                                        patch(selected.id, {
+                                                            shape: sh,
+                                                            lockAR: sh === "circle" || sh === "diamond" ? true : selected.lockAR,
+                                                        })
+                                                    }
+                                                >
+                                                    <ShapeIcon shape={sh} />
+                                                </ToolbarButton>
+                                            ))}
+
+                                            <Box sx={{ width: "1px", height: 26, flexShrink: 0, bgcolor: appColors.divider, mx: 0.75 }} />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Typography sx={{ fontSize: 15, color: appColors.textSecondary, textTransform: "capitalize" }}>
+                                                {selected.kind}
+                                            </Typography>
+                                            {selected.kind === "label" && (
+                                                <InputBase
+                                                    value={selected.text ?? ""}
+                                                    onChange={(e) => patch(selected.id, { text: e.target.value })}
+                                                    inputProps={{ "aria-label": "Label text" }}
+                                                    sx={{ width: 130, flexShrink: 0, "& input": { fontSize: 16, p: 0 } }}
+                                                />
+                                            )}
+                                            <Box sx={{ width: "1px", height: 26, flexShrink: 0, bgcolor: appColors.divider, mx: 0.75 }} />
+                                        </>
+                                    )}
+
+                                    {/* Locked means resizing keeps the proportions —
+                                        a round table that stops being round stops
+                                        reading as a table. */}
+                                    <ToolbarButton
+                                        label="Lock proportions"
+                                        active={Boolean(selected.lockAR)}
+                                        onClick={() => patch(selected.id, { lockAR: !selected.lockAR })}
+                                    >
+                                        {selected.lockAR ? <LockIcon sx={{ fontSize: 20 }} /> : <LockOpenIcon sx={{ fontSize: 20 }} />}
+                                    </ToolbarButton>
+
+                                    <ToolbarButton label="Duplicate" onClick={() => duplicate(selected)}>
+                                        <ContentCopyIcon sx={{ fontSize: 19 }} />
+                                    </ToolbarButton>
+
+                                    <ToolbarButton label="Delete" danger onClick={() => remove(selected.id)}>
+                                        <DeleteOutlineIcon sx={{ fontSize: 21 }} />
+                                    </ToolbarButton>
+                                </Stack>
                             </>
                         )}
                     </Box>
@@ -477,119 +775,6 @@ export const TableChartScreen = () => {
                         </IconButton>
                     </Stack>
 
-                    {/* Inspector for the selected element. */}
-                    {selected && (
-                        <Stack
-                            sx={{
-                                position: "absolute",
-                                left: 16,
-                                bottom: 16,
-                                bgcolor: "#fff",
-                                boxShadow: 3,
-                                borderRadius: 1,
-                                p: 2,
-                                gap: 1.5,
-                                width: 260,
-                            }}
-                        >
-                            <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
-                                <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary }}>
-                                    {selected.kind === "table" ? "TABLE" : selected.kind.toUpperCase()}
-                                </Typography>
-                                <IconButton aria-label="Delete element" onClick={() => remove(selected.id)} size="small">
-                                    <DeleteOutlineIcon />
-                                </IconButton>
-                            </Stack>
-
-                            {selected.kind === "table" && (
-                                <>
-                                    <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
-                                        <Typography sx={{ fontSize: 14, width: 56 }}>Name</Typography>
-                                        <Box
-                                            component="input"
-                                            value={selected.num ?? ""}
-                                            onChange={(e) => patch(selected.id, { num: e.target.value })}
-                                            sx={{
-                                                flex: 1,
-                                                minWidth: 0,
-                                                border: 0,
-                                                borderBottom: `1px solid ${appColors.divider}`,
-                                                fontSize: 15,
-                                                fontFamily: "inherit",
-                                                outline: "none",
-                                                py: 0.5,
-                                            }}
-                                        />
-                                    </Stack>
-
-                                    <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
-                                        <Typography sx={{ fontSize: 14, width: 56 }}>Seats</Typography>
-                                        <IconButton
-                                            aria-label="Fewer seats"
-                                            size="small"
-                                            onClick={() => patch(selected.id, { seats: clampSeats((selected.seats ?? 4) - 1) })}
-                                        >
-                                            <RemoveIcon fontSize="small" />
-                                        </IconButton>
-                                        <Typography sx={{ fontSize: 16, minWidth: 24, textAlign: "center" }}>
-                                            {clampSeats(selected.seats)}
-                                        </Typography>
-                                        <IconButton
-                                            aria-label="More seats"
-                                            size="small"
-                                            onClick={() => patch(selected.id, { seats: clampSeats((selected.seats ?? 4) + 1) })}
-                                        >
-                                            <AddIcon fontSize="small" />
-                                        </IconButton>
-                                        <Typography sx={{ fontSize: 12, color: appColors.textSecondary, ml: "auto" }}>
-                                            max {SEAT_RANGE.max}
-                                        </Typography>
-                                    </Stack>
-
-                                    <Stack direction="row" sx={{ gap: 0.75 }}>
-                                        {(["square", "circle", "rectangle", "oval", "diamond"] as TableShape[]).map((sh) => (
-                                            <ButtonBase
-                                                key={sh}
-                                                aria-label={sh}
-                                                onClick={() => patch(selected.id, { shape: sh, lockAR: sh === "circle" || sh === "diamond" })}
-                                                sx={{
-                                                    flex: 1,
-                                                    py: 0.75,
-                                                    fontSize: 11,
-                                                    textTransform: "capitalize",
-                                                    bgcolor: selected.shape === sh ? floorColors.idle : appColors.canvas,
-                                                    color: selected.shape === sh ? "#fff" : appColors.textPrimary,
-                                                    borderRadius: 0.5,
-                                                }}
-                                            >
-                                                {sh.slice(0, 4)}
-                                            </ButtonBase>
-                                        ))}
-                                    </Stack>
-                                </>
-                            )}
-
-                            {selected.kind === "label" && (
-                                <Box
-                                    component="input"
-                                    value={selected.text ?? ""}
-                                    onChange={(e) => patch(selected.id, { text: e.target.value })}
-                                    sx={{
-                                        border: 0,
-                                        borderBottom: `1px solid ${appColors.divider}`,
-                                        fontSize: 15,
-                                        fontFamily: "inherit",
-                                        outline: "none",
-                                        py: 0.5,
-                                    }}
-                                />
-                            )}
-
-                            <Typography sx={{ fontSize: 12, color: appColors.textSecondary }}>
-                                {selected.w} × {selected.h} at {selected.x}, {selected.y}
-                            </Typography>
-                        </Stack>
-                    )}
                 </Box>
             </Stack>
 

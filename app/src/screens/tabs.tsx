@@ -222,6 +222,7 @@ export const TabDetailScreen = () => {
      */
     const ticket = id === "active" ? state.tickets.find((t) => t.id === state.activeTicketId) : state.tickets.find((t) => t.id === id);
     const seats = ticket?.seats ?? 4;
+    const fromTable = ticket?.source === "Table";
     const [activeSeat, setActiveSeat] = useState(1);
     const [expanded, setExpanded] = useState<number | null>(1);
 
@@ -258,14 +259,22 @@ export const TabDetailScreen = () => {
             }
             actionBar={
                 <>
-                    <ActionButton onClick={() => navigate("/tabs")}>Done</ActionButton>
-                    <ActionButton icon={<CategoryIcon />}>Combos</ActionButton>
-                    <ActionButton>Open Food</ActionButton>
+                    {/*
+                     * DONE goes back where you came from. A check opened off the
+                     * floor plan returns to the floor; one opened off the tab list
+                     * returns to the list. Sending a table's check to the tab list
+                     * loses the room you were standing in.
+                     */}
+                    <ActionButton onClick={() => navigate(fromTable ? "/tables" : "/tabs")}>Done</ActionButton>
+                    <ActionButton icon={<CategoryIcon />} onClick={() => navigate("/combos")}>
+                        Combos
+                    </ActionButton>
+                    <ActionButton onClick={() => navigate("/quickorder")}>Open Food</ActionButton>
                     <ActionButton
                         tone="primary"
                         onClick={() => {
                             holdTicket();
-                            navigate("/tabs");
+                            navigate(fromTable ? "/tables" : "/tabs");
                         }}
                     >
                         Save Changes

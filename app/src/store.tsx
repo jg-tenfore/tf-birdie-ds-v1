@@ -231,6 +231,13 @@ type Action =
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
     | { type: "checkIn"; time: string }
+    | { type: "cancelPosition"; time: string; index: number }
+    | { type: "markNoShow"; time: string; index: number }
+    | { type: "signOutCart"; time: string; index: number }
+    | { type: "issueRaincheck"; time: string; index: number }
+    | { type: "setPositionNotes"; time: string; index: number; field: "customerNotes" | "groupNotes"; value: string }
+    | { type: "setTeeTimeNotes"; time: string; value: string }
+    | { type: "editPositionFees"; time: string; index: number; rateName: string; cartLabel: string; price: number }
     | { type: "chargeTeeTime"; time: string; only?: number }
     | { type: "clockToggle"; at: string }
     | { type: "openTable"; label: string; seats: number; server: string }
@@ -410,6 +417,72 @@ function reducer(state: State, action: Action): State {
                     ),
                 },
                 toast: `${action.time} checked in`,
+            };
+
+        /**
+         * Everything the detail screen's per-position buttons do.
+         *
+         * They all write to the same sheet slot, so they share one helper rather
+         * than each rebuilding the nested state by hand — that was where an
+         * earlier pass lost updates.
+         */
+        case "cancelPosition":
+        case "markNoShow":
+        case "signOutCart":
+        case "issueRaincheck":
+        case "setPositionNotes":
+        case "editPositionFees": {
+            const sheet = sheetFor(state);
+            const next = sheet.map((t) => {
+                if (t.time !== action.time) return t;
+                return {
+                    ...t,
+                    positions: t.positions.map((p, i) => {
+                        if (i !== action.index || !p) return p;
+                        switch (action.type) {
+                            // Cancelling frees the position outright — the app does
+                            // not keep a cancelled booking on the sheet.
+                            case "cancelPosition":
+                                return null;
+                            case "markNoShow":
+                                return { ...p, noShow: true };
+                            case "signOutCart":
+                                return { ...p, keyed: true };
+                            case "issueRaincheck":
+                                return { ...p, raincheck: true };
+                            case "setPositionNotes":
+                                return { ...p, [action.field]: action.value };
+                            case "editPositionFees":
+                                return { ...p, rateName: action.rateName, cartLabel: action.cartLabel, price: action.price };
+                        }
+                    }),
+                };
+            });
+
+            const toast =
+                action.type === "cancelPosition"
+                    ? "Reservation cancelled"
+                    : action.type === "markNoShow"
+                      ? "Marked no show"
+                      : action.type === "signOutCart"
+                        ? "Cart signed out"
+                        : action.type === "issueRaincheck"
+                          ? "Raincheck issued"
+                          : action.type === "editPositionFees"
+                            ? "Fees saved"
+                            : "Notes saved";
+
+            return { ...state, teeSheets: { ...state.teeSheets, [state.sheetDate]: next }, toast };
+        }
+
+        case "setTeeTimeNotes":
+            return {
+                ...state,
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheetFor(state).map((t) => (t.time === action.time ? { ...t, teeTimeNotes: action.value } : t)),
+                },
+                toast: "Tee time notes saved",
             };
 
         case "chargeTeeTime": {
@@ -602,6 +675,15 @@ export function useActions() {
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),
             setCourse: (course: string) => dispatch({ type: "setCourse", course }),
             checkIn: (time: string) => dispatch({ type: "checkIn", time }),
+            cancelPosition: (time: string, index: number) => dispatch({ type: "cancelPosition", time, index }),
+            markNoShow: (time: string, index: number) => dispatch({ type: "markNoShow", time, index }),
+            signOutCart: (time: string, index: number) => dispatch({ type: "signOutCart", time, index }),
+            issueRaincheck: (time: string, index: number) => dispatch({ type: "issueRaincheck", time, index }),
+            setPositionNotes: (time: string, index: number, field: "customerNotes" | "groupNotes", value: string) =>
+                dispatch({ type: "setPositionNotes", time, index, field, value }),
+            setTeeTimeNotes: (time: string, value: string) => dispatch({ type: "setTeeTimeNotes", time, value }),
+            editPositionFees: (time: string, index: number, rateName: string, cartLabel: string, price: number) =>
+                dispatch({ type: "editPositionFees", time, index, rateName, cartLabel, price }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),
             clockToggle: (at: string) => dispatch({ type: "clockToggle", at }),
             openTable: (label: string, seats: number, server: string) => dispatch({ type: "openTable", label, seats, server }),
