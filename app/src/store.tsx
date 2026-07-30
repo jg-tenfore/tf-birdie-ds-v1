@@ -89,6 +89,8 @@ export const TODAY = "2026-07-29";
 
 /** A simulator-bay reservation. `start` is minutes from midnight. */
 export interface BayBooking {
+    /** Bay blocks print PAID or UNPAID; the amount is only in the ticket. */
+    paid?: boolean;
     id: string;
     bay: string;
     start: number;

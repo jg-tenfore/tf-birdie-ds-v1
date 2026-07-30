@@ -5,17 +5,15 @@ import ButtonBase from "@mui/material/ButtonBase";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import AddIcon from "@mui/icons-material/Add";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import EmailIcon from "@mui/icons-material/Email";
-import PhoneIcon from "@mui/icons-material/Phone";
 import SportsTennisIcon from "@mui/icons-material/SportsTennis";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
+import { CustomerLookupResults } from "@/components/screens/operations/customer-lookup";
 import { searchCustomers, type Customer } from "@/data/crm";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
@@ -39,6 +37,12 @@ import { useActions, useStore } from "../store";
  */
 
 const RESULT_LIMIT = 6;
+
+/** `(617) 470-7879` — the reserved card formats, the search results do not. */
+const formatPhone = (raw: string) => {
+    const d = raw.replace(/\D/g, "");
+    return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : raw;
+};
 
 const SummaryBand = ({ customer }: { customer: Customer | null }) => (
     <Stack direction="row" sx={{ bgcolor: appColors.slate, color: "#fff", px: 3, py: 2, alignItems: "center" }}>
@@ -77,6 +81,9 @@ export const ResourceReservationScreen = () => {
 
     const results = useMemo(() => searchCustomers(query, RESULT_LIMIT, state.customers), [query, state.customers]);
     const booked = state.resourceBookings[`${state.courtDate}|${decodedResource}|${decodedTime}`];
+    // The slot stores a display name, so the record is looked back up to print the
+    // contact lines the reserved card shows.
+    const holder = booked ? (state.customers.find((c) => c.displayName === booked) ?? null) : null;
 
     const back = () => navigate("/coursheet");
 
@@ -115,66 +122,21 @@ export const ResourceReservationScreen = () => {
                     {/* Results hang off the field, over the bands below. */}
                     {query.trim().length >= 2 && (
                         <Box
-                            sx={{
-                                position: "absolute",
-                                top: "100%",
-                                left: 0,
-                                width: "69%",
-                                zIndex: 20,
-                                bgcolor: "#fff",
-                                boxShadow: 6,
-                                maxHeight: 460,
-                                overflowY: "auto",
-                            }}
+                            sx={{ position: "absolute", top: "100%", left: 0, width: "69%", zIndex: 20 }}
                         >
-                            {results.map((c) => (
-                                <ButtonBase
-                                    key={c.id}
-                                    onClick={() => {
-                                        setPicked(c);
-                                        setQuery("");
-                                    }}
-                                    sx={{
-                                        display: "block",
-                                        width: "100%",
-                                        textAlign: "left",
-                                        px: 2,
-                                        py: 1.25,
-                                        borderBottom: `1px solid ${appColors.textPrimary}`,
-                                    }}
-                                >
-                                    <Typography sx={{ fontSize: 19 }}>{c.displayName}</Typography>
-                                    <Stack direction="row" sx={{ alignItems: "center", gap: 1, mt: 0.25 }}>
-                                        <EmailIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
-                                        <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>{c.email || "—"}</Typography>
-                                    </Stack>
-                                    {c.phone && (
-                                        <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
-                                            <PhoneIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
-                                            <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>{c.phone}</Typography>
-                                        </Stack>
-                                    )}
-                                </ButtonBase>
-                            ))}
-
-                            {/*
-                             * The device gives no route to create a customer from
-                             * here, so a walk-up who is not in the database is a
-                             * dead end. This is the missing exit.
-                             */}
-                            <ButtonBase
-                                onClick={() =>
+                            <CustomerLookupResults
+                                results={results}
+                                query={query.trim()}
+                                onPick={(c) => {
+                                    setPicked(c);
+                                    setQuery("");
+                                }}
+                                onCreate={() =>
                                     navigate(
                                         `/customers/new?return=${encodeURIComponent(`/coursheet/${resource}/${time}`)}&name=${encodeURIComponent(query.trim())}`,
                                     )
                                 }
-                                sx={{ display: "flex", width: "100%", gap: 1, px: 2, py: 1.75, color: appColors.green }}
-                            >
-                                <AddIcon sx={{ fontSize: 20 }} />
-                                <Typography sx={{ fontSize: 17 }}>
-                                    {results.length ? "Add a new customer" : `Add “${query.trim()}” as a new customer`}
-                                </Typography>
-                            </ButtonBase>
+                            />
                         </Box>
                     )}
                 </Stack>
@@ -184,10 +146,25 @@ export const ResourceReservationScreen = () => {
                 <Box sx={{ m: 1.5, bgcolor: "#fff", border: `1px solid ${appColors.divider}`, borderRadius: 1, p: 2.5 }}>
                     <Typography sx={{ fontSize: 30, mb: 2 }}>{decodedResource}</Typography>
 
-                    {booked && (
-                        <Typography sx={{ fontSize: 17, color: appColors.textSecondary, mb: 2 }}>
-                            Currently reserved for {booked}.
-                        </Typography>
+                    {/*
+                     * Reserved: the card grows the customer's name, email and
+                     * formatted phone, Cancel turns red because it now destroys
+                     * something, and Reserve greys out because there is nothing
+                     * left to reserve.
+                     */}
+                    {holder && (
+                        <Stack sx={{ mb: 2, gap: 0.25 }}>
+                            <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{holder.displayName}</Typography>
+                            {holder.email && (
+                                <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{holder.email}</Typography>
+                            )}
+                            {holder.phone && (
+                                <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{formatPhone(holder.phone)}</Typography>
+                            )}
+                        </Stack>
+                    )}
+                    {booked && !holder && (
+                        <Typography sx={{ fontSize: 21, color: appColors.textSecondary, mb: 2 }}>{booked}</Typography>
                     )}
 
                     <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
@@ -196,18 +173,27 @@ export const ResourceReservationScreen = () => {
                                 if (booked) cancelResource(state.courtDate, decodedResource, decodedTime);
                                 back();
                             }}
-                            sx={{ gap: 1, px: 2.5, py: 1.5, bgcolor: appColors.grey, color: "#fff", fontSize: 17, fontWeight: 700 }}
+                            sx={{
+                                gap: 1,
+                                px: 2.5,
+                                py: 1.5,
+                                // Red only when it will actually undo a booking.
+                                bgcolor: booked ? appColors.clockOutRed : appColors.grey,
+                                color: "#fff",
+                                fontSize: 17,
+                                fontWeight: 700,
+                            }}
                         >
                             <CloseIcon sx={{ fontSize: 20 }} />
-                            {booked ? "Cancel reservation" : "Cancel"}
+                            Cancel
                         </ButtonBase>
 
                         {/* Inert until a customer is picked — there is no anonymous
                             court reservation. */}
                         <ButtonBase
-                            disabled={!picked}
+                            disabled={!picked || Boolean(booked)}
                             onClick={() => {
-                                if (!picked) return;
+                                if (!picked || booked) return;
                                 reserveResource(state.courtDate, decodedResource, decodedTime, picked.displayName);
                                 back();
                             }}
@@ -215,8 +201,8 @@ export const ResourceReservationScreen = () => {
                                 gap: 1,
                                 px: 3,
                                 py: 1.5,
-                                bgcolor: picked ? appColors.slate : "#B9BEC4",
-                                color: "#fff",
+                                bgcolor: picked && !booked ? appColors.slate : "#DCDEE0",
+                                color: picked && !booked ? "#fff" : "#9AA1A9",
                                 fontSize: 17,
                                 fontWeight: 500,
                             }}
