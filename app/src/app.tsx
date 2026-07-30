@@ -5,16 +5,28 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-d
 import { appReplicaTheme } from "@/theme/app-replica-theme";
 import { StoreProvider, useStore } from "./store";
 import { CombosScreen } from "./screens/combos";
+import { EventDetailScreen, EventsScreen } from "./screens/events";
+import { GiftCardsScreen } from "./screens/gift-cards";
+import { InventoryCountScreen, InventoryNewCountScreen, InventoryScreen } from "./screens/inventory";
 import { PaymentScreen } from "./screens/payment";
 import { QuickOrderScreen } from "./screens/quick-order";
 import { ProShopScreen } from "./screens/selling";
+import { TableChartScreen } from "./screens/table-chart";
 import { TablesScreen } from "./screens/tables";
 import { TabDetailScreen, TabsScreen } from "./screens/tabs";
 import { BaySheetScreen } from "./screens/bay-sheet";
 import { CourtSheetScreen } from "./screens/court-sheet";
-import { TeeSheetScreen, TeeTimeDetailScreen } from "./screens/tee-sheet";
+import { TeeSheetScreen } from "./screens/tee-sheet";
+import { TeeTimeDetailScreen } from "./screens/tee-time-detail";
+import { TeeTimeCartSignOutScreen, TeeTimeEditScreen } from "./screens/tee-time-edit";
 import { SignInScreen } from "./screens/sign-in";
-import { CustomerSearchScreen, OrderLookupScreen, ShiftScreen, StubScreen, TimeClockScreen } from "./screens/misc";
+import { CustomerRecordScreen, CustomerSearchScreen } from "./screens/customer-search";
+import { StubScreen } from "./screens/misc";
+import { OrderLookupScreen } from "./screens/order-lookup";
+import { OrdersTipsScreen } from "./screens/orders-tips";
+import { RestaurantReservationsScreen } from "./screens/restaurant-reservations";
+import { TimeClockScreen } from "./screens/time-clock";
+import { ShiftScreen } from "./screens/shift";
 
 /** Everything past sign-in requires an operator, as the real terminal does. */
 const RequireOperator = ({ children }: { children: React.ReactNode }) => {
@@ -31,21 +43,27 @@ const routes: [string, React.ReactNode][] = [
     ["/pay", <PaymentScreen />],
     ["/teesheet", <TeeSheetScreen />],
     ["/teesheet/:time", <TeeTimeDetailScreen />],
+    ["/teesheet/:time/:index/edit", <TeeTimeEditScreen />],
+    ["/teesheet/:time/:index/cartsignout", <TeeTimeCartSignOutScreen />],
     ["/tabs", <TabsScreen />],
     ["/tabs/:id", <TabDetailScreen />],
     ["/tables", <TablesScreen />],
     ["/customersearch", <CustomerSearchScreen />],
+    ["/customersearch/:id", <CustomerRecordScreen />],
     ["/orderlookup", <OrderLookupScreen />],
     ["/timeclock", <TimeClockScreen />],
     ["/shift", <ShiftScreen />],
     ["/coursheet", <CourtSheetScreen />],
     ["/baysheet", <BaySheetScreen />],
-    ["/reservations", <StubScreen title="Reservations" active="reservations" note="Restaurant reservations." />],
-    ["/orderstips", <StubScreen title="Orders & Tips" active="orderstips" note="Tip adjustment on closed card sales." />],
-    ["/tablechart", <StubScreen title="Table Chart" active="tablechart" note="Floor-plan editor." />],
-    ["/giftcards", <StubScreen title="Gift Cards" active="giftcards" note="Balance lookup and reload." />],
-    ["/events", <StubScreen title="Events" active="events" note="Outings and league billing." />],
-    ["/inventory", <StubScreen title="Inventory" active="inventory" note="Physical stock counts." />],
+    ["/reservations", <RestaurantReservationsScreen />],
+    ["/orderstips", <OrdersTipsScreen />],
+    ["/tablechart", <TableChartScreen />],
+    ["/giftcards", <GiftCardsScreen />],
+    ["/events", <EventsScreen />],
+    ["/events/:id", <EventDetailScreen />],
+    ["/inventory", <InventoryScreen />],
+    ["/inventory/new", <InventoryNewCountScreen />],
+    ["/inventory/:title", <InventoryCountScreen />],
     ["/settings", <StubScreen title="Settings" active="settings" note="Terminal and hardware configuration." />],
 ];
 

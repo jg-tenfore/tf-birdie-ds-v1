@@ -6,6 +6,8 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -53,6 +55,12 @@ export interface AppShellProps {
     topActions?: string[];
     showCart?: boolean;
     showOverflow?: boolean;
+    /**
+     * Items for the app bar's overflow (⋮) menu. Supplying them turns the icon
+     * from decoration into a real menu; without them it renders as the device
+     * does on screens whose menu we have not captured.
+     */
+    overflowItems?: { label: string; onClick?: () => void }[];
     /**
      * Replaces the whole right-hand cluster when supplied. Pass `null` to render
      * nothing there — several screens (Court Sheet, Gift Cards, Table Chart)
@@ -129,7 +137,8 @@ const NavDrawerContent = ({ active, onNavigate }: { active?: NavKey; onNavigate?
  * A bottom action-bar button.
  *
  * `tone` maps to the app's own vocabulary: `default` slate, `primary` green for
- * the confirming action, `danger` red for POP, `disabled` grey. Buttons share
+ * the confirming action, `danger` red for POP, `destructive` the brighter red
+ * for CLOCK OUT and END SHIFT, `disabled` grey. Buttons share
  * the row equally unless `grow` is set.
  */
 export const ActionButton = ({
@@ -149,7 +158,7 @@ export const ActionButton = ({
     onClick,
 }: {
     children: ReactNode;
-    tone?: "default" | "primary" | "danger" | "disabled" | "active";
+    tone?: "default" | "primary" | "danger" | "destructive" | "disabled" | "active";
     icon?: ReactNode;
     iconEdge?: "left" | "right" | "group";
     preserveCase?: boolean;
@@ -161,6 +170,9 @@ export const ActionButton = ({
         primary: { bg: appColors.green, hover: appColors.greenDark, fg: "#fff" },
         active: { bg: appColors.green, hover: appColors.greenDark, fg: "#fff" },
         danger: { bg: appColors.red, hover: "#C62F43", fg: "#fff" },
+        // Brighter than `danger` — the app reserves this for the two actions that
+        // end something outright: CLOCK OUT and END SHIFT.
+        destructive: { bg: appColors.clockOutRed, hover: "#D42A1E", fg: "#fff" },
         disabled: { bg: appColors.greyLight, hover: appColors.greyLight, fg: "#fff" },
     }[tone];
 
@@ -214,6 +226,7 @@ export const AppShell = ({
     topActions = [],
     showCart = false,
     showOverflow = true,
+    overflowItems,
     topBarRight,
     subBar,
     orderPanel,
@@ -227,6 +240,7 @@ export const AppShell = ({
     onNavigate,
 }: AppShellProps) => {
     const [drawerOpen, setDrawerOpen] = useState(defaultDrawerOpen);
+    const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
 
     const isDark = tone === "dark";
     // `undefined` means "use the default cluster"; an explicit `null` means
@@ -279,9 +293,48 @@ export const AppShell = ({
                                 </IconButton>
                             )}
                             {showOverflow && (
-                                <IconButton aria-label="More" edge="end" sx={{ color: "#fff" }}>
-                                    <MoreVertIcon />
-                                </IconButton>
+                                <>
+                                    <IconButton
+                                        aria-label="More"
+                                        edge="end"
+                                        sx={{ color: "#fff" }}
+                                        onClick={(e) => overflowItems?.length && setOverflowAnchor(e.currentTarget)}
+                                    >
+                                        <MoreVertIcon />
+                                    </IconButton>
+                                    {/*
+                                     * A white sheet with full-bleed dividers, not
+                                     * a rounded popover — the device's menus run
+                                     * their rules edge to edge.
+                                     */}
+                                    <Menu
+                                        anchorEl={overflowAnchor}
+                                        open={Boolean(overflowAnchor)}
+                                        onClose={() => setOverflowAnchor(null)}
+                                        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                                        transformOrigin={{ vertical: "top", horizontal: "right" }}
+                                        slotProps={{ paper: { sx: { borderRadius: 0, minWidth: 300 } }, list: { sx: { py: 0 } } }}
+                                    >
+                                        {(overflowItems ?? []).map((item, i) => (
+                                            <MenuItem
+                                                key={item.label}
+                                                onClick={() => {
+                                                    item.onClick?.();
+                                                    setOverflowAnchor(null);
+                                                }}
+                                                sx={{
+                                                    minHeight: 72,
+                                                    px: 3,
+                                                    fontSize: 19,
+                                                    color: appColors.textSecondary,
+                                                    borderTop: i === 0 ? "none" : `1px solid ${appColors.textPrimary}`,
+                                                }}
+                                            >
+                                                {item.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Menu>
+                                </>
                             )}
                         </Box>
                     )}

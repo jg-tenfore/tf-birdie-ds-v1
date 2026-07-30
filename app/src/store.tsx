@@ -1,3 +1,13 @@
+import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
+import {
+    buildDaySheet,
+    may12Sheet,
+    todaySheet,
+    type Position,
+    type ReservationEvent,
+    type SheetView,
+    type TeeTimeBooking,
+} from "@/data/tee-sheet";
 import { createContext, useContext, useMemo, useReducer, type ReactNode } from "react";
 
 /**
@@ -22,6 +32,11 @@ export interface Line {
     seat?: number;
     image?: string;
     note?: string;
+}
+
+export interface Punch {
+    at: string;
+    kind: "Clock In" | "Clock Out";
 }
 
 export type TicketStatus = "open" | "held" | "paid" | "voided";
@@ -49,31 +64,20 @@ export interface Ticket {
  * position holds a booking for a party ("(4) Oda Brennevin"), so four positions
  * can represent sixteen golfers. Modelling it as a player list, as an earlier
  * pass did, cannot reproduce the real layout.
+ *
+ * The model and the seeded day live in `src/data/tee-sheet.ts` so the stories can
+ * use them too; this only re-exports.
  */
-export interface Position {
-    name: string;
-    /** The "(4)" prefix — how many golfers this one booking covers. */
-    party: number;
-    price: number;
-    holes: 18 | 9;
-    rate: string;
-    cart: boolean;
-    paid: boolean;
-    /** Cart keys signed out — shows the key glyph. */
-    keyed?: boolean;
-    /** On a raincheck — shows the bolt glyph. */
-    raincheck?: boolean;
-    /** Carries a balance — shows the large "$" watermark. */
-    balance?: boolean;
-    checkedIn?: boolean;
-}
+export type { Position, ReservationEvent, SheetView, TeeTimeBooking };
 
-export interface TeeTimeBooking {
-    time: string;
-    /** Always length 4. `null` is an open position. */
-    positions: (Position | null)[];
-    blocked?: boolean;
-}
+/**
+ * One playing position on a tee time.
+ *
+ * The sheet is a grid of four positions per time, not a list of players — a
+ * position holds a booking for a party ("(4) Oda Brennevin"), so four positions
+ * can represent sixteen golfers. Modelling it as a player list, as an earlier
+ * pass did, cannot reproduce the real layout.
+ */
 
 /**
  * The app's "today". Fixed rather than read from the clock so the prototype
@@ -117,6 +121,15 @@ interface State {
     bayBookings: BayBooking[];
     shiftOpen: boolean;
     clockedIn: boolean;
+    /** Time-clock punches, newest first — what the Time Clock log renders. */
+    punches: Punch[];
+    /**
+     * Saved floor plans, keyed by room. The Table Chart editor writes here on
+     * SAVE and the live Tables view reads from it, so the two screens are the
+     * same data rather than two hard-coded layouts.
+     */
+    floorPlans: Record<string, FloorElement[]>;
+    floorRoom: string;
     toast: string | null;
 }
 
@@ -169,78 +182,11 @@ const seedTickets: Ticket[] = [
     },
 ];
 
-const pos = (name: string, party: number, price: number, extra: Partial<Position> = {}): Position => ({
-    name,
-    party,
-    price,
-    holes: 18,
-    rate: "Group Pricing",
-    cart: true,
-    paid: false,
-    ...extra,
-});
-
-const may12: TeeTimeBooking[] = [
-    { time: "5:30 PM", positions: [null, null, null, null] },
-    { time: "5:44 PM", positions: [null, null, null, null] },
-    {
-        time: "5:58 PM",
-        positions: [
-            pos("Oda Brennevin", 4, 24.61, { keyed: true }),
-            pos("Ivar Brennevin", 4, 0.93, { balance: true }),
-            pos("Rufus Brennevin", 4, 34.99),
-            pos("Women's League", 4, 24.61),
-        ],
-    },
-    { time: "6:12 PM", positions: [null, null, null, null] },
-    {
-        time: "6:26 PM",
-        positions: [
-            pos("Ivar Brennevin", 4, 0, { balance: true }),
-            pos("Ivar Brennevin", 4, 0, { balance: true }),
-            pos("Ivar Brennevin", 4, 0, { balance: true }),
-            pos("Women's League", 4, 24.61),
-        ],
-    },
-    { time: "6:40 PM", positions: [null, null, null, null] },
-    {
-        time: "6:54 PM",
-        positions: [
-            pos("Oda Brennevin", 2, 125.0, { paid: true, raincheck: true }),
-            pos("G-Oda Brennevin", 2, 95.42, { paid: true }),
-            null,
-            null,
-        ],
-    },
-    { time: "7:08 PM", positions: [null, null, null, null] },
-    { time: "7:22 PM", blocked: true, positions: [null, null, null, null] },
-    {
-        time: "7:36 PM",
-        positions: [pos("Sutton, K.", 3, 96.0), pos("Doyle, F.", 1, 62.0, { cart: false }), null, null],
-    },
-    { time: "7:50 PM", positions: [null, null, null, null] },
-];
-
-/**
- * Today's sheet on the reference device is empty and runs on a 10-minute
- * interval, where May 12 runs on 14 — the interval is per-day course config,
- * not a constant.
- */
-const today: TeeTimeBooking[] = Array.from({ length: 14 }, (_, i) => {
-    const mins = 15 * 60 + 10 + i * 10;
-    const h24 = Math.floor(mins / 60);
-    const h = h24 % 12 === 0 ? 12 : h24 % 12;
-    return {
-        time: `${h}:${String(mins % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`,
-        positions: [null, null, null, null] as (Position | null)[],
-    };
-});
-
 const initial: State = {
     operator: null,
     tickets: seedTickets,
     activeTicketId: null,
-    teeSheets: { "2026-05-12": may12, [TODAY]: today },
+    teeSheets: { "2026-05-12": may12Sheet, [TODAY]: todaySheet },
     sheetDate: "2026-05-12",
     course: "North Course",
     facility: "The Dunes of Delgado PROD",
@@ -262,6 +208,9 @@ const initial: State = {
     ],
     shiftOpen: true,
     clockedIn: false,
+    punches: [],
+    floorPlans: seededFloorPlans,
+    floorRoom: "bigroom",
     toast: null,
 };
 
@@ -282,8 +231,18 @@ type Action =
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
     | { type: "checkIn"; time: string }
+    | { type: "cancelPosition"; time: string; index: number }
+    | { type: "markNoShow"; time: string; index: number }
+    | { type: "signOutCart"; time: string; index: number }
+    | { type: "issueRaincheck"; time: string; index: number }
+    | { type: "setPositionNotes"; time: string; index: number; field: "customerNotes" | "groupNotes"; value: string }
+    | { type: "setTeeTimeNotes"; time: string; value: string }
+    | { type: "editPositionFees"; time: string; index: number; rateName: string; cartLabel: string; price: number }
     | { type: "chargeTeeTime"; time: string; only?: number }
-    | { type: "clockToggle" }
+    | { type: "clockToggle"; at: string }
+    | { type: "openTable"; label: string; seats: number; server: string }
+    | { type: "setFloorRoom"; room: string }
+    | { type: "saveFloorPlan"; room: string; elements: FloorElement[] }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
     | { type: "endShift" }
     | { type: "toast"; message: string | null };
@@ -293,17 +252,15 @@ function sheetFor(state: State): TeeTimeBooking[] {
     return state.teeSheets[state.sheetDate] ?? emptySheet();
 }
 
-/** A blank 10-minute sheet, used for any date with no configured times. */
+/**
+ * A blank sheet for any date with no configured times.
+ *
+ * Times are still laid out — an unconfigured day looks like a bookable day with
+ * nothing sold, which is the truth: the course has hours, it just has no
+ * reservations.
+ */
 function emptySheet(): TeeTimeBooking[] {
-    return Array.from({ length: 14 }, (_, i) => {
-        const mins = 15 * 60 + 10 + i * 10;
-        const h24 = Math.floor(mins / 60);
-        const h = h24 % 12 === 0 ? 12 : h24 % 12;
-        return {
-            time: `${h}:${String(mins % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`,
-            positions: [null, null, null, null] as (Position | null)[],
-        };
-    });
+    return buildDaySheet({ density: 0, seed: 1 }).map((t) => ({ ...t, positions: [null, null, null, null] as (Position | null)[] }));
 }
 
 function activeTicket(state: State) {
@@ -462,6 +419,72 @@ function reducer(state: State, action: Action): State {
                 toast: `${action.time} checked in`,
             };
 
+        /**
+         * Everything the detail screen's per-position buttons do.
+         *
+         * They all write to the same sheet slot, so they share one helper rather
+         * than each rebuilding the nested state by hand — that was where an
+         * earlier pass lost updates.
+         */
+        case "cancelPosition":
+        case "markNoShow":
+        case "signOutCart":
+        case "issueRaincheck":
+        case "setPositionNotes":
+        case "editPositionFees": {
+            const sheet = sheetFor(state);
+            const next = sheet.map((t) => {
+                if (t.time !== action.time) return t;
+                return {
+                    ...t,
+                    positions: t.positions.map((p, i) => {
+                        if (i !== action.index || !p) return p;
+                        switch (action.type) {
+                            // Cancelling frees the position outright — the app does
+                            // not keep a cancelled booking on the sheet.
+                            case "cancelPosition":
+                                return null;
+                            case "markNoShow":
+                                return { ...p, noShow: true };
+                            case "signOutCart":
+                                return { ...p, keyed: true };
+                            case "issueRaincheck":
+                                return { ...p, raincheck: true };
+                            case "setPositionNotes":
+                                return { ...p, [action.field]: action.value };
+                            case "editPositionFees":
+                                return { ...p, rateName: action.rateName, cartLabel: action.cartLabel, price: action.price };
+                        }
+                    }),
+                };
+            });
+
+            const toast =
+                action.type === "cancelPosition"
+                    ? "Reservation cancelled"
+                    : action.type === "markNoShow"
+                      ? "Marked no show"
+                      : action.type === "signOutCart"
+                        ? "Cart signed out"
+                        : action.type === "issueRaincheck"
+                          ? "Raincheck issued"
+                          : action.type === "editPositionFees"
+                            ? "Fees saved"
+                            : "Notes saved";
+
+            return { ...state, teeSheets: { ...state.teeSheets, [state.sheetDate]: next }, toast };
+        }
+
+        case "setTeeTimeNotes":
+            return {
+                ...state,
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheetFor(state).map((t) => (t.time === action.time ? { ...t, teeTimeNotes: action.value } : t)),
+                },
+                toast: "Tee time notes saved",
+            };
+
         case "chargeTeeTime": {
             const slot = sheetFor(state).find((t) => t.time === action.time);
             const booked = slot?.positions.filter((p): p is Position => Boolean(p)) ?? [];
@@ -510,8 +533,61 @@ function reducer(state: State, action: Action): State {
             };
         }
 
-        case "clockToggle":
-            return { ...state, clockedIn: !state.clockedIn, toast: state.clockedIn ? "Clocked out" : "Clocked in" };
+        /**
+         * Tapping a table on the floor either reopens its check or starts one.
+         *
+         * A table's check is an ordinary ticket with `source: "Table"` — the
+         * seat editor at /tabs/:id is the same screen either way, which is what
+         * the app does: there is no separate "table order" screen, only a ticket
+         * that happens to belong to a table.
+         */
+        case "openTable": {
+            const existing = state.tickets.find((t) => t.name === action.label && t.status !== "paid" && t.status !== "voided");
+            if (existing) return { ...state, activeTicketId: existing.id, tickets: state.tickets.map((t) => (t.id === existing.id ? { ...t, status: "open" } : t)) };
+
+            const id = `t-${state.nextNumber}`;
+            return {
+                ...state,
+                nextNumber: state.nextNumber + 1,
+                activeTicketId: id,
+                tickets: [
+                    ...state.tickets,
+                    {
+                        id,
+                        number: `#${4252110 + state.tickets.length}`,
+                        name: action.label,
+                        lines: [],
+                        status: "open",
+                        opened: "now",
+                        server: action.server,
+                        source: "Table",
+                        seats: action.seats,
+                    },
+                ],
+                toast: `${action.label} opened`,
+            };
+        }
+
+        case "setFloorRoom":
+            return { ...state, floorRoom: action.room };
+
+        case "saveFloorPlan":
+            return {
+                ...state,
+                floorPlans: { ...state.floorPlans, [action.room]: action.elements },
+                toast: `${action.room} layout saved`,
+            };
+
+        case "clockToggle": {
+            const kind = state.clockedIn ? "Clock Out" : "Clock In";
+            return {
+                ...state,
+                clockedIn: !state.clockedIn,
+                // Newest punch on top, which is how the device stacks them.
+                punches: [{ at: action.at, kind }, ...state.punches],
+                toast: state.clockedIn ? "Clocked out" : "Clocked in",
+            };
+        }
 
         case "addBayBooking":
             return {
@@ -599,8 +675,20 @@ export function useActions() {
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),
             setCourse: (course: string) => dispatch({ type: "setCourse", course }),
             checkIn: (time: string) => dispatch({ type: "checkIn", time }),
+            cancelPosition: (time: string, index: number) => dispatch({ type: "cancelPosition", time, index }),
+            markNoShow: (time: string, index: number) => dispatch({ type: "markNoShow", time, index }),
+            signOutCart: (time: string, index: number) => dispatch({ type: "signOutCart", time, index }),
+            issueRaincheck: (time: string, index: number) => dispatch({ type: "issueRaincheck", time, index }),
+            setPositionNotes: (time: string, index: number, field: "customerNotes" | "groupNotes", value: string) =>
+                dispatch({ type: "setPositionNotes", time, index, field, value }),
+            setTeeTimeNotes: (time: string, value: string) => dispatch({ type: "setTeeTimeNotes", time, value }),
+            editPositionFees: (time: string, index: number, rateName: string, cartLabel: string, price: number) =>
+                dispatch({ type: "editPositionFees", time, index, rateName, cartLabel, price }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),
-            clockToggle: () => dispatch({ type: "clockToggle" }),
+            clockToggle: (at: string) => dispatch({ type: "clockToggle", at }),
+            openTable: (label: string, seats: number, server: string) => dispatch({ type: "openTable", label, seats, server }),
+            setFloorRoom: (room: string) => dispatch({ type: "setFloorRoom", room }),
+            saveFloorPlan: (room: string, elements: FloorElement[]) => dispatch({ type: "saveFloorPlan", room, elements }),
             addBayBooking: (booking: Omit<BayBooking, "id">) => dispatch({ type: "addBayBooking", booking }),
             endShift: () => dispatch({ type: "endShift" }),
             toast: (message: string | null) => dispatch({ type: "toast", message }),

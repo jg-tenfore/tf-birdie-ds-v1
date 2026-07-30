@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
+import InputBase from "@mui/material/InputBase";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 import PeopleIcon from "@mui/icons-material/People";
@@ -52,12 +53,21 @@ const FeeSection = ({
     selected,
     subTotal,
     grandTotal,
+    holesLabel,
+    holesOn,
+    onToggleHoles,
+    onSelect,
 }: {
     heading: string;
     options: readonly string[];
     selected?: string;
     subTotal: string;
     grandTotal: string;
+    holesLabel?: string;
+    holesOn?: boolean;
+    onToggleHoles?: () => void;
+    /** Supplied by the prototype; the stories leave the chips inert. */
+    onSelect?: (option: string) => void;
 }) => (
     <>
         <Box sx={{ display: "flex", alignItems: "center", px: 2, py: 1.5, bgcolor: appColors.surface }}>
@@ -65,8 +75,8 @@ const FeeSection = ({
 
             {heading === "Fee Information" && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography sx={{ fontSize: 18, color: appColors.textPrimary }}>{editReservation.holesLabel}</Typography>
-                    <Switch defaultChecked />
+                    <Typography sx={{ fontSize: 18, color: appColors.textPrimary }}>{holesLabel ?? editReservation.holesLabel}</Typography>
+                    <Switch checked={holesOn ?? true} onChange={onToggleHoles} />
                 </Box>
             )}
         </Box>
@@ -74,7 +84,7 @@ const FeeSection = ({
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, px: 2, py: 1.5, bgcolor: "#F4F6F8" }}>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, flex: 1 }}>
                 {options.map((option) => (
-                    <Button key={option} sx={feeChipSx(option === selected)}>
+                    <Button key={option} onClick={() => onSelect?.(option)} sx={feeChipSx(option === selected)}>
                         {option}
                     </Button>
                 ))}
@@ -98,7 +108,25 @@ const FeeSection = ({
  * "SAVE FEES TO ALL" applies the same selection to every player in the tee
  * time, which is why it sits beside SAVE rather than inside it.
  */
-export const EditReservationScreen = () => (
+export const EditReservationScreen = ({
+    guest = editReservation.guest,
+    greenFees = editReservation.greenFees,
+    transportFees = editReservation.transportFees,
+    holesLabel,
+    holesOn,
+    onToggleHoles,
+    onSelectGreenFee,
+    onSelectTransport,
+}: {
+    guest?: { name: string; when: string; email: string };
+    greenFees?: { options: readonly string[]; selected?: string; subTotal: string; grandTotal: string };
+    transportFees?: { options: readonly string[]; selected?: string; subTotal: string; grandTotal: string };
+    holesLabel?: string;
+    holesOn?: boolean;
+    onToggleHoles?: () => void;
+    onSelectGreenFee?: (option: string) => void;
+    onSelectTransport?: (option: string) => void;
+} = {}) => (
     <Box sx={{ bgcolor: appColors.surface, minHeight: "100%" }}>
         <Box sx={{ display: "flex", px: 2, pt: 2, pb: 1, gap: 4 }}>
             <Typography sx={{ fontSize: 21, flex: 1 }}>Guest Info</Typography>
@@ -108,9 +136,9 @@ export const EditReservationScreen = () => (
 
         <Box sx={{ display: "flex", px: 2, pb: 3, gap: 4, borderBottom: `1px solid ${appColors.divider}` }}>
             <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontSize: 22, color: appColors.textPrimary }}>{editReservation.guest.name}</Typography>
-                <Typography sx={{ fontSize: 18, color: appColors.textPrimary, pt: 0.5 }}>{editReservation.guest.when}</Typography>
-                <Typography sx={{ fontSize: 17, color: appColors.textSecondary, pt: 0.5 }}>{editReservation.guest.email}</Typography>
+                <Typography sx={{ fontSize: 22, color: appColors.textPrimary }}>{guest.name}</Typography>
+                <Typography sx={{ fontSize: 18, color: appColors.textPrimary, pt: 0.5 }}>{guest.when}</Typography>
+                <Typography sx={{ fontSize: 17, color: appColors.textSecondary, pt: 0.5 }}>{guest.email}</Typography>
             </Box>
 
             <Box sx={{ flex: 1 }}>
@@ -141,17 +169,23 @@ export const EditReservationScreen = () => (
 
         <FeeSection
             heading="Fee Information"
-            options={editReservation.greenFees.options}
-            selected={editReservation.greenFees.selected}
-            subTotal={editReservation.greenFees.subTotal}
-            grandTotal={editReservation.greenFees.grandTotal}
+            options={greenFees.options}
+            selected={greenFees.selected}
+            subTotal={greenFees.subTotal}
+            grandTotal={greenFees.grandTotal}
+            holesLabel={holesLabel}
+            holesOn={holesOn}
+            onToggleHoles={onToggleHoles}
+            onSelect={onSelectGreenFee}
         />
 
         <FeeSection
             heading="Transportation Fee Information"
-            options={editReservation.transportFees.options}
-            subTotal={editReservation.transportFees.subTotal}
-            grandTotal={editReservation.transportFees.grandTotal}
+            options={transportFees.options}
+            selected={transportFees.selected}
+            subTotal={transportFees.subTotal}
+            grandTotal={transportFees.grandTotal}
+            onSelect={onSelectTransport}
         />
     </Box>
 );
@@ -163,20 +197,43 @@ export const EditReservationScreen = () => (
  * signature is drawn directly on the glass below the "Sign Here" rule. The
  * consent checkbox starts unchecked.
  */
-export const CartSignOutScreen = () => (
+export const CartSignOutScreen = ({
+    reservation = cartSignOut.reservation,
+    customer = cartSignOut.customer,
+    cartNumber,
+    onCartNumber,
+    consented,
+    onConsent,
+}: {
+    reservation?: string;
+    customer?: string;
+    cartNumber?: string;
+    onCartNumber?: (next: string) => void;
+    consented?: boolean;
+    onConsent?: (next: boolean) => void;
+} = {}) => (
     <Box sx={{ bgcolor: appColors.canvas, minHeight: "100%", px: 3, py: 2, display: "flex", flexDirection: "column" }}>
-        <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{cartSignOut.reservation}</Typography>
+        <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{reservation}</Typography>
 
         <Box sx={{ borderBottom: `1px solid ${appColors.textSecondary}`, pt: 2, pb: 0.5 }}>
-            <Typography sx={{ fontSize: 26, color: appColors.textPrimary }}>{cartSignOut.customer}</Typography>
+            <Typography sx={{ fontSize: 26, color: appColors.textPrimary }}>{customer}</Typography>
         </Box>
 
         <Box sx={{ borderBottom: `1px solid ${appColors.textSecondary}`, pt: 3, pb: 0.5 }}>
-            <Typography sx={{ fontSize: 26, color: appColors.textSecondary }}>Cart Number</Typography>
+            {onCartNumber ? (
+                <InputBase
+                    value={cartNumber ?? ""}
+                    onChange={(e) => onCartNumber(e.target.value)}
+                    placeholder="Cart Number"
+                    sx={{ width: 320, "& input": { fontSize: 26, p: 0, "&::placeholder": { color: appColors.textSecondary, opacity: 1 } } }}
+                />
+            ) : (
+                <Typography sx={{ fontSize: 26, color: appColors.textSecondary }}>Cart Number</Typography>
+            )}
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, pt: 2 }}>
-            <Checkbox sx={{ p: 0, mt: 0.25 }} />
+            <Checkbox checked={consented ?? false} onChange={(e) => onConsent?.(e.target.checked)} sx={{ p: 0, mt: 0.25 }} />
             <Typography sx={{ fontSize: 16, color: appColors.textPrimary, lineHeight: 1.35 }}>{cartSignOut.consent}</Typography>
         </Box>
 

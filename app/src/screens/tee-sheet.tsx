@@ -3,21 +3,22 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
+import GridViewIcon from "@mui/icons-material/GridView";
+import PauseIcon from "@mui/icons-material/Pause";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import ViewListIcon from "@mui/icons-material/ViewList";
 import Dialog from "@mui/material/Dialog";
-import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import AirportShuttleIcon from "@mui/icons-material/AirportShuttle";
-import BoltIcon from "@mui/icons-material/Bolt";
-import CheckIcon from "@mui/icons-material/Check";
 import SettingsIcon from "@mui/icons-material/Settings";
-import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
-import { appColors, appRadius, teeSlotColors } from "@/theme/app-replica-tokens";
+import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
-import { money, useActions, useStore, type Position, type TeeTimeBooking } from "../store";
+import { money, useActions, useStore, type SheetView, type TeeTimeBooking } from "../store";
+import { SheetBody } from "./tee-sheet-views";
 
 /**
  * The tee sheet, reproduced from `references/072926/2-teesheet/`.
@@ -32,8 +33,6 @@ import { money, useActions, useStore, type Position, type TeeTimeBooking } from 
  * they are assigned by position index, as the app appears to do.
  */
 
-const TIME_COL = 146;
-const GEAR_COL = 130;
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOW = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
@@ -262,78 +261,31 @@ const Counts = ({ times }: { times: TeeTimeBooking[] }) => {
 };
 
 /** One of the four playing positions. */
-const Slot = ({ position, index, onOpen }: { position: Position | null; index: number; onOpen: () => void }) => {
-    if (!position) return <Box sx={{ flex: 1, bgcolor: "#fff", borderLeft: "1px solid", borderColor: "#e4e4e4" }} />;
-
-    const fill = position.paid ? teeSlotColors.paid : index % 2 === 0 ? teeSlotColors.booked : teeSlotColors.bookedAlt;
-
-    return (
-        <ButtonBase
-            onClick={onOpen}
-            sx={{
-                flex: 1,
-                bgcolor: fill,
-                color: "#fff",
-                flexDirection: "column",
-                alignItems: "stretch",
-                justifyContent: "space-between",
-                px: 1.25,
-                py: 1,
-                position: "relative",
-            }}
-        >
-            <Typography sx={{ fontSize: 14, textAlign: "left" }} noWrap>
-                ({position.party}) {position.name}
-            </Typography>
-
-            {position.balance && (
-                <Typography
-                    sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-40%)", fontSize: 30, opacity: 0.9 }}
-                >
-                    $
-                </Typography>
-            )}
-
-            <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
-                {position.cart && <AirportShuttleIcon sx={{ fontSize: 17 }} />}
-                {position.keyed && <VpnKeyIcon sx={{ fontSize: 15 }} />}
-                {position.raincheck && <BoltIcon sx={{ fontSize: 16 }} />}
-                <Box sx={{ flex: 1 }} />
-                <Typography sx={{ fontSize: 14, fontWeight: 500 }}>{money(position.price)}</Typography>
-            </Stack>
-        </ButtonBase>
-    );
-};
-
-/** The gear menu — six operations, all on the tee time rather than a player. */
-const SlotMenu = ({ onClose }: { onClose: () => void }) => (
-    <ClickAwayListener onClickAway={onClose}>
-        <Box sx={{ position: "absolute", right: 8, top: "100%", zIndex: 20, bgcolor: "#fff", boxShadow: 6, width: 300 }}>
-            {["Squeeze Before", "Squeeze After", "Clear Time", "Clone Before", "Clone After", "Move Player(s)"].map((label, i) => (
-                <Box
-                    key={label}
-                    sx={{
-                        px: 3,
-                        py: 2,
-                        fontSize: 19,
-                        borderTop: i ? "1px solid" : 0,
-                        borderColor: "#e4e4e4",
-                        cursor: "pointer",
-                        "&:hover": { bgcolor: "#f2f4f6" },
-                    }}
-                    onClick={onClose}
-                >
-                    {label}
-                </Box>
-            ))}
-        </Box>
-    </ClickAwayListener>
-);
-
 export const TeeSheetScreen = () => {
-    const { state, teeTimes } = useStore();
+    const { state, teeTimes, lines, total } = useStore();
+    const { setCourse } = useActions();
     const navigate = useNavigate();
-    const [menuFor, setMenuFor] = useState<string | null>(null);
+    const [view, setView] = useState<SheetView>("list");
+    const [courseOpen, setCourseOpen] = useState(false);
+    const courseMenu = courseOpen ? (
+        <ClickAwayListener onClickAway={() => setCourseOpen(false)}>
+            {/* Opens upward from the bottom bar, as the device does. */}
+            <Box sx={{ position: "fixed", bottom: 78, left: 340, zIndex: 1300, width: 310, bgcolor: appColors.sheetFill, boxShadow: 8, py: 1 }}>
+                {["North Course", "East Course", "West Course"].map((c) => (
+                    <ButtonBase
+                        key={c}
+                        onClick={() => {
+                            setCourse(c);
+                            setCourseOpen(false);
+                        }}
+                        sx={{ display: "block", width: "100%", py: 2.25, fontSize: 15, color: "#fff" }}
+                    >
+                        {c}
+                    </ButtonBase>
+                ))}
+            </Box>
+        </ClickAwayListener>
+    ) : undefined;
 
     return (
         <Shell
@@ -343,222 +295,59 @@ export const TeeSheetScreen = () => {
             showCart
             subBar={<SubBar />}
             actionBarBg={appColors.sheetCanvas}
+            overlay={courseMenu}
             actionBar={
                 <>
                     <ActionButton onClick={() => navigate("/proshop")}>Pro Shop</ActionButton>
-                    <ActionButton preserveCase>{state.course}</ActionButton>
-                    <ActionButton>Grid</ActionButton>
-                    <ActionButton tone="active">List</ActionButton>
-                    <ActionButton>Multi</ActionButton>
-                    <ActionButton onClick={() => navigate("/coursheet")}>Court Sheet</ActionButton>
+                    {/* The course picker is dropped in Multi view — it is showing
+                        three courses at once, so picking one makes no sense. */}
+                    {view !== "multi" && (
+                        <ActionButton preserveCase onClick={() => setCourseOpen((o) => !o)}>
+                            {state.course}
+                        </ActionButton>
+                    )}
+                    <ActionButton icon={<GridViewIcon />} tone={view === "grid" ? "active" : "default"} onClick={() => setView("grid")}>
+                        Grid
+                    </ActionButton>
+                    <ActionButton icon={<ViewListIcon />} tone={view === "list" ? "active" : "default"} onClick={() => setView("list")}>
+                        List
+                    </ActionButton>
+                    <ActionButton icon={<PauseIcon />} tone={view === "multi" ? "active" : "default"} onClick={() => setView("multi")}>
+                        Multi
+                    </ActionButton>
+                    <ActionButton icon={<SettingsIcon />} tone={view === "back9" ? "active" : "default"} onClick={() => setView("back9")}>
+                        Back 9
+                    </ActionButton>
+                    <ActionButton icon={<RefreshIcon />} grow={0.4} onClick={() => setView(view)}>
+                        {""}
+                    </ActionButton>
+                    <ActionButton
+                        icon={<ShoppingCartIcon />}
+                        tone={lines.length ? "primary" : "disabled"}
+                        grow={1.4}
+                        onClick={() => lines.length && navigate("/pay")}
+                    >
+                        {lines.length ? `Pay ${money(total)}` : "Pay"}
+                    </ActionButton>
                 </>
             }
         >
             <Box sx={{ bgcolor: appColors.sheetCanvas, minHeight: "100%" }}>
                 <Counts times={teeTimes} />
 
-                <Stack spacing="6px" sx={{ px: "6px", pb: "6px" }}>
-                    {teeTimes.map((slot) => (
-                        <Box
-                            key={slot.time}
-                            sx={{
-                                position: "relative",
-                                display: "flex",
-                                minHeight: 92,
-                                bgcolor: "#fff",
-                                borderRadius: `${appRadius.tile}px`,
-                                overflow: "visible",
-                            }}
-                        >
-                            <Box sx={{ width: TIME_COL, display: "flex", alignItems: "center", pl: 2.5, flexShrink: 0 }}>
-                                <Typography sx={{ fontSize: 21 }}>{slot.time}</Typography>
-                            </Box>
-
-                            <Box sx={{ flex: 1, display: "flex", minWidth: 0 }}>
-                                {slot.blocked
-                                    ? [0, 1, 2, 3].map((i) => (
-                                          <Box
-                                              key={i}
-                                              sx={{
-                                                  flex: 1,
-                                                  bgcolor: teeSlotColors.blocked,
-                                                  borderLeft: "1px solid",
-                                                  borderColor: "#b0b0b0",
-                                                  display: "grid",
-                                                  placeItems: "center",
-                                              }}
-                                          >
-                                              <Typography sx={{ fontSize: 13, color: "#4a4a4a" }}>BLOCKED</Typography>
-                                          </Box>
-                                      ))
-                                    : slot.positions.map((p, i) => (
-                                          <Slot
-                                              key={i}
-                                              position={p}
-                                              index={i}
-                                              onOpen={() => navigate(`/teesheet/${encodeURIComponent(slot.time)}`)}
-                                          />
-                                      ))}
-                            </Box>
-
-                            <Box sx={{ width: GEAR_COL, flexShrink: 0, display: "grid", placeItems: "center" }}>
-                                <ButtonBase
-                                    aria-label={`Options for ${slot.time}`}
-                                    onClick={() => setMenuFor(menuFor === slot.time ? null : slot.time)}
-                                    sx={{ p: 1.5, borderRadius: "50%" }}
-                                >
-                                    <SettingsIcon sx={{ fontSize: 30 }} />
-                                </ButtonBase>
-                            </Box>
-
-                            {menuFor === slot.time && <SlotMenu onClose={() => setMenuFor(null)} />}
-                        </Box>
-                    ))}
-                </Stack>
-            </Box>
-        </Shell>
-    );
-};
-
-/* ------------------------------------------------------------------ *
- * Tee time detail — a LIGHT screen, not dark.
- * ------------------------------------------------------------------ */
-
-const SummaryBand = () => (
-    <Stack direction="row" sx={{ bgcolor: appColors.slate, color: "#fff", px: 3, py: 2, alignItems: "center", gap: 4 }}>
-        {["Customer", "Current Membership(s)", "Rounds", "Rewards Balance:"].map((label) => (
-            <Stack key={label} sx={{ flex: 1, alignItems: "center" }}>
-                <Typography sx={{ fontSize: 13 }}>{label}</Typography>
-                <Typography sx={{ fontSize: 13, color: "rgba(255,255,255,.75)" }}>--------</Typography>
-            </Stack>
-        ))}
-        <Box sx={{ bgcolor: "#8f9296", color: "#fff", px: 3, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
-            <CheckIcon sx={{ fontSize: 20 }} />
-            <Typography sx={{ fontSize: 14, letterSpacing: "0.06em" }}>RESERVE</Typography>
-        </Box>
-    </Stack>
-);
-
-const PlayerAction = ({ label, tone = "dark", onClick }: { label: string; tone?: "dark" | "red" | "green"; onClick?: () => void }) => (
-    <ButtonBase
-        onClick={onClick}
-        sx={{
-            flex: 1,
-            minHeight: 52,
-            px: 1,
-            fontSize: 14,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "#fff",
-            bgcolor: tone === "red" ? "#E53935" : tone === "green" ? appColors.green : appColors.slate,
-            "&:hover": { filter: "brightness(1.1)" },
-        }}
-    >
-        {label}
-    </ButtonBase>
-);
-
-export const TeeTimeDetailScreen = () => {
-    const { time = "" } = useParams();
-    const decoded = decodeURIComponent(time);
-    const { teeTimes } = useStore();
-    const { chargeTeeTime } = useActions();
-    const navigate = useNavigate();
-
-    const slot = teeTimes.find((t) => t.time === decoded);
-    const booked = slot?.positions.map((p, i) => ({ p, i })).filter((x): x is { p: Position; i: number } => Boolean(x.p)) ?? [];
-    const total = booked.reduce((s, { p }) => s + p.price, 0);
-
-    return (
-        <Shell
-            title={`The Dunes of Delgado PROD - North Course - ${decoded} - FRONT`}
-            active="teesheet"
-            showCart
-            showLogOut={false}
-            accountLabel=""
-            actionBar={
-                <>
-                    <ActionButton onClick={() => navigate("/teesheet")}>Tee Sheet</ActionButton>
-                    <ActionButton onClick={() => navigate("/proshop")}>Pro Shop</ActionButton>
-                    <ActionButton
-                        tone={booked.length ? "default" : "disabled"}
-                        onClick={() => {
-                            if (!booked.length) return;
-                            chargeTeeTime(decoded);
-                            navigate("/proshop");
-                        }}
-                    >
-                        Add all to cart
-                    </ActionButton>
-                    <ActionButton>Tee time notes</ActionButton>
-                    <ActionButton tone={booked.length ? "primary" : "disabled"} onClick={() => booked.length && navigate("/pay")}>
-                        {booked.length ? `Pay ${money(total)}` : "Pay"}
-                    </ActionButton>
-                </>
-            }
-        >
-            <Box sx={{ bgcolor: "#fff", minHeight: "100%" }}>
-                <Stack direction="row" sx={{ bgcolor: "#E3E3E3", px: 3, py: 2.5, gap: 4 }}>
-                    <InputBase placeholder="Search by customer name, email, or phone…" sx={{ flex: 2, fontSize: 20 }} />
-                    <InputBase placeholder="Member Number…" sx={{ flex: 1, fontSize: 20 }} />
-                </Stack>
-
-                <SummaryBand />
-
-                <Stack spacing={1.5} sx={{ p: 1.5 }}>
-                    {booked.length === 0 && (
-                        <Typography sx={{ p: 3, fontSize: 18, color: appColors.textSecondary }}>
-                            This time is open. Search for a customer above to reserve it.
-                        </Typography>
-                    )}
-
-                    {booked.map(({ p, i }) => (
-                        <Box key={i} sx={{ bgcolor: appColors.detailCard, p: 2 }}>
-                            <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-                                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: 30 }}>{p.name}</Typography>
-                                    {p.balance && <Typography sx={{ fontSize: 22 }}>$</Typography>}
-                                    {p.raincheck && <BoltIcon sx={{ fontSize: 22 }} />}
-                                </Stack>
-                                <Typography sx={{ fontSize: 26 }}>{money(p.price)}</Typography>
-                            </Stack>
-
-                            <Typography sx={{ fontSize: 13, color: "#5a6068", mb: 1.5 }}>
-                                {p.holes} holes &nbsp; {p.rate} : {money(p.price)} &nbsp; ID:1039014{i} &nbsp;{" "}
-                                {p.checkedIn ? "Checked in" : "Not checked in"}
-                            </Typography>
-
-                            <Stack direction="row" spacing={1}>
-                                {p.paid ? (
-                                    <>
-                                        <PlayerAction label="Raincheck" tone="red" />
-                                        <PlayerAction label="History" />
-                                        <PlayerAction label="Edit" />
-                                        <PlayerAction label="Print starter" />
-                                        <PlayerAction label="Print receipt" />
-                                        <PlayerAction label="Cart key" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlayerAction label="Cancel" tone="red" />
-                                        <PlayerAction label="No show" tone="red" />
-                                        <PlayerAction label="History" />
-                                        <PlayerAction label="Edit" />
-                                        <PlayerAction label="Cart signout" />
-                                        <PlayerAction
-                                            label="Add to cart"
-                                            tone="green"
-                                            onClick={() => {
-                                                chargeTeeTime(decoded, i);
-                                                navigate("/proshop");
-                                            }}
-                                        />
-                                    </>
-                                )}
-                            </Stack>
-                        </Box>
-                    ))}
-                </Stack>
+                {/*
+                 * All four renderings come from the same components the
+                 * Storybook stories use; this screen only supplies live data and
+                 * the tap target. See app/src/screens/tee-sheet-views.tsx for the
+                 * adapters, including why a reservation is purple here and navy
+                 * in the other three.
+                 */}
+                <SheetBody
+                    view={view}
+                    times={teeTimes}
+                    course={state.course}
+                    onOpenTime={(time) => navigate(`/teesheet/${encodeURIComponent(time)}`)}
+                />
             </Box>
         </Shell>
     );

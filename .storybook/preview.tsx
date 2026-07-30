@@ -53,7 +53,19 @@ const preview: Preview = {
                 order: [
                     "Introduction",
                     "Foundations",
-                    ["Overview", "Colors", "Typography", "Spacing & Layout", "Radius & Elevation", "Touch Targets", "Icons", "Logos"],
+                    [
+                        "Overview",
+                        "Colors",
+                        "Typography",
+                        "Spacing & Layout",
+                        "Radius & Elevation",
+                        "Touch Targets",
+                        "Icons",
+                        "Logos",
+                        // How the prototype and this system stay one thing. Last
+                        // because it is architecture rather than a token.
+                        "Prototype Seam",
+                    ],
                     "Components",
                     ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Charts & Data", "Media & Visuals", "Navigation"],
                     // The shipping app's flyout drawer.

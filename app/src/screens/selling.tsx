@@ -247,11 +247,29 @@ export const SellActionBar = ({ source }: { source: "Pro Shop" | "Quick Order" }
     );
 };
 
-export const ProShopScreen = () => (
-    <Shell title="Pro Shop Order" active="proshop" orderPanel={<LiveOrderPanel />} actionBar={<SellActionBar source="Pro Shop" />}>
-        <Catalog source="Pro Shop" />
-    </Shell>
-);
+export const ProShopScreen = () => {
+    const navigate = useNavigate();
+    const { holdTicket } = useActions();
+
+    return (
+        <Shell
+            title="Pro Shop Order"
+            active="proshop"
+            orderPanel={<LiveOrderPanel />}
+            actionBar={<SellActionBar source="Pro Shop" />}
+            // The register's own overflow menu, from
+            // references/072926/1-proshop/. Three items, no icons, full-bleed
+            // rules between them.
+            overflowItems={[
+                { label: "Refresh", onClick: () => navigate(0) },
+                { label: "Add Cash Payout", onClick: () => navigate("/pay") },
+                { label: "Quick Tab", onClick: () => { holdTicket(); navigate("/tabs"); } },
+            ]}
+        >
+            <Catalog source="Pro Shop" />
+        </Shell>
+    );
+};
 
 export const QuickOrderScreen = () => (
     <Shell title="Quick Order" active="quickorder" orderPanel={<LiveOrderPanel />} actionBar={<SellActionBar source="Quick Order" />}>

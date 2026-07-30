@@ -114,7 +114,7 @@ const GearCell = ({ menu }: { menu?: ReactNode }) => (
 /* List view                                                           */
 /* ------------------------------------------------------------------ */
 
-const ListRow = ({ row, menu }: { row: SheetRow; menu?: ReactNode }) => (
+const ListRow = ({ row, menu, onOpen }: { row: SheetRow; menu?: ReactNode; onOpen?: () => void }) => (
     <Paper
         elevation={1}
         sx={{
@@ -138,6 +138,7 @@ const ListRow = ({ row, menu }: { row: SheetRow; menu?: ReactNode }) => (
                     borderRight: `1px solid ${appColors.divider}`,
                     minWidth: 0,
                 }}
+                onClick={slot && onOpen ? onOpen : undefined}
             >
                 {slot && <RowSlot slot={slot} />}
             </Box>
@@ -154,10 +155,24 @@ const ListRow = ({ row, menu }: { row: SheetRow; menu?: ReactNode }) => (
  * time detail, and the gear at the right end opens per-time operations
  * (squeeze, clone, clear, move players).
  */
-export const TeeSheetListView = ({ rows = listRows, slotMenu }: { rows?: SheetRow[]; slotMenu?: ReactNode }) => (
+export const TeeSheetListView = ({
+    rows = listRows,
+    slotMenu,
+    onOpenTime,
+}: {
+    rows?: SheetRow[];
+    slotMenu?: ReactNode;
+    /** Supplied by the prototype; the stories leave the rows inert. */
+    onOpenTime?: (time: string) => void;
+}) => (
     <Box sx={{ bgcolor: sheetCanvas, px: 1, pb: 1, display: "flex", flexDirection: "column", gap: 1 }}>
         {rows.map((row, index) => (
-            <ListRow key={row.time} row={row} menu={index === 0 ? slotMenu : undefined} />
+            <ListRow
+                key={row.time}
+                row={row}
+                menu={index === 0 ? slotMenu : undefined}
+                onOpen={onOpenTime ? () => onOpenTime(row.time) : undefined}
+            />
         ))}
     </Box>
 );
@@ -175,11 +190,22 @@ const gridCardFill: Record<GridCard["tone"], { bg: string; fg: string }> = {
     blocked: { bg: appColors.blocked, fg: "rgba(255,255,255,0.92)" },
 };
 
-const GridTile = ({ card }: { card: GridCard }) => {
+const GridTile = ({ card, onOpen }: { card: GridCard; onOpen?: () => void }) => {
     const fill = gridCardFill[card.tone];
 
     return (
-        <Paper elevation={1} sx={{ bgcolor: fill.bg, color: fill.fg, p: 1.5, minHeight: 132, borderRadius: `${appRadius.card}px` }}>
+        <Paper
+            elevation={1}
+            onClick={onOpen}
+            sx={{
+                bgcolor: fill.bg,
+                color: fill.fg,
+                p: 1.5,
+                minHeight: 132,
+                borderRadius: `${appRadius.card}px`,
+                cursor: onOpen ? "pointer" : "default",
+            }}
+        >
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
                 <Typography sx={{ fontSize: 19, color: fill.fg }}>{card.time}</Typography>
                 <SettingsIcon sx={{ fontSize: 24, color: card.tone === "open" ? appColors.textPrimary : fill.fg }} />
@@ -205,10 +231,10 @@ const GridTile = ({ card }: { card: GridCard }) => {
  * four hours of the sheet at once, and the card colour alone tells you whether
  * a time is open, booked, paid or blocked.
  */
-export const TeeSheetGridView = ({ cards = gridCards }: { cards?: GridCard[] }) => (
+export const TeeSheetGridView = ({ cards = gridCards, onOpenTime }: { cards?: GridCard[]; onOpenTime?: (time: string) => void }) => (
     <Box sx={{ bgcolor: sheetCanvas, p: 1, display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 1 }}>
         {cards.map((card) => (
-            <GridTile key={card.time} card={card} />
+            <GridTile key={card.time} card={card} onOpen={onOpenTime ? () => onOpenTime(card.time) : undefined} />
         ))}
     </Box>
 );
