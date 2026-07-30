@@ -381,6 +381,58 @@ await step("Quick Order's rail carries steppers and totals", async () => {
     for (const t of ["Subtotal", "Tax", "Total"]) await page.waitForSelector(`text=${t}`, { timeout: 5000 });
 });
 
+await step("a court slot books against a named customer", async () => {
+    await page.goto(`${BASE}#/coursheet`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=/JULY \\d+ 2026/", { timeout: 6000 });
+
+    await page.getByRole("button", { name: "Pickleball Court 1 6:00 AM" }).click();
+    await page.waitForSelector("text=Weekday Court Schedule - 6:00 AM", { timeout: 6000 });
+    // The tee sheet's Rounds column has no meaning for a court.
+    if (await page.getByText("Rounds", { exact: true }).count()) throw new Error("Rounds column present");
+
+    // There is no anonymous court reservation, so RESERVE stays inert.
+    const reserve = page.getByRole("button", { name: "Reserve" });
+    const locked = await reserve.evaluate((el) => getComputedStyle(el).backgroundColor);
+    await page.fill('input[placeholder^="Search by customer name"]', "west");
+    await page.waitForTimeout(400);
+    await page.locator("text=/@(example\\.com|tenfore\\.golf)/").first().click();
+    if ((await reserve.evaluate((el) => getComputedStyle(el).backgroundColor)) === locked) throw new Error("gate never opened");
+
+    await reserve.click();
+    await page.waitForTimeout(500);
+    const cell = await page.getByRole("button", { name: "Pickleball Court 1 6:00 AM" }).textContent();
+    if (!/6:00 AM\s*\S/.test(cell)) throw new Error(`slot still empty: "${cell}"`);
+});
+
+await step("a walk-up can be created and reserved in one pass", async () => {
+    await page.getByRole("button", { name: "Tennis 2 6:20 AM" }).click();
+    await page.waitForSelector("text=Weekday Court Schedule - 6:20 AM", { timeout: 6000 });
+    await page.fill('input[placeholder^="Search by customer name"]', "Zephyr Quill");
+    await page.waitForTimeout(400);
+    await page.getByText(/Add .Zephyr Quill. as a new customer/).click();
+    await page.waitForSelector("text=Add a New Customer", { timeout: 6000 });
+
+    // A last name plus either a phone or an email — the device only says so after
+    // you press SAVE, and only about two of the three fields it badges.
+    await page.getByRole("button", { name: "Save" }).click();
+    await page.waitForSelector("text=Phone number or email is required.", { timeout: 5000 });
+
+    await page.getByRole("button", { name: "@GMAIL.COM" }).click();
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // Saving hands the new id back, so the reservation continues with them picked.
+    await page.waitForSelector("text=Weekday Court Schedule - 6:20 AM", { timeout: 6000 });
+    await page.getByRole("button", { name: "Reserve" }).click();
+    await page.waitForTimeout(500);
+    const cell = await page.getByRole("button", { name: "Tennis 2 6:20 AM" }).textContent();
+    if (!/Zephyr/.test(cell)) throw new Error(`slot reads "${cell}"`);
+
+    // And they are in the database, not just on the sheet.
+    await page.goto(`${BASE}#/customersearch`, { waitUntil: "networkidle" });
+    await page.fill('input[placeholder^="Search by customer name"]', "Quill");
+    await page.waitForSelector("text=Zephyr Quill", { timeout: 5000 });
+});
+
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");
 errors.slice(0, 6).forEach((e) => console.log("  " + e.slice(0, 160)));
 if (errors.length) process.exitCode = 1;

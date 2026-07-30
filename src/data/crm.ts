@@ -78,7 +78,10 @@ export interface Customer {
     cardExpires?: string;
 }
 
-/** Every type the course has configured. Records select a subset. */
+/**
+ * Every type the course has configured, in the order the new-customer form lays
+ * them out: four columns, filled left to right.
+ */
 export const CUSTOMER_TYPES = [
     "Senior",
     "Military",
@@ -93,7 +96,19 @@ export const CUSTOMER_TYPES = [
     "Austin Test",
     "Test percent off",
     "Simp",
+    "Employee",
+    "Campaign Testers",
+    "Wonderful Person",
+    "Average Person",
 ] as const;
+
+/**
+ * The email domains the form offers as one-tap suffixes.
+ *
+ * Six buttons for the six providers this membership actually uses, which is
+ * faster than typing on glass and removes the commonest source of a bad address.
+ */
+export const EMAIL_DOMAINS = ["@gmail.com", "@yahoo.com", "@hotmail.com", "@aol.com", "@sbcglobal.net", "@att.net"] as const;
 
 const MEMBERSHIP_NAMES = [
     "30 Day booking window",
@@ -268,10 +283,10 @@ export const customers = buildCustomers();
  * going, which is fine on a real CRM but makes a demo look broken when a
  * two-letter query returns ninety rows.
  */
-export function searchCustomers(query: string, limit = 8): Customer[] {
+export function searchCustomers(query: string, limit = 8, list: Customer[] = customers): Customer[] {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return [];
-    return customers
+    return list
         .filter(
             (c) =>
                 c.displayName.toLowerCase().includes(q) ||
@@ -282,4 +297,37 @@ export function searchCustomers(query: string, limit = 8): Customer[] {
         .slice(0, limit);
 }
 
-export const customerById = (id: string) => customers.find((c) => c.id === id) ?? null;
+export const customerById = (id: string, list: Customer[] = customers) => list.find((c) => c.id === id) ?? null;
+
+/**
+ * Builds a record from what the new-customer form collects.
+ *
+ * Everything the form does not ask for is left empty rather than invented — a
+ * counter-created customer genuinely has no address, no memberships and no
+ * history, and filling those in would make a brand-new record look like an
+ * established one.
+ */
+export function newCustomer(
+    input: { firstName: string; lastName: string; email?: string; phone?: string; birthday?: string; notes?: string; types?: string[] },
+    seq: number,
+): Customer {
+    const suffix = input.types?.[0];
+    return {
+        id: String(560000 + seq),
+        courseId: String(410000 + seq),
+        firstName: input.firstName,
+        lastName: input.lastName,
+        displayName: suffix ? `${input.firstName} ${input.lastName} - ${suffix}` : `${input.firstName} ${input.lastName}`,
+        email: input.email ?? "",
+        phone: input.phone,
+        birthday: input.birthday,
+        notes: input.notes,
+        memberships: [],
+        customerTypes: input.types ?? [],
+        giftCards: [],
+        teeTimes: [],
+        punchCards: [],
+        rewardsBalance: 0,
+        balance: 0,
+    };
+}

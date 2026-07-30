@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
+import { TODAY, useActions, useStore } from "../store";
 
 /**
  * Court Sheet, from `references/072926/3-coursheet/`.
@@ -35,26 +36,39 @@ const SLOTS = Array.from({ length: 12 }, (_, i) => {
     return `${h}:${String(m).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`;
 });
 
-const DateBar = () => (
+const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+const DOW = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+const longDate = (iso: string) => {
+    const d = new Date(`${iso}T12:00:00`);
+    return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} ${d.getFullYear()}`;
+};
+
+/**
+ * The date band.
+ *
+ * Same rule as the tee sheet: orange means the sheet is showing a day other than
+ * today. It is a warning that you are not looking at the live sheet, and it has
+ * to mean the same thing on every sheet or it means nothing on any of them.
+ */
+const DateBar = () => {
+    const { state } = useStore();
+    const { setCourtDate, shiftCourtDate } = useActions();
+    const isToday = state.courtDate === TODAY;
+
+    return (
     <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.canvas }}>
-        <Box
-            sx={{
-                bgcolor: appColors.green,
-                width: 190,
-                display: "grid",
-                placeItems: "center",
-                color: "#fff",
-                fontSize: 26,
-                lineHeight: 1,
-                py: 1.75,
-            }}
+        <ButtonBase
+            aria-label="Previous day"
+            onClick={() => shiftCourtDate(-1)}
+            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1, py: 1.75 }}
         >
             ‹
-        </Box>
+        </ButtonBase>
         <Box
             sx={{
                 flex: 3,
-                bgcolor: appColors.orange,
+                bgcolor: isToday ? appColors.slate : appColors.orange,
                 color: "#fff",
                 display: "grid",
                 placeItems: "center",
@@ -62,31 +76,35 @@ const DateBar = () => (
                 letterSpacing: "0.08em",
             }}
         >
-            SATURDAY, JULY 29 2026
+            {longDate(state.courtDate)}
         </Box>
-        <Box
+        <ButtonBase
+            disabled={isToday}
+            onClick={() => setCourtDate(TODAY)}
             sx={{
                 flex: 2,
-                bgcolor: appColors.slate,
+                bgcolor: isToday ? appColors.grey : appColors.slate,
                 color: "#fff",
-                display: "grid",
-                placeItems: "center",
                 fontSize: 14,
                 letterSpacing: "0.08em",
             }}
         >
             GO TO TODAY
-        </Box>
-        <Box
-            sx={{ bgcolor: appColors.green, width: 190, display: "grid", placeItems: "center", color: "#fff", fontSize: 26, lineHeight: 1 }}
+        </ButtonBase>
+        <ButtonBase
+            aria-label="Next day"
+            onClick={() => shiftCourtDate(1)}
+            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1 }}
         >
             ›
-        </Box>
+        </ButtonBase>
     </Stack>
-);
+    );
+};
 
 export const CourtSheetScreen = () => {
     const navigate = useNavigate();
+    const { state } = useStore();
 
     return (
         <Shell
@@ -131,6 +149,10 @@ export const CourtSheetScreen = () => {
                             {SLOTS.map((slot) => (
                                 <ButtonBase
                                     key={slot}
+                                    aria-label={`${court} ${slot}`}
+                                    onClick={() =>
+                                        navigate(`/coursheet/${encodeURIComponent(court)}/${encodeURIComponent(slot)}`)
+                                    }
                                     sx={{
                                         display: "block",
                                         textAlign: "left",
@@ -145,6 +167,13 @@ export const CourtSheetScreen = () => {
                                     }}
                                 >
                                     <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{slot}</Typography>
+                                    {/* The reservation is just the customer's name —
+                                        no time, no duration, no party size. */}
+                                    {state.resourceBookings[`${state.courtDate}|${court}|${slot}`] && (
+                                        <Typography sx={{ fontSize: 21, mt: 1.5 }} noWrap>
+                                            {state.resourceBookings[`${state.courtDate}|${court}|${slot}`]}
+                                        </Typography>
+                                    )}
                                 </ButtonBase>
                             ))}
                         </Stack>

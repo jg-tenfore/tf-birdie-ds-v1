@@ -1,4 +1,5 @@
 import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
+import { customers as seededCustomers, type Customer } from "@/data/crm";
 import {
     buildDaySheet,
     may12Sheet,
@@ -119,6 +120,22 @@ interface State {
     /** Last completed sale, so the approved screen has something to show. */
     lastSale: { ticket: Ticket; total: number; tender: string } | null;
     bayBookings: BayBooking[];
+    /**
+     * Court and bay reservations, keyed `date|resource|time`.
+     *
+     * One flat map rather than a nested structure per resource type, because the
+     * court sheet and the bay sheet book the same way — a named person against a
+     * named resource at a named time — and a shared key means one reservation
+     * screen serves both.
+     */
+    resourceBookings: Record<string, string>;
+    /** The day the court sheet is showing. Independent of the tee sheet's. */
+    courtDate: string;
+    /**
+     * The customer database, in state rather than imported directly, so a
+     * customer created at the counter is findable a second later.
+     */
+    customers: Customer[];
     shiftOpen: boolean;
     clockedIn: boolean;
     /** Time-clock punches, newest first — what the Time Clock log renders. */
@@ -209,6 +226,9 @@ const initial: State = {
     shiftOpen: true,
     clockedIn: false,
     punches: [],
+    resourceBookings: {},
+    courtDate: "2026-07-21",
+    customers: seededCustomers,
     floorPlans: seededFloorPlans,
     floorRoom: "bigroom",
     toast: null,
@@ -248,6 +268,11 @@ type Action =
     | { type: "setFloorRoom"; room: string }
     | { type: "saveFloorPlan"; room: string; elements: FloorElement[] }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
+    | { type: "reserveResource"; date: string; resource: string; time: string; customer: string }
+    | { type: "cancelResource"; date: string; resource: string; time: string }
+    | { type: "setCourtDate"; date: string }
+    | { type: "shiftCourtDate"; days: number }
+    | { type: "addCustomer"; customer: Customer }
     | { type: "endShift" }
     | { type: "toast"; message: string | null };
 
@@ -708,6 +733,36 @@ function reducer(state: State, action: Action): State {
             };
         }
 
+        case "reserveResource":
+            return {
+                ...state,
+                resourceBookings: {
+                    ...state.resourceBookings,
+                    [`${action.date}|${action.resource}|${action.time}`]: action.customer,
+                },
+                toast: `${action.resource} ${action.time} reserved for ${action.customer}`,
+            };
+
+        case "cancelResource": {
+            const next = { ...state.resourceBookings };
+            delete next[`${action.date}|${action.resource}|${action.time}`];
+            return { ...state, resourceBookings: next, toast: `${action.resource} ${action.time} released` };
+        }
+
+        case "setCourtDate":
+            return { ...state, courtDate: action.date };
+
+        case "shiftCourtDate": {
+            const d = new Date(`${state.courtDate}T12:00:00`);
+            d.setDate(d.getDate() + action.days);
+            return { ...state, courtDate: d.toISOString().slice(0, 10) };
+        }
+
+        // Newest first, so a customer created at the counter is the top hit when
+        // the operator searches the name they just typed.
+        case "addCustomer":
+            return { ...state, customers: [action.customer, ...state.customers], toast: `${action.customer.displayName} added` };
+
         case "addBayBooking":
             return {
                 ...state,
@@ -813,6 +868,12 @@ export function useActions() {
             setFloorRoom: (room: string) => dispatch({ type: "setFloorRoom", room }),
             saveFloorPlan: (room: string, elements: FloorElement[]) => dispatch({ type: "saveFloorPlan", room, elements }),
             addBayBooking: (booking: Omit<BayBooking, "id">) => dispatch({ type: "addBayBooking", booking }),
+            reserveResource: (date: string, resource: string, time: string, customer: string) =>
+                dispatch({ type: "reserveResource", date, resource, time, customer }),
+            cancelResource: (date: string, resource: string, time: string) => dispatch({ type: "cancelResource", date, resource, time }),
+            setCourtDate: (date: string) => dispatch({ type: "setCourtDate", date }),
+            shiftCourtDate: (days: number) => dispatch({ type: "shiftCourtDate", days }),
+            addCustomer: (customer: Customer) => dispatch({ type: "addCustomer", customer }),
             endShift: () => dispatch({ type: "endShift" }),
             toast: (message: string | null) => dispatch({ type: "toast", message }),
         }),

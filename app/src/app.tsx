@@ -16,6 +16,8 @@ import { TablesScreen } from "./screens/tables";
 import { TabDetailScreen, TabsScreen } from "./screens/tabs";
 import { BaySheetScreen } from "./screens/bay-sheet";
 import { CourtSheetScreen } from "./screens/court-sheet";
+import { NewCustomerScreen } from "./screens/new-customer";
+import { ResourceReservationScreen } from "./screens/resource-reservation";
 import { TeeSheetScreen } from "./screens/tee-sheet";
 import { TeeTimeDetailScreen } from "./screens/tee-time-detail";
 import { TeeTimeCartSignOutScreen, TeeTimeEditScreen } from "./screens/tee-time-edit";
@@ -54,6 +56,8 @@ const routes: [string, React.ReactNode][] = [
     ["/timeclock", <TimeClockScreen />],
     ["/shift", <ShiftScreen />],
     ["/coursheet", <CourtSheetScreen />],
+    ["/coursheet/:resource/:time", <ResourceReservationScreen />],
+    ["/customers/new", <NewCustomerScreen />],
     ["/baysheet", <BaySheetScreen />],
     ["/reservations", <RestaurantReservationsScreen />],
     ["/orderstips", <OrdersTipsScreen />],
