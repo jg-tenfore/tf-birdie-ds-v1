@@ -85,7 +85,7 @@ const TabRow = ({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) => {
 
 export const TabsScreen = () => {
     const { heldTickets } = useStore();
-    const { openTicket } = useActions();
+    const { openTicket, popDrawer } = useActions();
     const navigate = useNavigate();
     const [q, setQ] = useState("");
 
@@ -109,7 +109,7 @@ export const TabsScreen = () => {
             actionBar={
                 <>
                     <ActionButton tone="disabled">Back</ActionButton>
-                    <ActionButton tone="danger" icon={<SaveAltIcon />}>
+                    <ActionButton tone="danger" icon={<SaveAltIcon />} onClick={popDrawer}>
                         Pop
                     </ActionButton>
                     <ActionButton icon={<BoltIcon />} onClick={() => navigate("/quickorder")}>

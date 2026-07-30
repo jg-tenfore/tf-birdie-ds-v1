@@ -31,10 +31,12 @@ import { useActions, useStore } from "../store";
  * booking is not a round of golf.
  *
  * RESERVE does one of two things depending on whether a customer has been picked.
- * With one, it books the slot. Without one, it goes to Add a New Customer — so
- * the button is both "confirm" and "I need to create this person first", which is
- * how a walk-up gets booked at all. It reads as disabled in the reference because
- * it is styled flat until a customer is chosen, but it is live either way.
+ * With one, it books the slot. Without one, it goes to Add a New Customer — so the
+ * button is both "confirm" and "I need to create this person first", which is how a
+ * walk-up gets booked at all.
+ *
+ * It is therefore slate on any open slot, picked or not. It only greys out once the
+ * slot is reserved, which is the single state where it cannot do anything.
  *
  * Search runs against the store's customer list rather than the imported
  * fixture, so somebody created at the counter is findable a second later.
@@ -217,8 +219,13 @@ export const ResourceReservationScreen = () => {
                                 gap: 1,
                                 px: 3,
                                 py: 1.5,
-                                bgcolor: picked && !booked ? appColors.slate : "#DCDEE0",
-                                color: picked && !booked ? "#fff" : "#9AA1A9",
+                                // Slate on an open slot whether or not a customer
+                                // is picked — it is live either way, and the flat
+                                // grey it had read as broken. Only an
+                                // already-reserved slot greys it out, which is the
+                                // one state where it genuinely cannot act.
+                                bgcolor: booked ? "#DCDEE0" : appColors.slate,
+                                color: booked ? "#9AA1A9" : "#fff",
                                 fontSize: 17,
                                 fontWeight: 500,
                             }}

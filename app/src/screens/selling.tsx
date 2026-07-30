@@ -378,7 +378,7 @@ export const SellActionBar = ({
     onBack?: () => void;
 }) => {
     const { lines, total } = useStore();
-    const { clearCart, holdTicket } = useActions();
+    const { clearCart, popDrawer } = useActions();
     const navigate = useNavigate();
     const hasLines = lines.length > 0;
 
@@ -400,7 +400,8 @@ export const SellActionBar = ({
             <ActionButton icon={<ReplayIcon />} onClick={clearCart}>
                 Reset
             </ActionButton>
-            <ActionButton icon={<SaveAltIcon />} onClick={holdTicket}>
+            {/* Opens the cash drawer — it does not touch the ticket. */}
+            <ActionButton icon={<SaveAltIcon />} onClick={popDrawer}>
                 Pop
             </ActionButton>
             <ActionButton icon={<PersonIcon />} onClick={() => navigate("/customersearch")}>

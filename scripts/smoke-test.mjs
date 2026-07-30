@@ -138,7 +138,11 @@ await step("held ticket appears on the tabs list", async () => {
     await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
     const before = await page.evaluate(() => document.body.innerText.match(/\d{4} - /g)?.length ?? 0);
     await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Pop", exact: true }).click();
+    // Quick Tab in the overflow is what holds a ticket. POP is the cash drawer —
+    // this check used to lean on POP doing both.
+    await page.getByRole("button", { name: "More" }).click();
+    await page.getByText("Quick Tab", { exact: true }).click();
+    await page.waitForTimeout(400);
     await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
     // Asserting a count rather than a name: the checked-in golfer comes from the
     // generated sheet, so hard-coding one couples this test to the seed.
@@ -470,6 +474,41 @@ await step("the Gift Card tile configures before it sells", async () => {
     // than the total, since earlier steps in this run have already put items in.
     await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
     await page.waitForSelector("text=$20.00", { timeout: 5000 });
+});
+
+await step("POP opens the cash drawer and touches nothing else", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /Green Fees/i }).click();
+    await page.getByText("Green fee — 18", { exact: true }).first().click();
+    await page.waitForTimeout(400);
+
+    const before = await page.getByRole("button", { name: /^Pay \$/ }).textContent();
+    await page.getByRole("button", { name: "Pop" }).click();
+
+    // Read the snackbar directly: a toast may already be open from adding the
+    // item, and its auto-hide timer keeps running, so polling for the text can
+    // race the close.
+    await page.waitForFunction(
+        () => document.querySelector(".MuiSnackbar-root")?.textContent?.includes("Drawer Popping") ?? false,
+        undefined,
+        { timeout: 5000 },
+    );
+
+    // POP is the drawer, not a ticket hold — an earlier pass had it calling
+    // holdTicket, which moved the order out from under the operator.
+    const after = await page.getByRole("button", { name: /^Pay \$/ }).textContent();
+    if (before !== after) throw new Error(`POP moved the ticket: ${before} -> ${after}`);
+});
+
+await step("every configured room has a layout", async () => {
+    await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+    for (const room of ["[Detached Tables]", "smallroom", "banquet", "Lounge", "Trivia Pub/Bar", "Big Bar", "Open Tabs", "New Table Designer Room"]) {
+        await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+        await page.getByText(room, { exact: true }).click();
+        await page.waitForTimeout(350);
+        if ((await page.locator("[data-table]").count()) === 0) throw new Error(`${room} has no layout`);
+    }
 });
 
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");

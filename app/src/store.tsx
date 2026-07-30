@@ -267,6 +267,7 @@ type Action =
     | { type: "changeQty"; lineId: string; delta: number; seat?: number }
     | { type: "removeLine"; lineId: string; seat?: number }
     | { type: "clearCart" }
+    | { type: "popDrawer" }
     | { type: "holdTicket" }
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
@@ -422,6 +423,17 @@ function reducer(state: State, action: Action): State {
                         : { ...t, lines: t.lines.filter((l) => !(l.id === action.lineId && l.seat === action.seat)) },
                 ),
             };
+
+        /**
+         * POP opens the cash drawer. Nothing else.
+         *
+         * An earlier pass read it as "hold this ticket" and wired it to
+         * holdTicket, which meant the button on four screens did something it had
+         * never claimed to do. The device confirms with a toast and no state
+         * changes at all — holding a ticket is Quick Tab, in the overflow menu.
+         */
+        case "popDrawer":
+            return { ...state, toast: "Drawer Popping!" };
 
         case "clearCart": {
             const current = activeTicket(state);
@@ -874,6 +886,7 @@ export function useActions() {
             changeQty: (lineId: string, delta: number, seat?: number) => dispatch({ type: "changeQty", lineId, delta, seat }),
             removeLine: (lineId: string, seat?: number) => dispatch({ type: "removeLine", lineId, seat }),
             clearCart: () => dispatch({ type: "clearCart" }),
+            popDrawer: () => dispatch({ type: "popDrawer" }),
             holdTicket: () => dispatch({ type: "holdTicket" }),
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
