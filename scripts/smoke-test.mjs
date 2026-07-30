@@ -436,6 +436,30 @@ await step("a walk-up can be created and reserved in one pass", async () => {
     await page.waitForSelector("text=Zephyr Quill", { timeout: 5000 });
 });
 
+await step("the Gift Card tile configures before it sells", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
+
+    // A category tile is a destination, not necessarily a list — this one opens a
+    // form, because a gift card has no price until somebody types one.
+    await page.getByText("Gift Card", { exact: true }).click();
+    await page.waitForSelector("text=Create a Gift Card", { timeout: 6000 });
+    for (const t of ["Gift Card FROM", "Gift Card TO", "Same as From", "Alcohol"])
+        await page.waitForSelector(`text=${t}`, { timeout: 4000 });
+
+    await page.locator('input[placeholder="0.00"]').fill("20");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // No UPC means the server mints one, and the device says so before committing.
+    await page.waitForSelector("text=UPC was not provided", { timeout: 5000 });
+    await page.getByRole("button", { name: "OK" }).click();
+
+    // Back on the register with the card in the order. Asserting the line rather
+    // than the total, since earlier steps in this run have already put items in.
+    await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
+    await page.waitForSelector("text=$20.00", { timeout: 5000 });
+});
+
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");
 errors.slice(0, 6).forEach((e) => console.log("  " + e.slice(0, 160)));
 if (errors.length) process.exitCode = 1;

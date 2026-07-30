@@ -5,6 +5,7 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-d
 import { appReplicaTheme } from "@/theme/app-replica-theme";
 import { StoreProvider, useStore } from "./store";
 import { CombosScreen } from "./screens/combos";
+import { CreateGiftCardScreen } from "./screens/create-gift-card";
 import { EventDetailScreen, EventsScreen } from "./screens/events";
 import { GiftCardsScreen } from "./screens/gift-cards";
 import { InventoryCountScreen, InventoryNewCountScreen, InventoryScreen } from "./screens/inventory";
@@ -63,6 +64,7 @@ const routes: [string, React.ReactNode][] = [
     ["/orderstips", <OrdersTipsScreen />],
     ["/tablechart", <TableChartScreen />],
     ["/giftcards", <GiftCardsScreen />],
+    ["/giftcards/new", <CreateGiftCardScreen />],
     ["/events", <EventsScreen />],
     ["/events/:id", <EventDetailScreen />],
     ["/inventory", <InventoryScreen />],
