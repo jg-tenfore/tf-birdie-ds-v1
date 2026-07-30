@@ -108,7 +108,7 @@ const QuickOrderPanel = () => {
 
 export const QuickOrderScreen = () => {
     const { lines, total } = useStore();
-    const { addItem } = useActions();
+    const { addItem, clearCart, holdTicket } = useActions();
     const navigate = useNavigate();
 
     const [menuSet, setMenuSet] = useState("19th Hole Menu");
@@ -122,6 +122,15 @@ export const QuickOrderScreen = () => {
             title="Quick Order"
             active="quickorder"
             orderPanel={<QuickOrderPanel />}
+            // Quick Order's own overflow, from
+            // references/072926/5-quickorder/. Four order-scoped commands, one of
+            // which converts the whole quick order into a tab.
+            overflowItems={[
+                { label: "Quick Tab", onClick: () => { holdTicket(); navigate("/tabs"); } },
+                { label: "Refresh Menu", onClick: () => navigate(0) },
+                { label: "Remove All Discounts", onClick: clearCart },
+                { label: "Cancel Quick Order", onClick: () => { clearCart(); navigate("/proshop"); } },
+            ]}
             actionBar={
                 <>
                     <ActionButton tone={drilled ? "default" : "disabled"} onClick={() => setDrilled(null)}>
