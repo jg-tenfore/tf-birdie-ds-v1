@@ -28,9 +28,13 @@ import { useActions, useStore } from "../store";
  * are booking is named twice and the *day* not at all, which is worth flagging.
  *
  * The summary band is the tee sheet's minus the Rounds column, since a court
- * booking is not a round of golf. RESERVE stays dark and inert until a customer
- * has been picked: there is no such thing as an anonymous court reservation, and
- * the device offers no way to make one.
+ * booking is not a round of golf.
+ *
+ * RESERVE does one of two things depending on whether a customer has been picked.
+ * With one, it books the slot. Without one, it goes to Add a New Customer — so
+ * the button is both "confirm" and "I need to create this person first", which is
+ * how a walk-up gets booked at all. It reads as disabled in the reference because
+ * it is styled flat until a customer is chosen, but it is live either way.
  *
  * Search runs against the store's customer list rather than the imported
  * fixture, so somebody created at the counter is findable a second later.
@@ -188,12 +192,24 @@ export const ResourceReservationScreen = () => {
                             Cancel
                         </ButtonBase>
 
-                        {/* Inert until a customer is picked — there is no anonymous
-                            court reservation. */}
+                        {/*
+                         * Live whether or not a customer is picked: with one it
+                         * books, without one it goes to create the person. Only a
+                         * slot that is already reserved switches it off, because
+                         * then there is genuinely nothing to do.
+                         */}
                         <ButtonBase
-                            disabled={!picked || Boolean(booked)}
+                            disabled={Boolean(booked)}
                             onClick={() => {
-                                if (!picked || booked) return;
+                                if (booked) return;
+                                if (!picked) {
+                                    navigate(
+                                        `/customers/new?return=${encodeURIComponent(`/coursheet/${resource}/${time}`)}${
+                                            query.trim() ? `&name=${encodeURIComponent(query.trim())}` : ""
+                                        }`,
+                                    );
+                                    return;
+                                }
                                 reserveResource(state.courtDate, decodedResource, decodedTime, picked.displayName);
                                 back();
                             }}

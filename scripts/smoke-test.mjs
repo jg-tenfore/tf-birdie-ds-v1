@@ -403,14 +403,14 @@ await step("a court slot books against a named customer", async () => {
     // The tee sheet's Rounds column has no meaning for a court.
     if (await page.getByText("Rounds", { exact: true }).count()) throw new Error("Rounds column present");
 
-    // There is no anonymous court reservation, so RESERVE stays inert.
+    // RESERVE is live either way: with a customer it books, without one it goes to
+    // create the person. It is styled flat until one is picked, not disabled.
     const reserve = page.getByRole("button", { name: "Reserve" });
-    const locked = await reserve.evaluate((el) => getComputedStyle(el).backgroundColor);
+    if (await reserve.isDisabled()) throw new Error("Reserve disabled on an open slot");
+
     await page.fill('input[placeholder^="Search by customer name"]', "west");
     await page.waitForTimeout(400);
     await page.locator("text=/@(example\\.com|tenfore\\.golf)/").first().click();
-    if ((await reserve.evaluate((el) => getComputedStyle(el).backgroundColor)) === locked) throw new Error("gate never opened");
-
     await reserve.click();
     await page.waitForTimeout(500);
     const cell = await page.getByRole("button", { name: "Pickleball Court 1 6:00 AM" }).textContent();
@@ -420,9 +420,11 @@ await step("a court slot books against a named customer", async () => {
 await step("a walk-up can be created and reserved in one pass", async () => {
     await page.getByRole("button", { name: "Tennis 2 6:20 AM" }).click();
     await page.waitForSelector("text=Weekday Court Schedule - 6:20 AM", { timeout: 6000 });
+    // RESERVE with nobody picked is the route to creating them, and it carries the
+    // typed name across.
     await page.fill('input[placeholder^="Search by customer name"]', "Zephyr Quill");
     await page.waitForTimeout(400);
-    await page.getByText(/Add .Zephyr Quill. as a new customer/).click();
+    await page.getByRole("button", { name: "Reserve" }).click();
     await page.waitForSelector("text=Add a New Customer", { timeout: 6000 });
 
     // A last name plus either a phone or an email — the device only says so after
