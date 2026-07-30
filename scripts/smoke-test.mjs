@@ -320,11 +320,65 @@ await step("Customer Search finds a record and opens it", async () => {
 
 await step("tapping a table opens its check and DONE returns to the floor", async () => {
     await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
-    await page.waitForSelector("text=seated", { timeout: 6000 });
+    await page.waitForSelector('[data-table="9"]', { timeout: 6000 });
     await page.locator('[data-table="9"]').first().click();
     await page.waitForSelector("text=/Table Detached \\d+ \\| Order ID/", { timeout: 6000 });
     await page.getByRole("button", { name: "Done" }).click();
-    await page.waitForSelector("text=seated", { timeout: 5000 });
+    await page.waitForSelector('[data-table="9"]', { timeout: 5000 });
+});
+
+await step("the floor's FLOOR PLAN button opens the room sheet upward", async () => {
+    await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
+    await page.waitForSelector('[data-table="9"]', { timeout: 6000 });
+    await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+    for (const r of ["smallroom", "bigroom", "Private Hall"]) await page.waitForSelector(`text=${r}`, { timeout: 4000 });
+
+    const sheet = await page.locator('[role="menu"]').boundingBox();
+    const button = await page.getByRole("button", { name: "FLOOR PLAN" }).boundingBox();
+    // It has to sit above the bar and be centred on the button that opened it —
+    // a centred full-height panel left a slab of dead space under the last room.
+    if (sheet.y + sheet.height > button.y + 4) throw new Error("sheet overlaps the action bar");
+    if (Math.abs(sheet.x + sheet.width / 2 - (button.x + button.width / 2)) > 60) throw new Error("sheet not anchored to the button");
+});
+
+await step("seat orientation flips between top/bottom and left/right", async () => {
+    await page.goto(`${BASE}#/tablechart`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+    // The room is shared state, so make sure we are in the one with squares.
+    await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+    await page.getByText("bigroom", { exact: true }).click();
+    await page.waitForTimeout(500);
+
+    await page.locator('[data-table="1"]').first().click();
+    await page.waitForSelector('input[aria-label="Table name"]', { timeout: 5000 });
+
+    // Two seats, because at four every edge gets one whichever axis is chosen and
+    // the setting is genuinely invisible.
+    const fewer = page.getByRole("button", { name: "Fewer seats" });
+    await fewer.click();
+    await fewer.click();
+    await page.waitForTimeout(300);
+
+    const spread = async (axis) =>
+        page.locator('[data-table="1"] rect').evaluateAll((els, a) => {
+            const marks = els.slice(0, -1).map((e) => Number(e.getAttribute(a)));
+            return Math.max(...marks) - Math.min(...marks);
+        }, axis);
+
+    await page.getByRole("button", { name: "Seats top and bottom" }).click();
+    await page.waitForTimeout(300);
+    if (!((await spread("y")) > (await spread("x")))) throw new Error("horizontal did not seat top and bottom");
+
+    await page.getByRole("button", { name: "Seats left and right" }).click();
+    await page.waitForTimeout(300);
+    if (!((await spread("x")) > (await spread("y")))) throw new Error("vertical did not seat left and right");
+});
+
+await step("Quick Order's rail carries steppers and totals", async () => {
+    await page.goto(`${BASE}#/quickorder`, { waitUntil: "networkidle" });
+    await page.getByText("Steaks", { exact: true }).first().click();
+    await page.getByText("Filet Mignon 8 oz").first().click();
+    for (const t of ["Subtotal", "Tax", "Total"]) await page.waitForSelector(`text=${t}`, { timeout: 5000 });
 });
 
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");

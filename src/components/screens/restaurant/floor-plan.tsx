@@ -18,6 +18,19 @@ import Typography from "@mui/material/Typography";
  */
 
 export type TableShape = "square" | "circle" | "rectangle" | "oval" | "diamond";
+
+/**
+ * Which pair of edges the seats sit on.
+ *
+ * `horizontal` puts them along the top and bottom, so diners face each other
+ * across the table's width; `vertical` puts them on the left and right. It only
+ * means anything on the straight-edged shapes — a round table seats evenly around
+ * its perimeter — so the control is hidden for those rather than doing nothing.
+ *
+ * Left unset, seats follow the longer pair of edges. That is right most of the
+ * time and wrong exactly when a long table is pushed against a wall.
+ */
+export type SeatOrientation = "horizontal" | "vertical";
 export type ElementKind = "table" | "barrier" | "box" | "label";
 
 /** The states the live view colours by. Only `occupied` is coloured warm. */
@@ -39,6 +52,8 @@ export interface FloorElement {
     text?: string;
     /** Resizing keeps the aspect ratio — round tables must stay round. */
     lockAR?: boolean;
+    /** Overrides the default "seats follow the longer edges" rule. */
+    seatOrientation?: SeatOrientation;
     /** Live view only: who is sitting here. */
     party?: { name: string; guests: number; server: string; tab: number };
 }
@@ -69,7 +84,13 @@ interface ChairPos {
  * are special-cased to top → bottom → right → left, because proportional
  * distribution puts two chairs on one edge and looks wrong at low counts.
  */
-export function chairPositions(shape: TableShape, seats: number, w: number, h: number): ChairPos[] {
+export function chairPositions(
+    shape: TableShape,
+    seats: number,
+    w: number,
+    h: number,
+    orientation?: SeatOrientation,
+): ChairPos[] {
     const inset = CHAIR_SIZE + CHAIR_GAP;
     const tableLeft = inset;
     const tableTop = inset;
@@ -94,17 +115,22 @@ export function chairPositions(shape: TableShape, seats: number, w: number, h: n
     }
 
     // Square / rectangle / diamond (a diamond is a rotated square).
+    const top: ChairPos = { x: cx, y: CHAIR_GAP, rotate: 0 };
+    const bottom: ChairPos = { x: cx, y: h - CHAIR_GAP, rotate: 180 };
+    const right: ChairPos = { x: w - CHAIR_GAP, y: cy, rotate: 90 };
+    const left: ChairPos = { x: CHAIR_GAP, y: cy, rotate: 270 };
+
     if (seats <= 4 && shape !== "rectangle") {
-        const sides: ChairPos[] = [
-            { x: cx, y: CHAIR_GAP, rotate: 0 },
-            { x: cx, y: h - CHAIR_GAP, rotate: 180 },
-            { x: w - CHAIR_GAP, y: cy, rotate: 90 },
-            { x: CHAIR_GAP, y: cy, rotate: 270 },
-        ];
+        // Fill the chosen pair of edges first, then the other pair. With no
+        // orientation this is top → bottom → right → left, which is what a
+        // four-top looks like when nobody has said otherwise.
+        const sides = orientation === "vertical" ? [left, right, top, bottom] : [top, bottom, right, left];
         return sides.slice(0, seats);
     }
 
-    const isWide = tableW >= tableH;
+    // An explicit orientation overrides the edge-length rule: `horizontal` treats
+    // top and bottom as the primary pair whatever the proportions say.
+    const isWide = orientation ? orientation === "horizontal" : tableW >= tableH;
     const longEdge = isWide ? tableW : tableH;
     const shortEdge = isWide ? tableH : tableW;
     const total = longEdge * 2 + shortEdge * 2;
@@ -196,7 +222,7 @@ export const TableGraphic = ({ element, fill }: { element: FloorElement; fill: s
     return (
         <Box component="svg" width={w} height={h} viewBox={`0 0 ${w} ${h}`} sx={{ display: "block", overflow: "visible" }}>
             {!bare &&
-                chairPositions(shape, seats, w, h).map((c, i) => (
+                chairPositions(shape, seats, w, h, element.seatOrientation).map((c, i) => (
                     <rect
                         key={i}
                         x={c.x - CHAIR_SIZE / 2}

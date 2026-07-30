@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Divider from "@mui/material/Divider";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -10,13 +9,18 @@ import CategoryIcon from "@mui/icons-material/Category";
 import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
-import { OrderPanelEmpty } from "@/components/app-chrome/order-panel";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
-import { Shell } from "../pos-shell";
-import { money, useActions, useStore, type Line } from "../store";
+import { LiveOrderPanel, Shell } from "../pos-shell";
+import { money, useActions, useStore } from "../store";
 
 /**
  * Quick Order, from `references/072926/5-quickorder/`.
+ *
+ * The order rail is the register's own panel, not a lighter variant. An earlier
+ * pass read the reference as "no quantity stepper here, quantity is edited from
+ * the item detail pane" — but that leaves the one place you are looking at the
+ * order unable to change it, and hides the totals until the tender screen. Same
+ * panel as Pro Shop: ticket header, per-line steppers, subtotal / tax / total.
  *
  * Differs from Pro Shop in a way that is easy to miss: the tiles are menu
  * **categories**, not products. Tapping one replaces the entire browsing
@@ -24,9 +28,6 @@ import { money, useActions, useStore, type Line } from "../store";
  * header card naming the category over a list of its products. The only way
  * back is the BACK button, which is greyed until you have drilled in.
  *
- * The order panel rows are also lighter here than on the retail side: a small
- * thumbnail, name and price, with no quantity stepper. Quantity is edited from
- * the item detail pane, not the cart.
  */
 
 import { foodByCategory, foodCategories } from "@/data/food-catalog";
@@ -61,51 +62,6 @@ const MENU_SETS: Record<string, string[]> = {
     "19th Hole Menu": [...menuCategories, "Beer", "Wine", "Beverages"],
 };
 
-/** Quick Order's compact cart row — thumbnail, name, price. No stepper. */
-const QuickLine = ({ line }: { line: Line }) => (
-    <Stack direction="row" spacing={1.5} sx={{ px: 1.5, py: 1.25, alignItems: "center" }}>
-        <Box sx={{ position: "relative", width: 46, height: 46, flexShrink: 0, bgcolor: "#fff", overflow: "hidden" }}>
-            {line.image && <Box component="img" src={line.image} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-            <Box
-                sx={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    minWidth: 20,
-                    height: 20,
-                    px: 0.4,
-                    bgcolor: appColors.greenTee,
-                    color: "#fff",
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: 12,
-                    lineHeight: 1,
-                }}
-            >
-                {line.qty}
-            </Box>
-        </Box>
-        <Typography sx={{ flex: 1, fontSize: 15, fontWeight: 500 }} noWrap>
-            {line.name}
-        </Typography>
-        <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>{money(line.qty * line.unitPrice)}</Typography>
-    </Stack>
-);
-
-const QuickOrderPanel = () => {
-    const { lines } = useStore();
-    if (lines.length === 0) return <OrderPanelEmpty />;
-    return (
-        <Box sx={{ flex: 1, overflowY: "auto" }}>
-            <Stack divider={<Divider />}>
-                {lines.map((l) => (
-                    <QuickLine key={`${l.id}-${l.seat ?? "x"}`} line={l} />
-                ))}
-            </Stack>
-        </Box>
-    );
-};
-
 export const QuickOrderScreen = () => {
     const { lines, total } = useStore();
     const { addItem, clearCart, holdTicket } = useActions();
@@ -121,7 +77,7 @@ export const QuickOrderScreen = () => {
         <Shell
             title="Quick Order"
             active="quickorder"
-            orderPanel={<QuickOrderPanel />}
+            orderPanel={<LiveOrderPanel />}
             // Quick Order's own overflow, from
             // references/072926/5-quickorder/. Four order-scoped commands, one of
             // which converts the whole quick order into a tab.

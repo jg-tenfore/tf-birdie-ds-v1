@@ -194,7 +194,7 @@ const PaletteHeading = ({ children }: { children: React.ReactNode }) => (
 /** Selection accent. Blue so it never reads as part of the plan itself. */
 const SELECT_BLUE = "#1A73E8";
 /** Fixed so the toolbar can be centred on the selection before it renders. */
-const TOOLBAR_W = 430;
+const TOOLBAR_W = 526;
 const SELECT_BLUE_SOFT = "#E8F0FE";
 
 const SHAPES: TableShape[] = ["circle", "square", "rectangle", "oval", "diamond"];
@@ -212,6 +212,24 @@ const ShapeIcon = ({ shape }: { shape: TableShape }) => {
         </Box>
     );
 };
+
+/** Seat marks on the top and bottom edges, versus on the left and right. */
+const SeatAxisIcon = ({ axis }: { axis: "horizontal" | "vertical" }) => (
+    <Box component="svg" width={22} height={22} viewBox="0 0 22 22" sx={{ display: "block" }}>
+        <rect x={5} y={5} width={12} height={12} rx={2} fill="none" stroke="currentColor" strokeWidth={1.8} />
+        {axis === "horizontal" ? (
+            <>
+                <rect x={8} y={1} width={6} height={2.4} rx={1} fill="currentColor" />
+                <rect x={8} y={18.6} width={6} height={2.4} rx={1} fill="currentColor" />
+            </>
+        ) : (
+            <>
+                <rect x={1} y={8} width={2.4} height={6} rx={1} fill="currentColor" />
+                <rect x={18.6} y={8} width={2.4} height={6} rx={1} fill="currentColor" />
+            </>
+        )}
+    </Box>
+);
 
 const ToolbarButton = ({
     label,
@@ -258,6 +276,15 @@ const HANDLES = [
 type HandleKey = (typeof HANDLES)[number]["key"];
 
 const snap = (n: number) => Math.round(n / GRID) * GRID;
+
+/**
+ * Which orientation an element is showing when it has not been told.
+ *
+ * The geometry falls back to the longer pair of edges, so the toggle has to
+ * report that same fallback or neither button would look active on a table
+ * nobody has set yet.
+ */
+const defaultAxis = (el: FloorElement): "horizontal" | "vertical" => (el.w >= el.h ? "horizontal" : "vertical");
 
 export const TableChartScreen = () => {
     const { state } = useStore();
@@ -687,6 +714,31 @@ export const TableChartScreen = () => {
                                                     <ShapeIcon shape={sh} />
                                                 </ToolbarButton>
                                             ))}
+
+                                            {/*
+                                             * Seat orientation. Only meaningful on
+                                             * the straight-edged shapes — a round
+                                             * table seats evenly around its
+                                             * perimeter — so it is hidden rather
+                                             * than shown doing nothing.
+                                             */}
+                                            {selected.shape !== "circle" && selected.shape !== "oval" && (
+                                                <>
+                                                    <Box
+                                                        sx={{ width: "1px", height: 26, flexShrink: 0, bgcolor: appColors.divider, mx: 0.75 }}
+                                                    />
+                                                    {(["horizontal", "vertical"] as const).map((axis) => (
+                                                        <ToolbarButton
+                                                            key={axis}
+                                                            label={axis === "horizontal" ? "Seats top and bottom" : "Seats left and right"}
+                                                            active={(selected.seatOrientation ?? defaultAxis(selected)) === axis}
+                                                            onClick={() => patch(selected.id, { seatOrientation: axis })}
+                                                        >
+                                                            <SeatAxisIcon axis={axis} />
+                                                        </ToolbarButton>
+                                                    ))}
+                                                </>
+                                            )}
 
                                             <Box sx={{ width: "1px", height: 26, flexShrink: 0, bgcolor: appColors.divider, mx: 0.75 }} />
                                         </>
