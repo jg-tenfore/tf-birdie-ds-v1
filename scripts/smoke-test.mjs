@@ -511,6 +511,66 @@ await step("every configured room has a layout", async () => {
     }
 });
 
+await step("a tab's menu drills, and adding opens the item detail", async () => {
+    await page.goto(`${BASE}#/tabs/t-4128`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+
+    // Two levels above the products: menu set, then category.
+    for (const c of ["All", "19th Hole Menu"]) await page.waitForSelector(`text=${c}`, { timeout: 4000 });
+    await page.getByText("Hamburgers", { exact: true }).click();
+    await page.getByText("Clubhouse Cheeseburger", { exact: true }).first().click();
+
+    // Adding opens the item — a plate that needs a temperature needs it before the
+    // kitchen sees it, not after.
+    await page.waitForSelector("text=Enter Additional Notes…", { timeout: 5000 });
+    for (const g of ["Alergies", "Burger Test", "Cheeses", "Temp"]) await page.waitForSelector(`text=${g}`, { timeout: 4000 });
+});
+
+await step("modifiers, quantity and notes all reach the line", async () => {
+    const total = () => page.locator("[data-line-total]").innerText();
+    const before = await total();
+    await page.getByText("ADD BACON", { exact: true }).click();
+    await page.getByText("ADD CHICKEN", { exact: true }).click();
+    await page.waitForTimeout(400);
+    if ((await total()) === before) throw new Error("modifiers did not price in");
+
+    // Priced modifiers hang their surcharge off the name, as the device prints it.
+    await page.waitForSelector("text=/ADD BACON \\+\\$1\\.00/", { timeout: 4000 });
+
+    await page.getByRole("button", { name: "Increase quantity" }).click();
+    await page.locator("textarea").first().fill("no pickles please");
+    await page.waitForTimeout(400);
+    await page.waitForSelector("text=no pickles please", { timeout: 4000 });
+});
+
+await step("the line kebab fires, discounts and splits", async () => {
+    await page.getByRole("button", { name: "Back" }).click();
+    await page.waitForTimeout(300);
+
+    await page.getByRole("button", { name: /^Options for / }).first().click();
+    for (const i of ["Fire", "Move", "Split", "Edit", "Discount", "Delete"])
+        if (!(await page.getByText(i, { exact: true }).count())) throw new Error(`${i} missing`);
+
+    await page.getByText("Fire", { exact: true }).click();
+    await page.waitForSelector("text=FIRED", { timeout: 4000 });
+
+    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page.getByText("Discount", { exact: true }).click();
+    await page.getByText("25% off", { exact: true }).click();
+    await page.waitForSelector("text=25% off", { timeout: 4000 });
+
+    // Split needs a destination, so it opens a second step rather than guessing.
+    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page.getByText("Split", { exact: true }).click();
+    await page.waitForSelector("text=Split one to…", { timeout: 4000 });
+    await page.locator('[role="dialog"]').getByText("Seat 3", { exact: true }).click();
+    await page.waitForFunction(
+        () => /Split one to seat|Nothing to split/.test(document.querySelector(".MuiSnackbar-root")?.textContent ?? ""),
+        undefined,
+        { timeout: 5000 },
+    );
+});
+
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");
 errors.slice(0, 6).forEach((e) => console.log("  " + e.slice(0, 160)));
 if (errors.length) process.exitCode = 1;

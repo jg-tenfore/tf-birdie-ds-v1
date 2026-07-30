@@ -1,5 +1,6 @@
 import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
 import { customers as seededCustomers, type Customer } from "@/data/crm";
+import { modifierSurcharge } from "@/data/modifiers";
 import {
     buildDaySheet,
     may12Sheet,
@@ -35,6 +36,19 @@ export interface Line {
     note?: string;
     /** Gift cards are stored value, not a sale — tax lands when they are spent. */
     taxable?: boolean;
+    /**
+     * Selected modifier names, in the order they were tapped.
+     *
+     * Names rather than ids because that is what the kitchen ticket prints, and
+     * what the order line shows — the surcharge is looked up when needed.
+     */
+    modifiers?: string[];
+    /** Sent to the kitchen. A fired line cannot be edited on the device. */
+    fired?: boolean;
+    /** Percentage off this line, applied before tax. */
+    discountPct?: number;
+    /** On-hand / available, as the line prints them. */
+    stock?: [number, number];
 }
 
 export interface Punch {
@@ -168,7 +182,18 @@ interface State {
 
 export const TAX_RATE = 0.06;
 
-export const lineTotal = (l: Line) => l.qty * l.unitPrice;
+/**
+ * What a line costs.
+ *
+ * Unit price plus whatever its modifiers add, times quantity, less any line
+ * discount. Modifiers are priced per unit — two burgers with bacon are two bacons
+ * — which is the only reading that survives changing the quantity afterwards.
+ */
+export const lineUnitPrice = (l: Line) => l.unitPrice + modifierSurcharge(l.modifiers ?? []);
+export const lineTotal = (l: Line) => {
+    const gross = l.qty * lineUnitPrice(l);
+    return l.discountPct ? +(gross * (1 - l.discountPct / 100)).toFixed(2) : gross;
+};
 export const subtotalOf = (lines: Line[]) => lines.reduce((s, l) => s + lineTotal(l), 0);
 
 /**
@@ -265,6 +290,13 @@ type Action =
     | { type: "signOut" }
     | { type: "addItem"; item: { id: string; name: string; price: number; image?: string; taxable?: boolean }; seat?: number; source: Ticket["source"] }
     | { type: "changeQty"; lineId: string; delta: number; seat?: number }
+    | { type: "setLineModifiers"; lineId: string; seat?: number; modifiers: string[] }
+    | { type: "setLineNote"; lineId: string; seat?: number; note: string }
+    | { type: "setLineQty"; lineId: string; seat?: number; qty: number }
+    | { type: "fireLine"; lineId: string; seat?: number }
+    | { type: "moveLine"; lineId: string; from?: number; to: number }
+    | { type: "splitLine"; lineId: string; seat?: number; to: number }
+    | { type: "discountLine"; lineId: string; seat?: number; pct: number }
     | { type: "removeLine"; lineId: string; seat?: number }
     | { type: "clearCart" }
     | { type: "popDrawer" }
@@ -337,6 +369,19 @@ function emptySheet(): TeeTimeBooking[] {
     return buildDaySheet({ density: 0, seed: 1 }).map((t) => ({ ...t, positions: [null, null, null, null] as (Position | null)[] }));
 }
 
+/**
+ * The ticket holding a given line.
+ *
+ * Prefers the active ticket when it has the line, so two tickets carrying the same
+ * product id cannot cross-edit; otherwise falls back to whichever ticket owns it.
+ */
+function ticketHolding(state: State, lineId: string, seat?: number) {
+    const matches = (t: Ticket) => t.lines.some((l) => l.id === lineId && (seat === undefined || l.seat === seat));
+    const active = activeTicket(state);
+    if (active && matches(active)) return active;
+    return state.tickets.find(matches) ?? null;
+}
+
 function activeTicket(state: State) {
     return state.tickets.find((t) => t.id === state.activeTicketId) ?? null;
 }
@@ -395,6 +440,101 @@ function reducer(state: State, action: Action): State {
             });
 
             return { ...state, tickets, activeTicketId: id, nextNumber, toast: `${action.item.name} added` };
+        }
+
+        /**
+         * Everything the order line's kebab menu does.
+         *
+         * They share a branch because they all rewrite one line inside one ticket,
+         * and doing that by hand in six places is how updates get lost.
+         *
+         * The ticket is the one that *owns the line*, not the active one: a tab
+         * reached by URL is not necessarily active, and keying off `activeTicketId`
+         * made every one of these silently do nothing.
+         */
+        case "setLineModifiers":
+        case "setLineNote":
+        case "setLineQty":
+        case "fireLine":
+        case "discountLine": {
+            const current = ticketHolding(state, action.lineId, action.seat);
+            if (!current) return state;
+
+            const lines = current.lines.map((l) => {
+                if (l.id !== action.lineId || (action.seat !== undefined && l.seat !== action.seat)) return l;
+                switch (action.type) {
+                    case "setLineModifiers":
+                        return { ...l, modifiers: action.modifiers };
+                    case "setLineNote":
+                        return { ...l, note: action.note || undefined };
+                    case "setLineQty":
+                        return { ...l, qty: Math.max(1, action.qty) };
+                    case "fireLine":
+                        return { ...l, fired: true };
+                    case "discountLine":
+                        return { ...l, discountPct: action.pct || undefined };
+                }
+            });
+
+            const toast =
+                action.type === "fireLine"
+                    ? "Fired to the kitchen"
+                    : action.type === "discountLine"
+                      ? action.pct
+                          ? `${action.pct}% off applied`
+                          : "Discount removed"
+                      : null;
+
+            return {
+                ...state,
+                tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, lines } : t)),
+                ...(toast ? { toast } : {}),
+            };
+        }
+
+        case "moveLine": {
+            const current = ticketHolding(state, action.lineId, action.from);
+            if (!current) return state;
+            return {
+                ...state,
+                tickets: state.tickets.map((t) =>
+                    t.id !== current.id
+                        ? t
+                        : {
+                              ...t,
+                              lines: t.lines.map((l) =>
+                                  l.id === action.lineId && (action.from === undefined || l.seat === action.from)
+                                      ? { ...l, seat: action.to }
+                                      : l,
+                              ),
+                          },
+                ),
+                toast: `Moved to seat ${action.to}`,
+            };
+        }
+
+        /**
+         * Split one unit off onto another seat.
+         *
+         * Two people sharing a plate is the case this exists for, so it peels a
+         * single unit rather than halving — and it refuses on a single-unit line,
+         * because splitting one plate into two lines of one is not a split.
+         */
+        case "splitLine": {
+            const current = ticketHolding(state, action.lineId, action.seat);
+            if (!current) return state;
+            const source = current.lines.find((l) => l.id === action.lineId && (action.seat === undefined || l.seat === action.seat));
+            if (!source || source.qty < 2) return { ...state, toast: "Nothing to split — the line is a single item" };
+
+            const lines = current.lines
+                .map((l) => (l === source ? { ...l, qty: l.qty - 1 } : l))
+                .concat([{ ...source, qty: 1, seat: action.to, note: `Split from seat ${source.seat ?? 1}` }]);
+
+            return {
+                ...state,
+                tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, lines } : t)),
+                toast: `Split one to seat ${action.to}`,
+            };
         }
 
         case "changeQty":
@@ -884,6 +1024,14 @@ export function useActions() {
                 seat?: number,
             ) => dispatch({ type: "addItem", item, source, seat }),
             changeQty: (lineId: string, delta: number, seat?: number) => dispatch({ type: "changeQty", lineId, delta, seat }),
+            setLineModifiers: (lineId: string, modifiers: string[], seat?: number) =>
+                dispatch({ type: "setLineModifiers", lineId, modifiers, seat }),
+            setLineNote: (lineId: string, note: string, seat?: number) => dispatch({ type: "setLineNote", lineId, note, seat }),
+            setLineQty: (lineId: string, qty: number, seat?: number) => dispatch({ type: "setLineQty", lineId, qty, seat }),
+            fireLine: (lineId: string, seat?: number) => dispatch({ type: "fireLine", lineId, seat }),
+            moveLine: (lineId: string, to: number, from?: number) => dispatch({ type: "moveLine", lineId, to, from }),
+            splitLine: (lineId: string, to: number, seat?: number) => dispatch({ type: "splitLine", lineId, to, seat }),
+            discountLine: (lineId: string, pct: number, seat?: number) => dispatch({ type: "discountLine", lineId, pct, seat }),
             removeLine: (lineId: string, seat?: number) => dispatch({ type: "removeLine", lineId, seat }),
             clearCart: () => dispatch({ type: "clearCart" }),
             popDrawer: () => dispatch({ type: "popDrawer" }),

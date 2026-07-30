@@ -13,11 +13,17 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { useNavigate, useParams } from "react-router-dom";
 
+import Dialog from "@mui/material/Dialog";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { assetUrl } from "@/utils/asset-url";
 import { Shell } from "../pos-shell";
-import { money, useActions, useStore, type Line, type Ticket } from "../store";
+import { TabItemDetail } from "./tab-item-detail";
+import { modifierLine } from "@/data/modifiers";
+import { lineTotal, money, useActions, useStore, type Line, type Ticket } from "../store";
 import { foodByCategory, type FoodCategory } from "@/data/food-catalog";
 import { storeImage } from "@/utils/asset-url";
 
@@ -152,7 +158,56 @@ export const TabsScreen = () => {
 /* --------------------------- order editor -------------------------- */
 
 /** The seat editor sells the restaurant menu, not the retail catalogue. */
-const MENU_CATEGORIES: FoodCategory[] = ["Sandwiches", "Hamburgers", "Grill", "Beer", "Wine", "Beverages", "Snacks"];
+/** Menu sets, as the device groups them on this screen. */
+const TAB_MENU_SETS: Record<string, FoodCategory[]> = {
+    All: ["Sandwiches", "Hamburgers", "Grill", "Beer", "Wine", "Beverages", "Snacks", "Combos"],
+    "19th Hole Menu": ["Beer", "Wine", "Beverages"],
+};
+
+/** One tile shape for both levels of the hierarchy — categories and products. */
+const ProductTile = ({ name, price, image, onClick }: { name: string; price?: string; image?: string; onClick: () => void }) => (
+    <ButtonBase
+        onClick={onClick}
+        sx={{
+            flexDirection: "column",
+            alignItems: "stretch",
+            bgcolor: "#fff",
+            border: `1px solid ${appColors.divider}`,
+            borderRadius: `${appRadius.tile}px`,
+            overflow: "hidden",
+            transition: "border-color 100ms linear",
+            "&:hover": { borderColor: appColors.green },
+        }}
+    >
+        <Box sx={{ position: "relative", width: "100%", height: 120, flexShrink: 0, overflow: "hidden" }}>
+            {image && (
+                <Box
+                    component="img"
+                    src={image}
+                    alt=""
+                    loading="lazy"
+                    sx={{ position: "absolute", inset: 6, width: "calc(100% - 12px)", height: "calc(100% - 12px)", objectFit: "contain" }}
+                />
+            )}
+        </Box>
+        <Stack sx={{ px: 0.75, height: 66, flexShrink: 0, justifyContent: "center", borderTop: `1px solid ${appColors.divider}` }}>
+            <Typography
+                sx={{
+                    fontSize: 13,
+                    textAlign: "center",
+                    lineHeight: 1.25,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                }}
+            >
+                {name}
+            </Typography>
+            {price && <Typography sx={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{price}</Typography>}
+        </Stack>
+    </ButtonBase>
+);
 
 /**
  * A seat band.
@@ -185,37 +240,73 @@ const SeatBandRow = ({ seat, active, onSelect }: { seat: number; active: boolean
     </ButtonBase>
 );
 
-const SeatLine = ({ line, onRemove }: { line: Line; onRemove: () => void }) => (
-    <Stack direction="row" spacing={1.5} sx={{ px: 1.5, py: 1.25, alignItems: "center" }}>
-        <Box sx={{ position: "relative", width: 52, height: 46, flexShrink: 0, bgcolor: "#fff", overflow: "hidden" }}>
+/**
+ * An order line inside a seat.
+ *
+ * Four stacked pieces of information under the name, and only the first is
+ * labelled: the on-hand / available pair, the modifier run, and any note. The pair
+ * is printed with the second figure in orange and nothing to say what either
+ * means — it is the item's stock, and reading it takes knowing that.
+ */
+const SeatLine = ({ line, onMenu }: { line: Line; onMenu: (e: React.MouseEvent<HTMLElement>) => void }) => (
+    <Stack direction="row" spacing={1.5} sx={{ px: 1.5, py: 1.25, alignItems: "flex-start", bgcolor: "#fff" }}>
+        <Box sx={{ position: "relative", width: 52, height: 46, flexShrink: 0, mt: 0.5, bgcolor: "#fff", overflow: "hidden" }}>
             {line.image && <Box component="img" src={line.image} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />}
             <Box
                 sx={{
                     position: "absolute",
                     top: 0,
-                    right: 0,
-                    minWidth: 20,
-                    height: 20,
+                    left: 0,
+                    minWidth: 22,
+                    height: 22,
                     px: 0.4,
                     bgcolor: appColors.greenTee,
                     color: "#fff",
                     display: "grid",
                     placeItems: "center",
-                    fontSize: 12,
+                    fontSize: 13,
                     lineHeight: 1,
                 }}
             >
                 {line.qty}
             </Box>
         </Box>
-        <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 15, fontWeight: 500 }} noWrap>
+
+        <Stack sx={{ flex: 1, minWidth: 0, gap: 0.25 }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 700 }} noWrap>
                 {line.name}
             </Typography>
-            <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{money(line.unitPrice)}</Typography>
+
+            {line.stock && (
+                <Stack direction="row" sx={{ gap: 1.5 }}>
+                    <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{line.stock[0]}</Typography>
+                    <Typography sx={{ fontSize: 13, color: appColors.orange }}>{line.stock[1]}</Typography>
+                </Stack>
+            )}
+
+            {line.modifiers?.length ? (
+                <Typography sx={{ fontSize: 13, color: appColors.textSecondary, lineHeight: 1.35 }}>
+                    {modifierLine(line.modifiers)}
+                </Typography>
+            ) : null}
+
+            {line.note && <Typography sx={{ fontSize: 13, color: appColors.textPrimary }}>{line.note}</Typography>}
+
+            {line.fired && (
+                <Typography sx={{ fontSize: 12, color: appColors.greenTee, letterSpacing: "0.06em" }}>FIRED</Typography>
+            )}
+            {line.discountPct ? (
+                <Typography sx={{ fontSize: 12, color: appColors.orange }}>{line.discountPct}% off</Typography>
+            ) : null}
         </Stack>
-        <Typography sx={{ fontSize: 15 }}>{money(line.qty * line.unitPrice)}</Typography>
-        <ButtonBase onClick={onRemove} aria-label={`Remove ${line.name}`} sx={{ px: 1, fontSize: 18, color: appColors.textSecondary }}>
+
+        <Typography sx={{ fontSize: 15, mt: 0.5 }}>{money(lineTotal(line))}</Typography>
+
+        <ButtonBase
+            onClick={onMenu}
+            aria-label={`Options for ${line.name}`}
+            sx={{ width: 32, height: 44, fontSize: 20, color: appColors.textSecondary }}
+        >
             ⋮
         </ButtonBase>
     </Stack>
@@ -224,7 +315,8 @@ const SeatLine = ({ line, onRemove }: { line: Line; onRemove: () => void }) => (
 export const TabDetailScreen = () => {
     const { id = "" } = useParams();
     const { state, lines } = useStore();
-    const { addItem, removeLine, holdTicket } = useActions();
+    const { addItem, removeLine, holdTicket, setLineModifiers, setLineNote, setLineQty, fireLine, moveLine, splitLine, discountLine } =
+        useActions();
     const navigate = useNavigate();
 
     /**
@@ -238,6 +330,15 @@ export const TabDetailScreen = () => {
     const seats = ticket?.seats ?? 4;
     const fromTable = ticket?.source === "Table";
     const [activeSeat, setActiveSeat] = useState(1);
+    /** Which line's kebab is open, and where to anchor it. */
+    const [menuFor, setMenuFor] = useState<{ line: Line; anchor: HTMLElement } | null>(null);
+    /** The line being configured. Replaces the menu grid while it is set. */
+    const [editing, setEditing] = useState<Line | null>(null);
+    /** Move / Split need a target seat, so they open a second step. */
+    const [seatPickerFor, setSeatPickerFor] = useState<{ line: Line; mode: "move" | "split" } | null>(null);
+    const [discountFor, setDiscountFor] = useState<Line | null>(null);
+    const [menuSet, setMenuSet] = useState("All");
+    const [drilled, setDrilled] = useState<string | null>(null);
 
     const total = lines.reduce((s, l) => s + l.qty * l.unitPrice, 0) * 1.06;
 
@@ -260,7 +361,11 @@ export const TabDetailScreen = () => {
                                 {lines
                                     .filter((l) => l.seat === seat)
                                     .map((l) => (
-                                        <SeatLine key={`${l.id}-${seat}`} line={l} onRemove={() => removeLine(l.id, seat)} />
+                                        <SeatLine
+                                            key={`${l.id}-${seat}`}
+                                            line={l}
+                                            onMenu={(e) => setMenuFor({ line: l, anchor: e.currentTarget })}
+                                        />
                                     ))}
                             </Stack>
                         </Box>
@@ -275,7 +380,19 @@ export const TabDetailScreen = () => {
                      * returns to the list. Sending a table's check to the tab list
                      * loses the room you were standing in.
                      */}
-                    <ActionButton onClick={() => navigate(fromTable ? "/tables" : "/tabs")}>Done</ActionButton>
+                    {/* BACK while a line or a category is open; DONE otherwise. */}
+                    {editing || drilled ? (
+                        <ActionButton
+                            onClick={() => {
+                                if (editing) setEditing(null);
+                                else setDrilled(null);
+                            }}
+                        >
+                            Back
+                        </ActionButton>
+                    ) : (
+                        <ActionButton onClick={() => navigate(fromTable ? "/tables" : "/tabs")}>Done</ActionButton>
+                    )}
                     <ActionButton icon={<CategoryIcon />} onClick={() => navigate("/combos")}>
                         Combos
                     </ActionButton>
@@ -295,95 +412,190 @@ export const TabDetailScreen = () => {
                 </>
             }
         >
-            <Box sx={{ p: 2 }}>
-                <Typography sx={{ fontSize: 15, color: appColors.textSecondary, mb: 1.5 }}>
-                    Adding to <b>Seat {activeSeat}</b> — tap a seat band on the left to change which seat receives items.
-                </Typography>
-
-                <InputBase
-                    placeholder="Start typing product name or SKU…"
-                    sx={{ width: "100%", fontSize: 20, borderBottom: `1px solid ${appColors.textPrimary}`, pb: 1, mb: 3 }}
+            {editing ? (
+                <TabItemDetail
+                    line={editing}
+                    onQty={(qty) => {
+                        setLineQty(editing.id, qty, editing.seat);
+                        setEditing({ ...editing, qty: Math.max(1, qty) });
+                    }}
+                    onNote={(note) => {
+                        setLineNote(editing.id, note, editing.seat);
+                        setEditing({ ...editing, note });
+                    }}
+                    onModifiers={(names) => {
+                        setLineModifiers(editing.id, names, editing.seat);
+                        setEditing({ ...editing, modifiers: names });
+                    }}
                 />
+            ) : (
+                <Box sx={{ p: 2 }}>
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary, mb: 1.5 }}>
+                        Adding to <b>Seat {activeSeat}</b> — tap a seat band on the left to change which seat receives items.
+                    </Typography>
 
-                {/*
-                 * A real grid. This was a wrapping flex row of fixed-width tiles,
-                 * so the last item in each row left a ragged gap and tiles with
-                 * two-line names grew taller than their neighbours. Equal columns
-                 * and a fixed image box keep every tile the same size.
-                 */}
-                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
-                    {MENU_CATEGORIES.flatMap((c) => foodByCategory(c)).map((item) => (
-                        <ButtonBase
-                            key={item.id}
-                            onClick={() =>
-                                addItem(
-                                    { id: item.id, name: item.name, price: item.price, image: storeImage(item.path) },
-                                    "Table",
-                                    activeSeat,
-                                )
-                            }
-                            sx={{
-                                flexDirection: "column",
-                                alignItems: "stretch",
-                                bgcolor: "#fff",
-                                border: "1px solid",
-                                borderColor: appColors.divider,
-                                borderRadius: `${appRadius.tile}px`,
-                                overflow: "hidden",
-                                transition: "border-color 100ms linear",
-                                "&:hover": { borderColor: appColors.green },
-                            }}
-                        >
-                            {/* Absolutely positioned: a percentage max-height
-                                resolves against an auto-sized grid row and computes
-                                to none, which is how tall shots used to overflow
-                                onto the label. */}
-                            <Box sx={{ position: "relative", width: "100%", height: 120, flexShrink: 0, overflow: "hidden" }}>
-                                <Box
-                                    component="img"
-                                    src={storeImage(item.path)}
-                                    alt=""
-                                    loading="lazy"
+                    <InputBase
+                        placeholder="Start typing product name or SKU…"
+                        sx={{ width: "100%", fontSize: 20, borderBottom: `1px solid ${appColors.textPrimary}`, pb: 1, mb: 3 }}
+                    />
+
+                    {/*
+                     * Two levels above the products, same as Quick Order: a menu set
+                     * narrows which categories show, then a category opens its
+                     * items. Tabs was a single flat grid of every product, which is
+                     * unusable once the kitchen menu is in it.
+                     */}
+                    {!drilled && (
+                        <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
+                            {Object.keys(TAB_MENU_SETS).map((set) => (
+                                <ButtonBase
+                                    key={set}
+                                    onClick={() => setMenuSet(set)}
                                     sx={{
-                                        position: "absolute",
-                                        inset: 6,
-                                        width: "calc(100% - 12px)",
-                                        height: "calc(100% - 12px)",
-                                        objectFit: "contain",
-                                    }}
-                                />
-                            </Box>
-                            {/* A fixed height, not a minimum: a two-line product
-                                name would otherwise make its tile taller than its
-                                neighbours and break the row. Long names clamp. */}
-                            <Stack
-                                sx={{
-                                    px: 0.75,
-                                    height: 66,
-                                    flexShrink: 0,
-                                    justifyContent: "center",
-                                    borderTop: `1px solid ${appColors.divider}`,
-                                }}
-                            >
-                                <Typography
-                                    sx={{
-                                        fontSize: 13,
-                                        textAlign: "center",
-                                        lineHeight: 1.25,
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: "vertical",
-                                        overflow: "hidden",
+                                        minWidth: 200,
+                                        minHeight: 62,
+                                        fontSize: 16,
+                                        bgcolor: set === menuSet ? appColors.navy : appColors.grey,
+                                        color: "#fff",
+                                        borderBottom: set === menuSet ? `4px solid ${appColors.green}` : "4px solid transparent",
+                                        borderRadius: `${appRadius.tile}px`,
                                     }}
                                 >
-                                    {item.name}
-                                </Typography>
-                                <Typography sx={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{money(item.price)}</Typography>
-                            </Stack>
+                                    {set}
+                                </ButtonBase>
+                            ))}
+                        </Stack>
+                    )}
+
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 1.5 }}>
+                        {drilled
+                            ? foodByCategory(drilled as FoodCategory).map((item) => (
+                                  <ProductTile
+                                      key={item.id}
+                                      name={item.name}
+                                      price={money(item.price)}
+                                      image={storeImage(item.path)}
+                                      onClick={() => {
+                                          const id = item.id;
+                                          addItem(
+                                              { id, name: item.name, price: item.price, image: storeImage(item.path) },
+                                              "Table",
+                                              activeSeat,
+                                          );
+                                          // Adding opens the item straight away: a
+                                          // plate that needs a temperature needs it
+                                          // before it reaches the kitchen, not after.
+                                          setEditing({
+                                              id,
+                                              name: item.name,
+                                              qty: 1,
+                                              unitPrice: item.price,
+                                              image: storeImage(item.path),
+                                              seat: activeSeat,
+                                          });
+                                      }}
+                                  />
+                              ))
+                            : (TAB_MENU_SETS[menuSet] ?? []).map((category) => {
+                                  const hero = foodByCategory(category)[0];
+                                  return (
+                                      <ProductTile
+                                          key={category}
+                                          name={category}
+                                          image={hero ? storeImage(hero.path) : undefined}
+                                          onClick={() => setDrilled(category)}
+                                      />
+                                  );
+                              })}
+                    </Box>
+                </Box>
+            )}
+
+            {/* The line kebab. Everything here acts on one line. */}
+            <Menu
+                anchorEl={menuFor?.anchor ?? null}
+                open={Boolean(menuFor)}
+                onClose={() => setMenuFor(null)}
+                slotProps={{ paper: { sx: { width: 300, borderRadius: 0 } }, list: { sx: { py: 0 } } }}
+            >
+                {(["Fire", "Move", "Split", "Edit", "Discount", "Delete"] as const).map((item, i) => (
+                    <MenuItem
+                        key={item}
+                        onClick={() => {
+                            const line = menuFor!.line;
+                            setMenuFor(null);
+                            if (item === "Fire") return fireLine(line.id, line.seat);
+                            if (item === "Move") return setSeatPickerFor({ line, mode: "move" });
+                            if (item === "Split") return setSeatPickerFor({ line, mode: "split" });
+                            if (item === "Edit") return setEditing(line);
+                            if (item === "Discount") return setDiscountFor(line);
+                            removeLine(line.id, line.seat);
+                        }}
+                        sx={{
+                            minHeight: 68,
+                            px: 3,
+                            fontSize: 21,
+                            borderTop: i === 0 ? "none" : `1px solid ${appColors.divider}`,
+                            color: item === "Delete" ? "#E53935" : appColors.textPrimary,
+                        }}
+                    >
+                        {item}
+                    </MenuItem>
+                ))}
+            </Menu>
+
+            {/* Move and Split both need a destination seat. */}
+            <Dialog
+                open={Boolean(seatPickerFor)}
+                onClose={() => setSeatPickerFor(null)}
+                slotProps={{ paper: { sx: { width: 420, borderRadius: 1 } } }}
+            >
+                <Typography sx={{ fontSize: 21, px: 3, pt: 3, pb: 1 }}>
+                    {seatPickerFor?.mode === "split" ? "Split one to…" : "Move to…"}
+                </Typography>
+                {Array.from({ length: seats }, (_, i) => i + 1)
+                    .filter((seat) => seat !== seatPickerFor?.line.seat)
+                    .map((seat) => (
+                        <ButtonBase
+                            key={seat}
+                            onClick={() => {
+                                const { line, mode } = seatPickerFor!;
+                                if (mode === "move") moveLine(line.id, seat, line.seat);
+                                else splitLine(line.id, seat, line.seat);
+                                setSeatPickerFor(null);
+                            }}
+                            sx={{
+                                display: "flex",
+                                width: "100%",
+                                justifyContent: "flex-start",
+                                gap: 2,
+                                px: 3,
+                                py: 2,
+                                borderTop: `1px solid ${appColors.divider}`,
+                            }}
+                        >
+                            <Box sx={{ width: 16, height: 16, bgcolor: SEAT_COLORS[(seat - 1) % SEAT_COLORS.length] }} />
+                            <Typography sx={{ fontSize: 18 }}>Seat {seat}</Typography>
                         </ButtonBase>
                     ))}
-                </Box>
-            </Box>
+            </Dialog>
+
+            {/* Discounts are fixed percentages, not free entry. */}
+            <Dialog open={Boolean(discountFor)} onClose={() => setDiscountFor(null)} slotProps={{ paper: { sx: { width: 420, borderRadius: 1 } } }}>
+                <Typography sx={{ fontSize: 21, px: 3, pt: 3, pb: 1 }}>Discount {discountFor?.name}</Typography>
+                {[10, 20, 25, 50, 100, 0].map((pct) => (
+                    <ButtonBase
+                        key={pct}
+                        onClick={() => {
+                            discountLine(discountFor!.id, pct, discountFor!.seat);
+                            setDiscountFor(null);
+                        }}
+                        sx={{ display: "block", width: "100%", textAlign: "left", px: 3, py: 2, borderTop: `1px solid ${appColors.divider}` }}
+                    >
+                        <Typography sx={{ fontSize: 18 }}>{pct ? `${pct}% off` : "Remove discount"}</Typography>
+                    </ButtonBase>
+                ))}
+            </Dialog>
         </Shell>
     );
 };
