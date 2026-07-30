@@ -212,6 +212,40 @@ await step("cart signout will not complete without a cart number and the waiver"
     await page.waitForSelector("text=/ID:\\d{8}/", { timeout: 5000 });
 });
 
+await step("the gear menu runs the per-time operations", async () => {
+    await page.goto(`${BASE}#/teesheet`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(600);
+
+    const gears = page.getByRole("button", { name: /^Options for / });
+    const timeRows = () => page.locator("text=/^\\d{1,2}:\\d{2} (AM|PM)$/").count();
+
+    await gears.first().click();
+    for (const item of ["Squeeze Before", "Squeeze After", "Clear Time", "Clone Before", "Clone After", "Move Player(s)"]) {
+        if (!(await page.getByText(item, { exact: true }).count())) throw new Error(`${item} missing`);
+    }
+
+    // Squeezing inserts a time, so the row count is the assertion — the inserted
+    // time itself depends on the gap to its neighbour.
+    const before = await timeRows();
+    await page.getByText("Squeeze After", { exact: true }).click();
+    await page.waitForTimeout(500);
+    if ((await timeRows()) !== before + 1) throw new Error("squeeze did not insert a time");
+
+    // Move Player(s) is the only command with a second step.
+    const count = await gears.count();
+    for (let i = 0; i < count; i += 1) {
+        await gears.nth(i).click();
+        await page.waitForTimeout(150);
+        if (await page.getByText("Move Player(s)", { exact: true }).count()) {
+            await page.getByText("Move Player(s)", { exact: true }).click();
+            break;
+        }
+    }
+    await page.waitForSelector("text=/Move .* to…/", { timeout: 5000 });
+    await page.locator("text=/^\\d+ open$/").first().click();
+    await page.waitForSelector("text=/^(Moved \\d+ to |.* only has room)/", { timeout: 5000 });
+});
+
 await step("tee sheet date bar is orange away from today", async () => {
     await page.goto(`${BASE}#/teesheet`, { waitUntil: "networkidle" });
     await page.waitForSelector("text=TUESDAY, MAY 12 2026", { timeout: 5000 });

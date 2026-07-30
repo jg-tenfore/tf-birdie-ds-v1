@@ -237,6 +237,10 @@ type Action =
     | { type: "issueRaincheck"; time: string; index: number }
     | { type: "setPositionNotes"; time: string; index: number; field: "customerNotes" | "groupNotes"; value: string }
     | { type: "setTeeTimeNotes"; time: string; value: string }
+    | { type: "squeezeTime"; time: string; side: "before" | "after" }
+    | { type: "cloneTime"; time: string; side: "before" | "after" }
+    | { type: "clearTime"; time: string }
+    | { type: "movePlayers"; from: string; to: string }
     | { type: "editPositionFees"; time: string; index: number; rateName: string; cartLabel: string; price: number }
     | { type: "chargeTeeTime"; time: string; only?: number }
     | { type: "clockToggle"; at: string }
@@ -248,6 +252,26 @@ type Action =
     | { type: "toast"; message: string | null };
 
 /** The sheet for the date on screen. Unknown dates render as an empty day. */
+/** `6:14 AM` → minutes past midnight. The sheet stores times as display text. */
+export function minutesOf(time: string): number {
+    const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(time.trim());
+    if (!m) return 0;
+    const h = Number(m[1]) % 12 + (m[3].toUpperCase() === "PM" ? 12 : 0);
+    return h * 60 + Number(m[2]);
+}
+
+export function formatTime(mins: number): string {
+    const wrapped = ((mins % 1440) + 1440) % 1440;
+    const h24 = Math.floor(wrapped / 60);
+    return `${h24 % 12 || 12}:${String(wrapped % 60).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`;
+}
+
+/** The day's own spacing, read off the first two times rather than assumed. */
+function intervalOf(sheet: TeeTimeBooking[]): number {
+    if (sheet.length < 2) return 10;
+    return Math.max(1, minutesOf(sheet[1].time) - minutesOf(sheet[0].time));
+}
+
 function sheetFor(state: State): TeeTimeBooking[] {
     return state.teeSheets[state.sheetDate] ?? emptySheet();
 }
@@ -475,6 +499,101 @@ function reducer(state: State, action: Action): State {
             return { ...state, teeSheets: { ...state.teeSheets, [state.sheetDate]: next }, toast };
         }
 
+        /**
+         * The per-time operations behind the gear menu.
+         *
+         * All four rewrite the day's *shape* rather than a single booking, which
+         * is why they live together: squeezing and cloning insert a time, so any
+         * index-based reference into the sheet is invalid afterwards. Everything
+         * downstream keys off `time`, not position, for exactly this reason.
+         */
+        case "squeezeTime":
+        case "cloneTime": {
+            const sheet = sheetFor(state);
+            const at = sheet.findIndex((t) => t.time === action.time);
+            if (at === -1) return state;
+
+            const source = sheet[at];
+            // Squeeze lands halfway to the neighbour on that side; with no
+            // neighbour it falls back to half the day's own interval.
+            const neighbour = action.side === "before" ? sheet[at - 1] : sheet[at + 1];
+            const gap = neighbour ? Math.abs(minutesOf(neighbour.time) - minutesOf(source.time)) : intervalOf(sheet);
+            const offset = Math.max(1, Math.round(gap / 2)) * (action.side === "before" ? -1 : 1);
+            const time = formatTime(minutesOf(source.time) + offset);
+
+            // A squeeze that lands on an existing time would create a duplicate
+            // key and two rows claiming the same slot.
+            if (sheet.some((t) => t.time === time)) return { ...state, toast: `${time} already exists` };
+
+            const inserted: TeeTimeBooking =
+                action.type === "squeezeTime"
+                    ? { time, positions: [null, null, null, null], confirmation: String(6079000 + at), nine: "FRONT" }
+                    : {
+                          ...source,
+                          time,
+                          confirmation: String(6079500 + at),
+                          // Cloned bookings are new reservations, so they get new
+                          // ids and an empty history rather than sharing the
+                          // original's audit trail.
+                          positions: source.positions.map((pos) =>
+                              pos ? { ...pos, id: `${pos.id}-c`, paid: false, keyed: false, history: [] } : null,
+                          ),
+                      };
+
+            const next = [...sheet.slice(0, action.side === "before" ? at : at + 1), inserted, ...sheet.slice(action.side === "before" ? at : at + 1)];
+            return {
+                ...state,
+                teeSheets: { ...state.teeSheets, [state.sheetDate]: next },
+                toast: `${action.type === "cloneTime" ? "Cloned to" : "Squeezed in"} ${time}`,
+            };
+        }
+
+        case "clearTime":
+            return {
+                ...state,
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheetFor(state).map((t) =>
+                        t.time === action.time ? { ...t, positions: [null, null, null, null], blocked: false, blockLabel: undefined } : t,
+                    ),
+                },
+                toast: `${action.time} cleared`,
+            };
+
+        case "movePlayers": {
+            const sheet = sheetFor(state);
+            const from = sheet.find((t) => t.time === action.from);
+            const to = sheet.find((t) => t.time === action.to);
+            if (!from || !to) return state;
+
+            const moving = from.positions.filter(Boolean).length;
+            const room = to.positions.filter((p) => !p).length;
+            // Refuse rather than silently dropping golfers, which is what an
+            // unchecked move would do.
+            if (moving > room) return { ...state, toast: `${action.to} only has room for ${room}` };
+
+            let slot = 0;
+            const merged = to.positions.map((p) => {
+                if (p) return p;
+                const nextPos = from.positions.filter(Boolean)[slot];
+                slot += 1;
+                return nextPos ?? null;
+            });
+
+            return {
+                ...state,
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheet.map((t) => {
+                        if (t.time === action.from) return { ...t, positions: [null, null, null, null] };
+                        if (t.time === action.to) return { ...t, positions: merged };
+                        return t;
+                    }),
+                },
+                toast: `Moved ${moving} to ${action.to}`,
+            };
+        }
+
         case "setTeeTimeNotes":
             return {
                 ...state,
@@ -682,6 +801,10 @@ export function useActions() {
             setPositionNotes: (time: string, index: number, field: "customerNotes" | "groupNotes", value: string) =>
                 dispatch({ type: "setPositionNotes", time, index, field, value }),
             setTeeTimeNotes: (time: string, value: string) => dispatch({ type: "setTeeTimeNotes", time, value }),
+            squeezeTime: (time: string, side: "before" | "after") => dispatch({ type: "squeezeTime", time, side }),
+            cloneTime: (time: string, side: "before" | "after") => dispatch({ type: "cloneTime", time, side }),
+            clearTime: (time: string) => dispatch({ type: "clearTime", time }),
+            movePlayers: (from: string, to: string) => dispatch({ type: "movePlayers", from, to }),
             editPositionFees: (time: string, index: number, rateName: string, cartLabel: string, price: number) =>
                 dispatch({ type: "editPositionFees", time, index, rateName, cartLabel, price }),
             chargeTeeTime: (time: string, only?: number) => dispatch({ type: "chargeTeeTime", time, only }),

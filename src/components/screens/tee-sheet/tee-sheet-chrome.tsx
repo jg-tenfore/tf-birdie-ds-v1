@@ -225,7 +225,14 @@ export const TeeSheetActionBar = ({
  * group to a different time. It opens downward from the gear and floats over
  * the rows beneath.
  */
-export const SlotSettingsMenu = ({ items = slotSettingsMenu }: { items?: string[] }) => (
+export const SlotSettingsMenu = ({
+    items = slotSettingsMenu,
+    onSelect,
+}: {
+    items?: string[];
+    /** Supplied by the prototype; the stories render it inert. */
+    onSelect?: (item: string) => void;
+}) => (
     <Paper
         elevation={8}
         sx={{
@@ -241,12 +248,17 @@ export const SlotSettingsMenu = ({ items = slotSettingsMenu }: { items?: string[
         {items.map((item, index) => (
             <Box
                 key={item}
+                role={onSelect ? "button" : undefined}
+                tabIndex={onSelect ? 0 : undefined}
+                onClick={() => onSelect?.(item)}
                 sx={{
                     minHeight: 62,
                     display: "flex",
                     alignItems: "center",
                     px: 2.5,
+                    cursor: onSelect ? "pointer" : "default",
                     borderTop: index === 0 ? "none" : `1px solid ${appColors.divider}`,
+                    "&:hover": onSelect ? { bgcolor: appColors.canvas } : undefined,
                 }}
             >
                 <Typography sx={{ fontSize: 19, color: appColors.textPrimary }}>{item}</Typography>

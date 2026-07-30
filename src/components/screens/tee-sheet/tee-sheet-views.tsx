@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import AirportShuttleIcon from "@mui/icons-material/AirportShuttle";
@@ -103,9 +104,22 @@ const RowSlot = ({ slot, compact = false }: { slot: SheetSlot; compact?: boolean
     );
 };
 
-const GearCell = ({ menu }: { menu?: ReactNode }) => (
-    <Box sx={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end", pr: 3 }}>
-        <SettingsIcon sx={{ fontSize: 30, color: appColors.textPrimary }} />
+const GearCell = ({ menu, onOpenMenu, time }: { menu?: ReactNode; onOpenMenu?: () => void; time?: string }) => (
+    <Box sx={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end", pr: 2 }}>
+        {/*
+         * A real button, not a role on the icon: MUI's SvgIcon sets
+         * aria-hidden, so `role="button"` on it is invisible to assistive tech
+         * and to anything driving the UI. The 48px box also brings the target up
+         * to the touch floor — the glyph alone is 30px.
+         */}
+        <IconButton
+            aria-label={time ? `Options for ${time}` : "Options"}
+            onClick={onOpenMenu}
+            disabled={!onOpenMenu}
+            sx={{ width: 48, height: 48, color: appColors.textPrimary }}
+        >
+            <SettingsIcon sx={{ fontSize: 30 }} />
+        </IconButton>
         {menu}
     </Box>
 );
@@ -114,7 +128,7 @@ const GearCell = ({ menu }: { menu?: ReactNode }) => (
 /* List view                                                           */
 /* ------------------------------------------------------------------ */
 
-const ListRow = ({ row, menu, onOpen }: { row: SheetRow; menu?: ReactNode; onOpen?: () => void }) => (
+const ListRow = ({ row, menu, onOpen, onOpenMenu }: { row: SheetRow; menu?: ReactNode; onOpen?: () => void; onOpenMenu?: () => void }) => (
     <Paper
         elevation={1}
         sx={{
@@ -144,7 +158,7 @@ const ListRow = ({ row, menu, onOpen }: { row: SheetRow; menu?: ReactNode; onOpe
             </Box>
         ))}
 
-        <GearCell menu={menu} />
+        <GearCell menu={menu} onOpenMenu={onOpenMenu} time={row.time} />
     </Paper>
 );
 
@@ -159,19 +173,28 @@ export const TeeSheetListView = ({
     rows = listRows,
     slotMenu,
     onOpenTime,
+    onOpenMenu,
+    menuFor,
 }: {
     rows?: SheetRow[];
     slotMenu?: ReactNode;
     /** Supplied by the prototype; the stories leave the rows inert. */
     onOpenTime?: (time: string) => void;
+    onOpenMenu?: (time: string) => void;
+    /**
+     * Which row's gear menu is open. The stories pin `slotMenu` to the first row
+     * instead, so the documented state does not need a controlled parent.
+     */
+    menuFor?: string;
 }) => (
     <Box sx={{ bgcolor: sheetCanvas, px: 1, pb: 1, display: "flex", flexDirection: "column", gap: 1 }}>
         {rows.map((row, index) => (
             <ListRow
                 key={row.time}
                 row={row}
-                menu={index === 0 ? slotMenu : undefined}
+                menu={menuFor === undefined ? (index === 0 ? slotMenu : undefined) : menuFor === row.time ? slotMenu : undefined}
                 onOpen={onOpenTime ? () => onOpenTime(row.time) : undefined}
+                onOpenMenu={onOpenMenu ? () => onOpenMenu(row.time) : undefined}
             />
         ))}
     </Box>
