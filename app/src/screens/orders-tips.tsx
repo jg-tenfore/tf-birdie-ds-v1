@@ -10,7 +10,7 @@ import { ActionButton } from "@/components/app-chrome/app-shell";
 import { OrderPanelEmpty } from "@/components/app-chrome/order-panel";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
-import { money, useStore } from "../store";
+import { money, useActions, useStore } from "../store";
 
 /**
  * Orders & Tips, from `references/072926/9-ordersTips/`.
@@ -60,6 +60,7 @@ const cell = { flex: 1, minWidth: 0, textAlign: "center" as const, px: 1 };
 
 export const OrdersTipsScreen = () => {
     const { paidTickets } = useStore();
+    const { popDrawer } = useActions();
     const navigate = useNavigate();
 
     // Card sales taken in this session are tippable and belong in the list.
@@ -123,7 +124,7 @@ export const OrdersTipsScreen = () => {
                     <ActionButton icon={<ArrowBackIosNewIcon />} onClick={() => navigate(-1)}>
                         Back
                     </ActionButton>
-                    <ActionButton icon={<SaveAltIcon />} tone="destructive">
+                    <ActionButton icon={<SaveAltIcon />} tone="destructive" onClick={popDrawer}>
                         Pop
                     </ActionButton>
                     <ActionButton>Tip out</ActionButton>

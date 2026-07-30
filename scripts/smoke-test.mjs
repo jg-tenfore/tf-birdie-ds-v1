@@ -90,9 +90,19 @@ await step("quick-cash keys fill the cash amount", async () => {
     await page.waitForSelector('input[value="$20.00"]', { timeout: 4000 });
 });
 
-await step("PAY closes the ticket", async () => {
+await step("PAY closes the ticket and prints the receipt", async () => {
     await page.getByRole("button", { name: "Pay", exact: true }).click();
-    await page.waitForSelector("text=Approved", { timeout: 6000 });
+    await page.waitForSelector("text=Order Complete", { timeout: 6000 });
+    // The receipt lists every line the device prints, including the zeroes.
+    for (const t of ["Order Items", "Payments", "SubTotal", "Taxes and Fees", "Credit Surcharge", "Grand Total"])
+        await page.waitForSelector(`text=${t}`, { timeout: 4000 });
+    // Cash carries the tendered figure, so Change Due is real.
+    const body = await page.locator("body").innerText();
+    if (!/Change Due \$/.test(body)) throw new Error("no change line");
+    await page.getByText("PRINT RECEIPT", { exact: true }).click();
+    await page.waitForSelector("text=Print job queued up!", { timeout: 4000 });
+    await page.getByText("PRO SHOP", { exact: true }).click();
+    await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
 });
 
 await step("Order Lookup searches and finds the closed sale", async () => {
@@ -128,7 +138,11 @@ await step("held ticket appears on the tabs list", async () => {
     await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
     const before = await page.evaluate(() => document.body.innerText.match(/\d{4} - /g)?.length ?? 0);
     await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Pop", exact: true }).click();
+    // Quick Tab in the overflow is what holds a ticket. POP is the cash drawer —
+    // this check used to lean on POP doing both.
+    await page.getByRole("button", { name: "More" }).click();
+    await page.getByText("Quick Tab", { exact: true }).click();
+    await page.waitForTimeout(400);
     await page.goto(`${BASE}#/tabs`, { waitUntil: "networkidle" });
     // Asserting a count rather than a name: the checked-in golfer comes from the
     // generated sheet, so hard-coding one couples this test to the seed.
@@ -143,7 +157,10 @@ await step("court sheet renders six resource columns", async () => {
 await step("bay sheet renders the time-axis calendar", async () => {
     await page.goto(`${BASE}#/baysheet`, { waitUntil: "networkidle" });
     await page.waitForSelector("text=ZOOM OUT", { timeout: 5000 });
-    await page.waitForSelector("text=/\\(2\\) Sutton, K\\./", { timeout: 5000 });
+    // Blocks print the person, the party count, the fee and the paid state on
+    // separate lines now — the old "(2) Name" label is gone.
+    await page.waitForSelector("text=Sutton, K.", { timeout: 5000 });
+    await page.waitForSelector("text=UNPAID", { timeout: 5000 });
 });
 
 await step("quick order drills a category into a product list", async () => {
@@ -320,11 +337,238 @@ await step("Customer Search finds a record and opens it", async () => {
 
 await step("tapping a table opens its check and DONE returns to the floor", async () => {
     await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
-    await page.waitForSelector("text=seated", { timeout: 6000 });
+    await page.waitForSelector('[data-table="9"]', { timeout: 6000 });
     await page.locator('[data-table="9"]').first().click();
     await page.waitForSelector("text=/Table Detached \\d+ \\| Order ID/", { timeout: 6000 });
     await page.getByRole("button", { name: "Done" }).click();
-    await page.waitForSelector("text=seated", { timeout: 5000 });
+    await page.waitForSelector('[data-table="9"]', { timeout: 5000 });
+});
+
+await step("the floor's FLOOR PLAN button opens the room sheet upward", async () => {
+    await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
+    await page.waitForSelector('[data-table="9"]', { timeout: 6000 });
+    await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+    for (const r of ["smallroom", "bigroom", "Private Hall"]) await page.waitForSelector(`text=${r}`, { timeout: 4000 });
+
+    const sheet = await page.locator('[role="menu"]').boundingBox();
+    const button = await page.getByRole("button", { name: "FLOOR PLAN" }).boundingBox();
+    // It has to sit above the bar and be centred on the button that opened it —
+    // a centred full-height panel left a slab of dead space under the last room.
+    if (sheet.y + sheet.height > button.y + 4) throw new Error("sheet overlaps the action bar");
+    if (Math.abs(sheet.x + sheet.width / 2 - (button.x + button.width / 2)) > 60) throw new Error("sheet not anchored to the button");
+});
+
+await step("seat orientation flips between top/bottom and left/right", async () => {
+    await page.goto(`${BASE}#/tablechart`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+    // The room is shared state, so make sure we are in the one with squares.
+    await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+    await page.getByText("bigroom", { exact: true }).click();
+    await page.waitForTimeout(500);
+
+    await page.locator('[data-table="1"]').first().click();
+    await page.waitForSelector('input[aria-label="Table name"]', { timeout: 5000 });
+
+    // Two seats, because at four every edge gets one whichever axis is chosen and
+    // the setting is genuinely invisible.
+    const fewer = page.getByRole("button", { name: "Fewer seats" });
+    await fewer.click();
+    await fewer.click();
+    await page.waitForTimeout(300);
+
+    const spread = async (axis) =>
+        page.locator('[data-table="1"] rect').evaluateAll((els, a) => {
+            const marks = els.slice(0, -1).map((e) => Number(e.getAttribute(a)));
+            return Math.max(...marks) - Math.min(...marks);
+        }, axis);
+
+    await page.getByRole("button", { name: "Seats top and bottom" }).click();
+    await page.waitForTimeout(300);
+    if (!((await spread("y")) > (await spread("x")))) throw new Error("horizontal did not seat top and bottom");
+
+    await page.getByRole("button", { name: "Seats left and right" }).click();
+    await page.waitForTimeout(300);
+    if (!((await spread("x")) > (await spread("y")))) throw new Error("vertical did not seat left and right");
+});
+
+await step("Quick Order's rail carries steppers and totals", async () => {
+    await page.goto(`${BASE}#/quickorder`, { waitUntil: "networkidle" });
+    await page.getByText("Steaks", { exact: true }).first().click();
+    await page.getByText("Filet Mignon 8 oz").first().click();
+    for (const t of ["Subtotal", "Tax", "Total"]) await page.waitForSelector(`text=${t}`, { timeout: 5000 });
+});
+
+await step("a court slot books against a named customer", async () => {
+    await page.goto(`${BASE}#/coursheet`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=/JULY \\d+ 2026/", { timeout: 6000 });
+
+    await page.getByRole("button", { name: "Pickleball Court 1 6:00 AM" }).click();
+    await page.waitForSelector("text=Weekday Court Schedule - 6:00 AM", { timeout: 6000 });
+    // The tee sheet's Rounds column has no meaning for a court.
+    if (await page.getByText("Rounds", { exact: true }).count()) throw new Error("Rounds column present");
+
+    // RESERVE is live either way: with a customer it books, without one it goes to
+    // create the person. It is styled flat until one is picked, not disabled.
+    const reserve = page.getByRole("button", { name: "Reserve" });
+    if (await reserve.isDisabled()) throw new Error("Reserve disabled on an open slot");
+
+    await page.fill('input[placeholder^="Search by customer name"]', "west");
+    await page.waitForTimeout(400);
+    await page.locator("text=/@(example\\.com|tenfore\\.golf)/").first().click();
+    await reserve.click();
+    await page.waitForTimeout(500);
+    const cell = await page.getByRole("button", { name: "Pickleball Court 1 6:00 AM" }).textContent();
+    if (!/6:00 AM\s*\S/.test(cell)) throw new Error(`slot still empty: "${cell}"`);
+});
+
+await step("a walk-up can be created and reserved in one pass", async () => {
+    await page.getByRole("button", { name: "Tennis 2 6:20 AM" }).click();
+    await page.waitForSelector("text=Weekday Court Schedule - 6:20 AM", { timeout: 6000 });
+    // RESERVE with nobody picked is the route to creating them, and it carries the
+    // typed name across.
+    await page.fill('input[placeholder^="Search by customer name"]', "Zephyr Quill");
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: "Reserve" }).click();
+    await page.waitForSelector("text=Add a New Customer", { timeout: 6000 });
+
+    // A last name plus either a phone or an email — the device only says so after
+    // you press SAVE, and only about two of the three fields it badges.
+    await page.getByRole("button", { name: "Save" }).click();
+    await page.waitForSelector("text=Phone number or email is required.", { timeout: 5000 });
+
+    await page.getByRole("button", { name: "@GMAIL.COM" }).click();
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // Saving hands the new id back, so the reservation continues with them picked.
+    await page.waitForSelector("text=Weekday Court Schedule - 6:20 AM", { timeout: 6000 });
+    await page.getByRole("button", { name: "Reserve" }).click();
+    await page.waitForTimeout(500);
+    const cell = await page.getByRole("button", { name: "Tennis 2 6:20 AM" }).textContent();
+    if (!/Zephyr/.test(cell)) throw new Error(`slot reads "${cell}"`);
+
+    // And they are in the database, not just on the sheet.
+    await page.goto(`${BASE}#/customersearch`, { waitUntil: "networkidle" });
+    await page.fill('input[placeholder^="Search by customer name"]', "Quill");
+    await page.waitForSelector("text=Zephyr Quill", { timeout: 5000 });
+});
+
+await step("the Gift Card tile configures before it sells", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
+
+    // A category tile is a destination, not necessarily a list — this one opens a
+    // form, because a gift card has no price until somebody types one.
+    await page.getByText("Gift Card", { exact: true }).click();
+    await page.waitForSelector("text=Create a Gift Card", { timeout: 6000 });
+    for (const t of ["Gift Card FROM", "Gift Card TO", "Same as From", "Alcohol"])
+        await page.waitForSelector(`text=${t}`, { timeout: 4000 });
+
+    await page.locator('input[placeholder="0.00"]').fill("20");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // No UPC means the server mints one, and the device says so before committing.
+    await page.waitForSelector("text=UPC was not provided", { timeout: 5000 });
+    await page.getByRole("button", { name: "OK" }).click();
+
+    // Back on the register with the card in the order. Asserting the line rather
+    // than the total, since earlier steps in this run have already put items in.
+    await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
+    await page.waitForSelector("text=$20.00", { timeout: 5000 });
+});
+
+await step("POP opens the cash drawer and touches nothing else", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /Green Fees/i }).click();
+    await page.getByText("Green fee — 18", { exact: true }).first().click();
+    await page.waitForTimeout(400);
+
+    const before = await page.getByRole("button", { name: /^Pay \$/ }).textContent();
+    await page.getByRole("button", { name: "Pop" }).click();
+
+    // Read the snackbar directly: a toast may already be open from adding the
+    // item, and its auto-hide timer keeps running, so polling for the text can
+    // race the close.
+    await page.waitForFunction(
+        () => document.querySelector(".MuiSnackbar-root")?.textContent?.includes("Drawer Popping") ?? false,
+        undefined,
+        { timeout: 5000 },
+    );
+
+    // POP is the drawer, not a ticket hold — an earlier pass had it calling
+    // holdTicket, which moved the order out from under the operator.
+    const after = await page.getByRole("button", { name: /^Pay \$/ }).textContent();
+    if (before !== after) throw new Error(`POP moved the ticket: ${before} -> ${after}`);
+});
+
+await step("every configured room has a layout", async () => {
+    await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+    for (const room of ["[Detached Tables]", "smallroom", "banquet", "Lounge", "Trivia Pub/Bar", "Big Bar", "Open Tabs", "New Table Designer Room"]) {
+        await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+        await page.getByText(room, { exact: true }).click();
+        await page.waitForTimeout(350);
+        if ((await page.locator("[data-table]").count()) === 0) throw new Error(`${room} has no layout`);
+    }
+});
+
+await step("a tab's menu drills, and adding opens the item detail", async () => {
+    await page.goto(`${BASE}#/tabs/t-4128`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+
+    // Two levels above the products: menu set, then category.
+    for (const c of ["All", "19th Hole Menu"]) await page.waitForSelector(`text=${c}`, { timeout: 4000 });
+    await page.getByText("Hamburgers", { exact: true }).click();
+    await page.getByText("Clubhouse Cheeseburger", { exact: true }).first().click();
+
+    // Adding opens the item — a plate that needs a temperature needs it before the
+    // kitchen sees it, not after.
+    await page.waitForSelector("text=Enter Additional Notes…", { timeout: 5000 });
+    for (const g of ["Alergies", "Burger Test", "Cheeses", "Temp"]) await page.waitForSelector(`text=${g}`, { timeout: 4000 });
+});
+
+await step("modifiers, quantity and notes all reach the line", async () => {
+    const total = () => page.locator("[data-line-total]").innerText();
+    const before = await total();
+    await page.getByText("ADD BACON", { exact: true }).click();
+    await page.getByText("ADD CHICKEN", { exact: true }).click();
+    await page.waitForTimeout(400);
+    if ((await total()) === before) throw new Error("modifiers did not price in");
+
+    // Priced modifiers hang their surcharge off the name, as the device prints it.
+    await page.waitForSelector("text=/ADD BACON \\+\\$1\\.00/", { timeout: 4000 });
+
+    await page.getByRole("button", { name: "Increase quantity" }).click();
+    await page.locator("textarea").first().fill("no pickles please");
+    await page.waitForTimeout(400);
+    await page.waitForSelector("text=no pickles please", { timeout: 4000 });
+});
+
+await step("the line kebab fires, discounts and splits", async () => {
+    await page.getByRole("button", { name: "Back" }).click();
+    await page.waitForTimeout(300);
+
+    await page.getByRole("button", { name: /^Options for / }).first().click();
+    for (const i of ["Fire", "Move", "Split", "Edit", "Discount", "Delete"])
+        if (!(await page.getByText(i, { exact: true }).count())) throw new Error(`${i} missing`);
+
+    await page.getByText("Fire", { exact: true }).click();
+    await page.waitForSelector("text=FIRED", { timeout: 4000 });
+
+    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page.getByText("Discount", { exact: true }).click();
+    await page.getByText("25% off", { exact: true }).click();
+    await page.waitForSelector("text=25% off", { timeout: 4000 });
+
+    // Split needs a destination, so it opens a second step rather than guessing.
+    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page.getByText("Split", { exact: true }).click();
+    await page.waitForSelector("text=Split one to…", { timeout: 4000 });
+    await page.locator('[role="dialog"]').getByText("Seat 3", { exact: true }).click();
+    await page.waitForFunction(
+        () => /Split one to seat|Nothing to split/.test(document.querySelector(".MuiSnackbar-root")?.textContent ?? ""),
+        undefined,
+        { timeout: 5000 },
+    );
 });
 
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");

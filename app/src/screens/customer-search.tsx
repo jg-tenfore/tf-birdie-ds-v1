@@ -76,13 +76,13 @@ const ResultRow = ({ customer, onSelect }: { customer: Customer; onSelect: () =>
 );
 
 export const CustomerSearchScreen = () => {
-    const { ticket } = useStore();
+    const { ticket, state } = useStore();
     const navigate = useNavigate();
     const [query, setQuery] = useState("");
 
     // Live as you type — two characters is the floor, because one returns most
     // of the database and tells you nothing.
-    const results = useMemo(() => searchCustomers(query, RESULT_LIMIT), [query]);
+    const results = useMemo(() => searchCustomers(query, RESULT_LIMIT, state.customers), [query, state.customers]);
 
     return (
         <Shell
@@ -151,9 +151,9 @@ export const CustomerRecordScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { attachCustomer } = useActions();
-    const { ticket } = useStore();
+    const { ticket, state } = useStore();
 
-    const customer = id ? customerById(id) : null;
+    const customer = id ? customerById(id, state.customers) : null;
     const [types, setTypes] = useState<string[]>(customer?.customerTypes ?? []);
 
     if (!customer) {

@@ -2,13 +2,23 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { StorybookConfig } from "@storybook/react-vite";
+import remarkGfm from "remark-gfm";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
     stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
 
-    addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes"],
+    addons: [
+        {
+            name: "@storybook/addon-docs",
+            // MDX has no table support without GFM, so the Introduction page's two
+            // tables were rendering as raw pipe-delimited text.
+            options: { mdxPluginOptions: { mdxCompileOptions: { remarkPlugins: [remarkGfm] } } },
+        },
+        "@storybook/addon-a11y",
+        "@storybook/addon-themes",
+    ],
 
     framework: "@storybook/react-vite",
 

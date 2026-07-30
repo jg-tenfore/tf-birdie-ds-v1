@@ -18,6 +18,19 @@ import Typography from "@mui/material/Typography";
  */
 
 export type TableShape = "square" | "circle" | "rectangle" | "oval" | "diamond";
+
+/**
+ * Which pair of edges the seats sit on.
+ *
+ * `horizontal` puts them along the top and bottom, so diners face each other
+ * across the table's width; `vertical` puts them on the left and right. It only
+ * means anything on the straight-edged shapes — a round table seats evenly around
+ * its perimeter — so the control is hidden for those rather than doing nothing.
+ *
+ * Left unset, seats follow the longer pair of edges. That is right most of the
+ * time and wrong exactly when a long table is pushed against a wall.
+ */
+export type SeatOrientation = "horizontal" | "vertical";
 export type ElementKind = "table" | "barrier" | "box" | "label";
 
 /** The states the live view colours by. Only `occupied` is coloured warm. */
@@ -39,6 +52,8 @@ export interface FloorElement {
     text?: string;
     /** Resizing keeps the aspect ratio — round tables must stay round. */
     lockAR?: boolean;
+    /** Overrides the default "seats follow the longer edges" rule. */
+    seatOrientation?: SeatOrientation;
     /** Live view only: who is sitting here. */
     party?: { name: string; guests: number; server: string; tab: number };
 }
@@ -69,7 +84,13 @@ interface ChairPos {
  * are special-cased to top → bottom → right → left, because proportional
  * distribution puts two chairs on one edge and looks wrong at low counts.
  */
-export function chairPositions(shape: TableShape, seats: number, w: number, h: number): ChairPos[] {
+export function chairPositions(
+    shape: TableShape,
+    seats: number,
+    w: number,
+    h: number,
+    orientation?: SeatOrientation,
+): ChairPos[] {
     const inset = CHAIR_SIZE + CHAIR_GAP;
     const tableLeft = inset;
     const tableTop = inset;
@@ -94,17 +115,22 @@ export function chairPositions(shape: TableShape, seats: number, w: number, h: n
     }
 
     // Square / rectangle / diamond (a diamond is a rotated square).
+    const top: ChairPos = { x: cx, y: CHAIR_GAP, rotate: 0 };
+    const bottom: ChairPos = { x: cx, y: h - CHAIR_GAP, rotate: 180 };
+    const right: ChairPos = { x: w - CHAIR_GAP, y: cy, rotate: 90 };
+    const left: ChairPos = { x: CHAIR_GAP, y: cy, rotate: 270 };
+
     if (seats <= 4 && shape !== "rectangle") {
-        const sides: ChairPos[] = [
-            { x: cx, y: CHAIR_GAP, rotate: 0 },
-            { x: cx, y: h - CHAIR_GAP, rotate: 180 },
-            { x: w - CHAIR_GAP, y: cy, rotate: 90 },
-            { x: CHAIR_GAP, y: cy, rotate: 270 },
-        ];
+        // Fill the chosen pair of edges first, then the other pair. With no
+        // orientation this is top → bottom → right → left, which is what a
+        // four-top looks like when nobody has said otherwise.
+        const sides = orientation === "vertical" ? [left, right, top, bottom] : [top, bottom, right, left];
         return sides.slice(0, seats);
     }
 
-    const isWide = tableW >= tableH;
+    // An explicit orientation overrides the edge-length rule: `horizontal` treats
+    // top and bottom as the primary pair whatever the proportions say.
+    const isWide = orientation ? orientation === "horizontal" : tableW >= tableH;
     const longEdge = isWide ? tableW : tableH;
     const shortEdge = isWide ? tableH : tableW;
     const total = longEdge * 2 + shortEdge * 2;
@@ -196,7 +222,7 @@ export const TableGraphic = ({ element, fill }: { element: FloorElement; fill: s
     return (
         <Box component="svg" width={w} height={h} viewBox={`0 0 ${w} ${h}`} sx={{ display: "block", overflow: "visible" }}>
             {!bare &&
-                chairPositions(shape, seats, w, h).map((c, i) => (
+                chairPositions(shape, seats, w, h, element.seatOrientation).map((c, i) => (
                     <rect
                         key={i}
                         x={c.x - CHAIR_SIZE / 2}
@@ -368,6 +394,150 @@ export const floorRoomOrder = [
     "New Table Designer Room",
 ] as const;
 
+
+/* --------------------------------------------------- the other nine rooms */
+
+/** Helpers so a room reads as a room rather than a wall of coordinates. */
+const table = (
+    id: string,
+    num: string,
+    x: number,
+    y: number,
+    opts: Partial<FloorElement> = {},
+): FloorElement => ({ id, kind: "table", shape: "square", x, y, w: 100, h: 100, num, seats: 4, status: "empty", ...opts });
+
+const round = (id: string, num: string, x: number, y: number, opts: Partial<FloorElement> = {}) =>
+    table(id, num, x, y, { shape: "circle", w: 110, h: 110, lockAR: true, ...opts });
+
+const long = (id: string, num: string, x: number, y: number, opts: Partial<FloorElement> = {}) =>
+    table(id, num, x, y, { shape: "rectangle", w: 220, h: 100, seats: 8, ...opts });
+
+const seat = (id: string, num: string, x: number, y: number, opts: Partial<FloorElement> = {}) =>
+    table(id, num, x, y, { shape: "circle", w: 80, h: 80, seats: 1, lockAR: true, ...opts });
+
+const wall = (id: string, x: number, y: number, w: number, h = 14): FloorElement => ({ id, kind: "barrier", x, y, w, h });
+
+const label = (id: string, x: number, y: number, text: string, w = 120): FloorElement => ({ id, kind: "label", x, y, w, h: 24, text });
+
+const seated = (name: string, guests: number, server: string, tab: number) =>
+    ({ status: "occupied" as const, party: { name, guests, server, tab } });
+
+/**
+ * The rooms the device has configured but never laid out.
+ *
+ * Invented rather than transcribed, and each one deliberately a different *kind*
+ * of room rather than the same grid renamed — a banquet hall, a bar, a lounge and
+ * a test room have genuinely different geometry, and a floor-plan editor that has
+ * only ever been used on one shape is untested.
+ */
+const detachedTables: FloorElement[] = [
+    label("d-note", 24, 20, "Unassigned", 130),
+    // No walls: these are tables that belong to no room, which is the whole point
+    // of the bucket. They sit loose in the top-left as the app drops them.
+    table("d1", "27699", 40, 70, seated("Brooksby", 2, "BT", 11.94)),
+    table("d2", "27700", 190, 70),
+    table("d3", "27701", 340, 70, seated("Nakamura", 4, "SC", 86.4)),
+    round("d4", "27702", 40, 210),
+    round("d5", "27703", 190, 210),
+];
+
+const smallroom: FloorElement[] = [
+    wall("s-w1", 40, 40, 620),
+    label("s-l", 300, 12, "smallroom", 120),
+    table("s1", "1", 60, 110, { w: 90, h: 90, seats: 2 }),
+    table("s2", "2", 200, 110, { w: 90, h: 90, seats: 2, ...seated("Halloran", 2, "MR", 42.5) }),
+    table("s3", "3", 340, 110, { w: 90, h: 90, seats: 2 }),
+    table("s4", "4", 480, 110, { w: 90, h: 90, seats: 2 }),
+    round("s5", "5", 100, 270),
+    round("s6", "6", 260, 270, seated("Petrov", 3, "MR", 68.2)),
+    round("s7", "7", 420, 270),
+];
+
+const banquet: FloorElement[] = [
+    label("b-l", 40, 20, "Head table", 130),
+    // A banquet room is rows, not a scatter: one head table across the top and
+    // four long tables down the room, all seating eight.
+    long("b-head", "HEAD", 380, 60, { w: 420, h: 100, seats: 10 }),
+    long("b1", "1", 120, 220),
+    long("b2", "2", 420, 220, seated("Delgado Outing", 8, "JL", 612.0)),
+    long("b3", "3", 720, 220),
+    long("b4", "4", 120, 380),
+    long("b5", "5", 420, 380, seated("Sandhill Group", 6, "JL", 388.5)),
+    long("b6", "6", 720, 380),
+    long("b7", "7", 120, 540),
+    long("b8", "8", 420, 540),
+    long("b9", "9", 720, 540),
+];
+
+const lounge: FloorElement[] = [
+    label("l-l", 40, 20, "Lounge", 100),
+    // Low seating, no rows. Small rounds scattered off a counter along the wall.
+    wall("l-counter", 700, 80, 20, 520),
+    ...Array.from({ length: 6 }, (_, i) => seat(`l-s${i}`, `C${i + 1}`, 610, 100 + i * 90, i % 3 === 0 ? seated("Kaur", 1, "BT", 18) : {})),
+    round("l1", "1", 90, 120, { w: 96, h: 96, seats: 2 }),
+    round("l2", "2", 260, 120, { w: 96, h: 96, seats: 2, ...seated("Ito", 2, "BT", 34) }),
+    round("l3", "3", 90, 300, { w: 96, h: 96, seats: 2 }),
+    round("l4", "4", 260, 300, { w: 96, h: 96, seats: 2 }),
+    table("l5", "5", 420, 200, { w: 140, h: 140, seats: 6 }),
+];
+
+const triviaPub: FloorElement[] = [
+    label("t-l", 60, 20, "Trivia Pub/Bar", 150),
+    wall("t-bar", 60, 70, 900, 18),
+    ...Array.from({ length: 9 }, (_, i) =>
+        seat(`t-s${i}`, `B${i + 1}`, 60 + i * 100, 100, i % 2 === 0 ? seated("Osei", 1, "BT", 22) : {}),
+    ),
+    // High-tops on the floor, small and square so a quiz team crowds one.
+    ...Array.from({ length: 8 }, (_, i) =>
+        table(`t-h${i}`, `T${i + 1}`, 80 + (i % 4) * 220, 260 + Math.floor(i / 4) * 180, {
+            w: 90,
+            h: 90,
+            seats: 4,
+            ...(i === 2 || i === 5 ? seated("Quiz Night", 4, "MR", 96.5) : {}),
+        }),
+    ),
+];
+
+const astorCreekTest: FloorElement[] = [
+    label("a-l", 40, 20, "Astor Creek Test Room", 220),
+    // Deliberately mechanical: a 5×3 grid of identical four-tops. It is a test
+    // room, and test rooms look like test data.
+    ...Array.from({ length: 15 }, (_, i) => table(`a${i}`, String(i + 1), 60 + (i % 5) * 180, 90 + Math.floor(i / 5) * 170)),
+];
+
+const bigBar: FloorElement[] = [
+    label("bb-l", 500, 20, "Big Bar", 110),
+    // A U: three walls of counter with stools on the outside of each run.
+    wall("bb-top", 260, 90, 620, 20),
+    wall("bb-left", 260, 90, 20, 300),
+    wall("bb-right", 860, 90, 20, 300),
+    ...Array.from({ length: 7 }, (_, i) => seat(`bb-t${i}`, `B${i + 1}`, 290 + i * 90, 130)),
+    ...Array.from({ length: 3 }, (_, i) => seat(`bb-l${i}`, `B${8 + i}`, 160, 150 + i * 90, i === 1 ? seated("Marchetti", 1, "BT", 31) : {})),
+    ...Array.from({ length: 3 }, (_, i) => seat(`bb-r${i}`, `B${11 + i}`, 900, 150 + i * 90, i === 0 ? seated("Bergstrom", 1, "BT", 44) : {})),
+    round("bb-1", "1", 380, 460, seated("Ferreira", 4, "AK", 118)),
+    round("bb-2", "2", 560, 460),
+    round("bb-3", "3", 740, 460),
+];
+
+const openTabs: FloorElement[] = [
+    label("o-l", 40, 20, "Counter tabs", 150),
+    // Not a room with furniture — six counter positions for tabs that never sat
+    // down. Modelling them as tables is what lets them appear on the floor at all.
+    ...Array.from({ length: 6 }, (_, i) =>
+        seat(`o${i}`, `T${i + 1}`, 60 + i * 120, 110, i < 3 ? seated(["Mbeki", "Salvatore", "Wren"][i], 1, "BT", [14, 26, 9][i]) : {}),
+    ),
+];
+
+const newDesignerRoom: FloorElement[] = [
+    label("n-l", 40, 20, "Work in progress", 190),
+    // Half laid out, because that is what a room called "New … Room" usually is:
+    // somebody started and stopped.
+    wall("n-w", 40, 70, 400),
+    table("n1", "1", 60, 130),
+    table("n2", "2", 210, 130),
+    round("n3", "3", 60, 280),
+];
+
 export const seededFloorPlans: Record<string, FloorElement[]> = {
     bigroom: [
         // The bar: one long barrier with a dashed label over the stool row.
@@ -515,14 +685,13 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
         { id: "p6", kind: "table", shape: "diamond", x: 400, y: 350, w: 100, h: 100, num: "6", seats: 4, lockAR: true, status: "empty" },
         { id: "p7", kind: "table", shape: "diamond", x: 550, y: 350, w: 100, h: 100, num: "7", seats: 4, lockAR: true, status: "empty" },
     ],
-    // Deliberately blank — the empty room is a state the editor has to handle.
-    Lounge: [],
-    "[Detached Tables]": [],
-    smallroom: [],
-    banquet: [],
-    "Trivia Pub/Bar": [],
-    "Astor Creek Test Room": [],
-    "Big Bar": [],
-    "Open Tabs": [],
-    "New Table Designer Room": [],
+    "[Detached Tables]": detachedTables,
+    smallroom,
+    banquet,
+    Lounge: lounge,
+    "Trivia Pub/Bar": triviaPub,
+    "Astor Creek Test Room": astorCreekTest,
+    "Big Bar": bigBar,
+    "Open Tabs": openTabs,
+    "New Table Designer Room": newDesignerRoom,
 };

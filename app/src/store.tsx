@@ -1,4 +1,6 @@
 import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
+import { customers as seededCustomers, type Customer } from "@/data/crm";
+import { modifierSurcharge } from "@/data/modifiers";
 import {
     buildDaySheet,
     may12Sheet,
@@ -32,6 +34,21 @@ export interface Line {
     seat?: number;
     image?: string;
     note?: string;
+    /** Gift cards are stored value, not a sale — tax lands when they are spent. */
+    taxable?: boolean;
+    /**
+     * Selected modifier names, in the order they were tapped.
+     *
+     * Names rather than ids because that is what the kitchen ticket prints, and
+     * what the order line shows — the surcharge is looked up when needed.
+     */
+    modifiers?: string[];
+    /** Sent to the kitchen. A fired line cannot be edited on the device. */
+    fired?: boolean;
+    /** Percentage off this line, applied before tax. */
+    discountPct?: number;
+    /** On-hand / available, as the line prints them. */
+    stock?: [number, number];
 }
 
 export interface Punch {
@@ -88,6 +105,8 @@ export const TODAY = "2026-07-29";
 
 /** A simulator-bay reservation. `start` is minutes from midnight. */
 export interface BayBooking {
+    /** Bay blocks print PAID or UNPAID; the amount is only in the ticket. */
+    paid?: boolean;
     id: string;
     bay: string;
     start: number;
@@ -117,8 +136,36 @@ interface State {
     /** Rolling counter so new tickets get plausible sequential numbers. */
     nextNumber: number;
     /** Last completed sale, so the approved screen has something to show. */
-    lastSale: { ticket: Ticket; total: number; tender: string } | null;
+    /** Everything the Order Complete receipt prints. */
+    lastSale: {
+        ticket: Ticket;
+        subtotal: number;
+        tax: number;
+        total: number;
+        tender: string;
+        /** Cash handed over; equals the total for every other tender. */
+        tendered: number;
+        change: number;
+        /** The receipt's own number, distinct from the ticket's. */
+        orderNumber: string;
+    } | null;
     bayBookings: BayBooking[];
+    /**
+     * Court and bay reservations, keyed `date|resource|time`.
+     *
+     * One flat map rather than a nested structure per resource type, because the
+     * court sheet and the bay sheet book the same way — a named person against a
+     * named resource at a named time — and a shared key means one reservation
+     * screen serves both.
+     */
+    resourceBookings: Record<string, string>;
+    /** The day the court sheet is showing. Independent of the tee sheet's. */
+    courtDate: string;
+    /**
+     * The customer database, in state rather than imported directly, so a
+     * customer created at the counter is findable a second later.
+     */
+    customers: Customer[];
     shiftOpen: boolean;
     clockedIn: boolean;
     /** Time-clock punches, newest first — what the Time Clock log renders. */
@@ -135,10 +182,29 @@ interface State {
 
 export const TAX_RATE = 0.06;
 
-export const lineTotal = (l: Line) => l.qty * l.unitPrice;
+/**
+ * What a line costs.
+ *
+ * Unit price plus whatever its modifiers add, times quantity, less any line
+ * discount. Modifiers are priced per unit — two burgers with bacon are two bacons
+ * — which is the only reading that survives changing the quantity afterwards.
+ */
+export const lineUnitPrice = (l: Line) => l.unitPrice + modifierSurcharge(l.modifiers ?? []);
+export const lineTotal = (l: Line) => {
+    const gross = l.qty * lineUnitPrice(l);
+    return l.discountPct ? +(gross * (1 - l.discountPct / 100)).toFixed(2) : gross;
+};
 export const subtotalOf = (lines: Line[]) => lines.reduce((s, l) => s + lineTotal(l), 0);
-export const taxOf = (lines: Line[]) => subtotalOf(lines) * TAX_RATE;
-export const totalOf = (lines: Line[]) => subtotalOf(lines) * (1 + TAX_RATE);
+
+/**
+ * Tax is charged on the taxable lines only.
+ *
+ * A gift card is not a sale, it is stored value — the tax lands when the card is
+ * spent. The reference receipt makes this visible: a $20 gift card prints
+ * `Taxes and Fees $0.00`, which a flat rate on the subtotal cannot reproduce.
+ */
+export const taxOf = (lines: Line[]) => lines.filter((l) => l.taxable !== false).reduce((s, l) => s + lineTotal(l), 0) * TAX_RATE;
+export const totalOf = (lines: Line[]) => subtotalOf(lines) + taxOf(lines);
 export const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
 /* ------------------------------------------------------------------ *
@@ -209,6 +275,9 @@ const initial: State = {
     shiftOpen: true,
     clockedIn: false,
     punches: [],
+    resourceBookings: {},
+    courtDate: "2026-07-21",
+    customers: seededCustomers,
     floorPlans: seededFloorPlans,
     floorRoom: "bigroom",
     toast: null,
@@ -219,14 +288,22 @@ const initial: State = {
 type Action =
     | { type: "signIn"; operator: Operator }
     | { type: "signOut" }
-    | { type: "addItem"; item: { id: string; name: string; price: number; image?: string }; seat?: number; source: Ticket["source"] }
+    | { type: "addItem"; item: { id: string; name: string; price: number; image?: string; taxable?: boolean }; seat?: number; source: Ticket["source"] }
     | { type: "changeQty"; lineId: string; delta: number; seat?: number }
+    | { type: "setLineModifiers"; lineId: string; seat?: number; modifiers: string[] }
+    | { type: "setLineNote"; lineId: string; seat?: number; note: string }
+    | { type: "setLineQty"; lineId: string; seat?: number; qty: number }
+    | { type: "fireLine"; lineId: string; seat?: number }
+    | { type: "moveLine"; lineId: string; from?: number; to: number }
+    | { type: "splitLine"; lineId: string; seat?: number; to: number }
+    | { type: "discountLine"; lineId: string; seat?: number; pct: number }
     | { type: "removeLine"; lineId: string; seat?: number }
     | { type: "clearCart" }
+    | { type: "popDrawer" }
     | { type: "holdTicket" }
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
-    | { type: "pay"; tender: NonNullable<Ticket["tender"]> }
+    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number }
     | { type: "setSheetDate"; date: string }
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
@@ -248,6 +325,11 @@ type Action =
     | { type: "setFloorRoom"; room: string }
     | { type: "saveFloorPlan"; room: string; elements: FloorElement[] }
     | { type: "addBayBooking"; booking: Omit<BayBooking, "id"> }
+    | { type: "reserveResource"; date: string; resource: string; time: string; customer: string }
+    | { type: "cancelResource"; date: string; resource: string; time: string }
+    | { type: "setCourtDate"; date: string }
+    | { type: "shiftCourtDate"; days: number }
+    | { type: "addCustomer"; customer: Customer }
     | { type: "endShift" }
     | { type: "toast"; message: string | null };
 
@@ -285,6 +367,19 @@ function sheetFor(state: State): TeeTimeBooking[] {
  */
 function emptySheet(): TeeTimeBooking[] {
     return buildDaySheet({ density: 0, seed: 1 }).map((t) => ({ ...t, positions: [null, null, null, null] as (Position | null)[] }));
+}
+
+/**
+ * The ticket holding a given line.
+ *
+ * Prefers the active ticket when it has the line, so two tickets carrying the same
+ * product id cannot cross-edit; otherwise falls back to whichever ticket owns it.
+ */
+function ticketHolding(state: State, lineId: string, seat?: number) {
+    const matches = (t: Ticket) => t.lines.some((l) => l.id === lineId && (seat === undefined || l.seat === seat));
+    const active = activeTicket(state);
+    if (active && matches(active)) return active;
+    return state.tickets.find(matches) ?? null;
 }
 
 function activeTicket(state: State) {
@@ -337,6 +432,7 @@ function reducer(state: State, action: Action): State {
                               qty: 1,
                               unitPrice: action.item.price,
                               image: action.item.image,
+                              taxable: action.item.taxable,
                               seat: action.seat,
                           },
                       ];
@@ -344,6 +440,101 @@ function reducer(state: State, action: Action): State {
             });
 
             return { ...state, tickets, activeTicketId: id, nextNumber, toast: `${action.item.name} added` };
+        }
+
+        /**
+         * Everything the order line's kebab menu does.
+         *
+         * They share a branch because they all rewrite one line inside one ticket,
+         * and doing that by hand in six places is how updates get lost.
+         *
+         * The ticket is the one that *owns the line*, not the active one: a tab
+         * reached by URL is not necessarily active, and keying off `activeTicketId`
+         * made every one of these silently do nothing.
+         */
+        case "setLineModifiers":
+        case "setLineNote":
+        case "setLineQty":
+        case "fireLine":
+        case "discountLine": {
+            const current = ticketHolding(state, action.lineId, action.seat);
+            if (!current) return state;
+
+            const lines = current.lines.map((l) => {
+                if (l.id !== action.lineId || (action.seat !== undefined && l.seat !== action.seat)) return l;
+                switch (action.type) {
+                    case "setLineModifiers":
+                        return { ...l, modifiers: action.modifiers };
+                    case "setLineNote":
+                        return { ...l, note: action.note || undefined };
+                    case "setLineQty":
+                        return { ...l, qty: Math.max(1, action.qty) };
+                    case "fireLine":
+                        return { ...l, fired: true };
+                    case "discountLine":
+                        return { ...l, discountPct: action.pct || undefined };
+                }
+            });
+
+            const toast =
+                action.type === "fireLine"
+                    ? "Fired to the kitchen"
+                    : action.type === "discountLine"
+                      ? action.pct
+                          ? `${action.pct}% off applied`
+                          : "Discount removed"
+                      : null;
+
+            return {
+                ...state,
+                tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, lines } : t)),
+                ...(toast ? { toast } : {}),
+            };
+        }
+
+        case "moveLine": {
+            const current = ticketHolding(state, action.lineId, action.from);
+            if (!current) return state;
+            return {
+                ...state,
+                tickets: state.tickets.map((t) =>
+                    t.id !== current.id
+                        ? t
+                        : {
+                              ...t,
+                              lines: t.lines.map((l) =>
+                                  l.id === action.lineId && (action.from === undefined || l.seat === action.from)
+                                      ? { ...l, seat: action.to }
+                                      : l,
+                              ),
+                          },
+                ),
+                toast: `Moved to seat ${action.to}`,
+            };
+        }
+
+        /**
+         * Split one unit off onto another seat.
+         *
+         * Two people sharing a plate is the case this exists for, so it peels a
+         * single unit rather than halving — and it refuses on a single-unit line,
+         * because splitting one plate into two lines of one is not a split.
+         */
+        case "splitLine": {
+            const current = ticketHolding(state, action.lineId, action.seat);
+            if (!current) return state;
+            const source = current.lines.find((l) => l.id === action.lineId && (action.seat === undefined || l.seat === action.seat));
+            if (!source || source.qty < 2) return { ...state, toast: "Nothing to split — the line is a single item" };
+
+            const lines = current.lines
+                .map((l) => (l === source ? { ...l, qty: l.qty - 1 } : l))
+                .concat([{ ...source, qty: 1, seat: action.to, note: `Split from seat ${source.seat ?? 1}` }]);
+
+            return {
+                ...state,
+                tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, lines } : t)),
+                toast: `Split one to seat ${action.to}`,
+            };
         }
 
         case "changeQty":
@@ -372,6 +563,17 @@ function reducer(state: State, action: Action): State {
                         : { ...t, lines: t.lines.filter((l) => !(l.id === action.lineId && l.seat === action.seat)) },
                 ),
             };
+
+        /**
+         * POP opens the cash drawer. Nothing else.
+         *
+         * An earlier pass read it as "hold this ticket" and wired it to
+         * holdTicket, which meant the button on four screens did something it had
+         * never claimed to do. The device confirms with a toast and no state
+         * changes at all — holding a ticket is Quick Tab, in the overflow menu.
+         */
+        case "popDrawer":
+            return { ...state, toast: "Drawer Popping!" };
 
         case "clearCart": {
             const current = activeTicket(state);
@@ -414,7 +616,16 @@ function reducer(state: State, action: Action): State {
                 ...state,
                 tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, status: "paid", tender: action.tender } : t)),
                 activeTicketId: null,
-                lastSale: { ticket: { ...current, status: "paid", tender: action.tender }, total, tender: action.tender },
+                lastSale: {
+                    ticket: { ...current, status: "paid", tender: action.tender },
+                    subtotal: subtotalOf(current.lines),
+                    tax: taxOf(current.lines),
+                    total,
+                    tender: action.tender,
+                    tendered: action.tendered ?? total,
+                    change: Math.max(0, (action.tendered ?? total) - total),
+                    orderNumber: String(5593000 + state.tickets.length * 7 + 62),
+                },
                 toast: null,
             };
         }
@@ -708,6 +919,36 @@ function reducer(state: State, action: Action): State {
             };
         }
 
+        case "reserveResource":
+            return {
+                ...state,
+                resourceBookings: {
+                    ...state.resourceBookings,
+                    [`${action.date}|${action.resource}|${action.time}`]: action.customer,
+                },
+                toast: `${action.resource} ${action.time} reserved for ${action.customer}`,
+            };
+
+        case "cancelResource": {
+            const next = { ...state.resourceBookings };
+            delete next[`${action.date}|${action.resource}|${action.time}`];
+            return { ...state, resourceBookings: next, toast: `${action.resource} ${action.time} released` };
+        }
+
+        case "setCourtDate":
+            return { ...state, courtDate: action.date };
+
+        case "shiftCourtDate": {
+            const d = new Date(`${state.courtDate}T12:00:00`);
+            d.setDate(d.getDate() + action.days);
+            return { ...state, courtDate: d.toISOString().slice(0, 10) };
+        }
+
+        // Newest first, so a customer created at the counter is the top hit when
+        // the operator searches the name they just typed.
+        case "addCustomer":
+            return { ...state, customers: [action.customer, ...state.customers], toast: `${action.customer.displayName} added` };
+
         case "addBayBooking":
             return {
                 ...state,
@@ -778,17 +1019,26 @@ export function useActions() {
             signIn: (operator: Operator) => dispatch({ type: "signIn", operator }),
             signOut: () => dispatch({ type: "signOut" }),
             addItem: (
-                item: { id: string; name: string; price: number; image?: string },
+                item: { id: string; name: string; price: number; image?: string; taxable?: boolean },
                 source: Ticket["source"] = "Pro Shop",
                 seat?: number,
             ) => dispatch({ type: "addItem", item, source, seat }),
             changeQty: (lineId: string, delta: number, seat?: number) => dispatch({ type: "changeQty", lineId, delta, seat }),
+            setLineModifiers: (lineId: string, modifiers: string[], seat?: number) =>
+                dispatch({ type: "setLineModifiers", lineId, modifiers, seat }),
+            setLineNote: (lineId: string, note: string, seat?: number) => dispatch({ type: "setLineNote", lineId, note, seat }),
+            setLineQty: (lineId: string, qty: number, seat?: number) => dispatch({ type: "setLineQty", lineId, qty, seat }),
+            fireLine: (lineId: string, seat?: number) => dispatch({ type: "fireLine", lineId, seat }),
+            moveLine: (lineId: string, to: number, from?: number) => dispatch({ type: "moveLine", lineId, to, from }),
+            splitLine: (lineId: string, to: number, seat?: number) => dispatch({ type: "splitLine", lineId, to, seat }),
+            discountLine: (lineId: string, pct: number, seat?: number) => dispatch({ type: "discountLine", lineId, pct, seat }),
             removeLine: (lineId: string, seat?: number) => dispatch({ type: "removeLine", lineId, seat }),
             clearCart: () => dispatch({ type: "clearCart" }),
+            popDrawer: () => dispatch({ type: "popDrawer" }),
             holdTicket: () => dispatch({ type: "holdTicket" }),
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
-            pay: (tender: NonNullable<Ticket["tender"]>) => dispatch({ type: "pay", tender }),
+            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number) => dispatch({ type: "pay", tender, tendered }),
             setSheetDate: (date: string) => dispatch({ type: "setSheetDate", date }),
             shiftSheetDate: (days: number) => dispatch({ type: "shiftSheetDate", days }),
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),
@@ -813,6 +1063,12 @@ export function useActions() {
             setFloorRoom: (room: string) => dispatch({ type: "setFloorRoom", room }),
             saveFloorPlan: (room: string, elements: FloorElement[]) => dispatch({ type: "saveFloorPlan", room, elements }),
             addBayBooking: (booking: Omit<BayBooking, "id">) => dispatch({ type: "addBayBooking", booking }),
+            reserveResource: (date: string, resource: string, time: string, customer: string) =>
+                dispatch({ type: "reserveResource", date, resource, time, customer }),
+            cancelResource: (date: string, resource: string, time: string) => dispatch({ type: "cancelResource", date, resource, time }),
+            setCourtDate: (date: string) => dispatch({ type: "setCourtDate", date }),
+            shiftCourtDate: (days: number) => dispatch({ type: "shiftCourtDate", days }),
+            addCustomer: (customer: Customer) => dispatch({ type: "addCustomer", customer }),
             endShift: () => dispatch({ type: "endShift" }),
             toast: (message: string | null) => dispatch({ type: "toast", message }),
         }),

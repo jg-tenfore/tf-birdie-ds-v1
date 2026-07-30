@@ -18,7 +18,7 @@ import { ActionButton } from "@/components/app-chrome/app-shell";
 import { FloorElementView, floorColors, floorRoomOrder, statusFill } from "@/components/screens/restaurant/floor-plan";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
-import { money, useActions, useStore } from "../store";
+import { useActions, useStore } from "../store";
 
 /**
  * Restaurant Tables — the live floor.
@@ -56,8 +56,6 @@ export const TablesScreen = () => {
 
     const room = state.floorRoom;
     const elements = state.floorPlans[room] ?? [];
-    const tables = elements.filter((e) => e.kind === "table");
-    const seated = tables.filter((t) => t.party);
 
     /**
      * Tapping a table opens its check in the seat editor.
@@ -84,7 +82,12 @@ export const TablesScreen = () => {
                     <ActionButton icon={<ArrowBackIosNewIcon />} onClick={() => navigate(-1)}>
                         Back
                     </ActionButton>
-                    <ActionButton icon={<DashboardIcon />} preserveCase onClick={() => navigate("/tablechart")}>
+                    <ActionButton
+                        icon={<DashboardIcon />}
+                        preserveCase
+                        tone={roomsOpen ? "active" : "default"}
+                        onClick={() => setRoomsOpen((o) => !o)}
+                    >
                         FLOOR PLAN
                     </ActionButton>
                     <ActionButton icon={<CreditCardIcon />} onClick={() => navigate("/tabs")}>
@@ -125,67 +128,67 @@ export const TablesScreen = () => {
                     </Stack>
                 )}
 
-                {/* Room pill + a live count, which the editor does not need. */}
-                <Stack
-                    direction="row"
-                    sx={{
-                        position: "absolute",
-                        top: 12,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        alignItems: "center",
-                        gap: 2,
-                    }}
-                >
-                    <ButtonBase
-                        onClick={() => setRoomsOpen((o) => !o)}
-                        sx={{ bgcolor: "#fff", boxShadow: 2, borderRadius: 999, px: 2.5, py: 1, gap: 1.5 }}
-                    >
-                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>Floor plan</Typography>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{room}</Typography>
-                    </ButtonBase>
-                    <Box sx={{ bgcolor: "#fff", boxShadow: 2, borderRadius: 999, px: 2, py: 1 }}>
-                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
-                            {seated.length} of {tables.length} seated · {money(seated.reduce((s, t) => s + (t.party?.tab ?? 0), 0))} open
-                        </Typography>
-                    </Box>
-                </Stack>
-
+                {/*
+                 * Room sheet, from references/072926/7-tables/. A dark full-height
+                 * panel centred over the floor, opened by the FLOOR PLAN button in
+                 * the bottom bar — which is what that button does on the device.
+                 * The Table Chart editor is reached from the drawer instead.
+                 *
+                 * Eleven rooms at 60px a row do not fit any other shape, and only
+                 * three have a layout, so scrolling past the empty ones is the real
+                 * experience rather than something to trim away.
+                 */}
                 {roomsOpen && (
                     <ClickAwayListener onClickAway={() => setRoomsOpen(false)}>
                         <Box
+                            role="menu"
                             sx={{
-                                position: "absolute",
-                                top: 58,
-                                left: "50%",
+                                position: "fixed",
+                                // Anchored to the FLOOR PLAN button — second of the
+                                // four in the bottom bar — and opening upward from
+                                // it. A full-height centred panel left a slab of
+                                // dead space under the last room.
+                                bottom: 78,
+                                left: "37.5%",
                                 transform: "translateX(-50%)",
-                                bgcolor: "#fff",
-                                boxShadow: 6,
-                                borderRadius: 1,
-                                minWidth: 240,
-                                zIndex: 20,
+                                width: 366,
+                                maxHeight: "calc(100vh - 200px)",
+                                zIndex: 1300,
+                                bgcolor: appColors.sheetFill,
+                                boxShadow: 10,
+                                overflowY: "auto",
+                                py: 1,
                             }}
                         >
-                            {floorRoomOrder.map((r) => (
-                                <ButtonBase
-                                    key={r}
-                                    onClick={() => {
-                                        setFloorRoom(r);
-                                        setRoomsOpen(false);
-                                    }}
-                                    sx={{
-                                        display: "block",
-                                        width: "100%",
-                                        textAlign: "left",
-                                        px: 2.5,
-                                        py: 1.75,
-                                        fontSize: 15,
-                                        fontWeight: r === room ? 600 : 400,
-                                    }}
-                                >
-                                    {r}
-                                </ButtonBase>
-                            ))}
+                            {floorRoomOrder.map((r) => {
+                                const laid = (state.floorPlans[r] ?? []).length;
+                                return (
+                                    <ButtonBase
+                                        key={r}
+                                        role="menuitem"
+                                        aria-current={r === room || undefined}
+                                        onClick={() => {
+                                            setFloorRoom(r);
+                                            setRoomsOpen(false);
+                                        }}
+                                        sx={{
+                                            display: "block",
+                                            width: "100%",
+                                            py: 2.5,
+                                            px: 2,
+                                            fontSize: 15,
+                                            textAlign: "center",
+                                            color: "#fff",
+                                            // The current room is the only one weighted —
+                                            // the sheet has no checkmarks or radios.
+                                            fontWeight: r === room ? 600 : 400,
+                                            opacity: laid === 0 ? 0.6 : 1,
+                                        }}
+                                    >
+                                        {r}
+                                    </ButtonBase>
+                                );
+                            })}
                         </Box>
                     </ClickAwayListener>
                 )}

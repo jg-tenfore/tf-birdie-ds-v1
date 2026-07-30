@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
@@ -16,7 +16,15 @@ import { useNavigate } from "react-router-dom";
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
-import { money, useActions, useStore } from "../store";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FlashOffIcon from "@mui/icons-material/FlashOff";
+import GolfCourseIcon from "@mui/icons-material/GolfCourse";
+import GroupsIcon from "@mui/icons-material/Groups";
+import PersonIcon from "@mui/icons-material/Person";
+
+import { CustomerLookupResults } from "@/components/screens/operations/customer-lookup";
+import { searchCustomers, type Customer } from "@/data/crm";
+import { TODAY, useActions, useStore } from "../store";
 
 /**
  * Bay Sheet, from `references/072926/4-baysheet/`.
@@ -47,26 +55,33 @@ const fmt = (mins: number) => {
     return `${h}:${String(m).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`;
 };
 
-const DateBar = () => (
+const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+const DOW = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+const longDate = (iso: string) => {
+    const d = new Date(`${iso}T12:00:00`);
+    return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} ${d.getFullYear()}`;
+};
+
+/** Orange means you are not looking at today — the same rule as every sheet. */
+const DateBar = () => {
+    const { state } = useStore();
+    const { setCourtDate, shiftCourtDate } = useActions();
+    const isToday = state.courtDate === TODAY;
+
+    return (
     <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.canvas }}>
-        <Box
-            sx={{
-                bgcolor: appColors.green,
-                width: 190,
-                display: "grid",
-                placeItems: "center",
-                color: "#fff",
-                fontSize: 26,
-                lineHeight: 1,
-                py: 1.75,
-            }}
+        <ButtonBase
+            aria-label="Previous day"
+            onClick={() => shiftCourtDate(-1)}
+            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1, py: 1.75 }}
         >
             ‹
-        </Box>
+        </ButtonBase>
         <Box
             sx={{
                 flex: 3,
-                bgcolor: appColors.orange,
+                bgcolor: isToday ? appColors.slate : appColors.orange,
                 color: "#fff",
                 display: "grid",
                 placeItems: "center",
@@ -74,28 +89,25 @@ const DateBar = () => (
                 letterSpacing: "0.08em",
             }}
         >
-            SATURDAY, JULY 29 2026
+            {longDate(state.courtDate)}
         </Box>
-        <Box
-            sx={{
-                flex: 2,
-                bgcolor: appColors.slate,
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 14,
-                letterSpacing: "0.08em",
-            }}
+        <ButtonBase
+            disabled={isToday}
+            onClick={() => setCourtDate(TODAY)}
+            sx={{ flex: 2, bgcolor: isToday ? appColors.grey : appColors.slate, color: "#fff", fontSize: 14, letterSpacing: "0.08em" }}
         >
             GO TO TODAY
-        </Box>
-        <Box
-            sx={{ bgcolor: appColors.green, width: 190, display: "grid", placeItems: "center", color: "#fff", fontSize: 26, lineHeight: 1 }}
+        </ButtonBase>
+        <ButtonBase
+            aria-label="Next day"
+            onClick={() => shiftCourtDate(1)}
+            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1 }}
         >
             ›
-        </Box>
+        </ButtonBase>
     </Stack>
-);
+    );
+};
 
 /** A labelled stepper — the dialog's own control, not an MUI one. */
 const Stepper = ({
@@ -125,24 +137,41 @@ const Stepper = ({
     </Stack>
 );
 
-const Field = ({ placeholder }: { placeholder: string }) => (
+const Field = ({ placeholder, value, onChange }: { placeholder: string; value?: string; onChange?: (next: string) => void }) => (
     <Stack
         direction="row"
         sx={{ alignItems: "center", border: "1px solid", borderColor: "#B9BEC4", borderRadius: "3px", px: 2, height: 66, flex: 1 }}
     >
-        <InputBase placeholder={placeholder} sx={{ flex: 1, fontSize: 19 }} />
+        <InputBase
+            value={value ?? ""}
+            onChange={(e) => onChange?.(e.target.value)}
+            placeholder={placeholder}
+            sx={{ flex: 1, fontSize: 19 }}
+        />
         <SearchIcon sx={{ color: appColors.textPrimary }} />
     </Stack>
 );
 
 const NewReservationDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
     const { addBayBooking } = useActions();
+    const { state } = useStore();
+    const customers = state.customers;
     const [bayIndex, setBayIndex] = useState(0);
     const [party, setParty] = useState(1);
     const [start, setStart] = useState(11 * 60 + 30);
     const [duration, setDuration] = useState(90);
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
+    const [email, setEmail] = useState("");
+    const [picked, setPicked] = useState<Customer | null>(null);
+    const [emailQuery, setEmailQuery] = useState("");
+    const emailHits = useMemo(() => searchCustomers(emailQuery, 5, customers), [emailQuery, customers]);
+
+    // Either field searches — a member is as likely to be found by surname.
+    const lookup = useMemo(
+        () => searchCustomers(`${first} ${last}`.trim() || first || last, 5, customers),
+        [first, last, customers],
+    );
 
     return (
         <Dialog
@@ -196,49 +225,87 @@ const NewReservationDialog = ({ open, onClose }: { open: boolean; onClose: () =>
                     </Stack>
                 </Stack>
 
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                    <Stack
-                        direction="row"
-                        sx={{
-                            alignItems: "center",
-                            border: "1px solid",
-                            borderColor: "#B9BEC4",
-                            borderRadius: "3px",
-                            px: 2,
-                            height: 66,
-                            flex: 1,
-                        }}
-                    >
-                        <InputBase
-                            value={first}
-                            onChange={(e) => setFirst(e.target.value)}
-                            placeholder="First Name"
-                            sx={{ flex: 1, fontSize: 19 }}
-                        />
-                        <SearchIcon />
-                    </Stack>
-                    <Stack
-                        direction="row"
-                        sx={{
-                            alignItems: "center",
-                            border: "1px solid",
-                            borderColor: "#B9BEC4",
-                            borderRadius: "3px",
-                            px: 2,
-                            height: 66,
-                            flex: 1,
-                        }}
-                    >
-                        <InputBase
-                            value={last}
-                            onChange={(e) => setLast(e.target.value)}
-                            placeholder="Last Name"
-                            sx={{ flex: 1, fontSize: 19 }}
-                        />
-                        <SearchIcon />
-                    </Stack>
+                {/*
+                 * The layout is the device's — two name fields side by side with a
+                 * magnifier in each, then Email — but the magnifiers now do
+                 * something. Typing in either searches the customer database and
+                 * picking a result fills all three, so a bay booking names a real
+                 * record instead of whatever was typed. A booking against free text
+                 * can never be matched back to a customer.
+                 */}
+                <Stack direction="row" spacing={2} sx={{ mb: 2, position: "relative" }}>
+                    {(
+                        [
+                            ["First Name", first, setFirst],
+                            ["Last Name", last, setLast],
+                        ] as const
+                    ).map(([placeholder, value, set]) => (
+                        <Stack
+                            key={placeholder}
+                            direction="row"
+                            sx={{
+                                alignItems: "center",
+                                border: "1px solid",
+                                borderColor: "#B9BEC4",
+                                borderRadius: "3px",
+                                px: 2,
+                                height: 66,
+                                flex: 1,
+                            }}
+                        >
+                            <InputBase
+                                value={value}
+                                onChange={(e) => {
+                                    set(e.target.value);
+                                    setPicked(null);
+                                }}
+                                placeholder={placeholder}
+                                sx={{ flex: 1, fontSize: 19 }}
+                            />
+                            <SearchIcon />
+                        </Stack>
+                    ))}
+
+                    {!picked && lookup.length > 0 && (
+                        <Box sx={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20, mt: "2px" }}>
+                            <CustomerLookupResults
+                                results={lookup}
+                                query={`${first} ${last}`.trim()}
+                                onPick={(c) => {
+                                    setFirst(c.firstName);
+                                    setLast(c.lastName);
+                                    setEmail(c.email);
+                                    setPicked(c);
+                                }}
+                            />
+                        </Box>
+                    )}
                 </Stack>
-                <Field placeholder="Email" />
+                <Box sx={{ position: "relative" }}>
+                    <Field
+                        placeholder="Email"
+                        value={email}
+                        onChange={(v) => {
+                            setEmail(v);
+                            setPicked(null);
+                            setEmailQuery(v);
+                        }}
+                    />
+                    {!picked && emailQuery.trim().length >= 2 && emailHits.length > 0 && (
+                        <Box sx={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20, mt: "2px" }}>
+                            <CustomerLookupResults
+                                results={emailHits}
+                                onPick={(c) => {
+                                    setFirst(c.firstName);
+                                    setLast(c.lastName);
+                                    setEmail(c.email);
+                                    setEmailQuery("");
+                                    setPicked(c);
+                                }}
+                            />
+                        </Box>
+                    )}
+                </Box>
 
                 <Box sx={{ flex: 1, minHeight: 40 }} />
 
@@ -360,22 +427,53 @@ export const BaySheetScreen = () => {
                                                 height: b.duration * PPM,
                                                 left: 3,
                                                 right: 3,
-                                                bgcolor: appColors.navy,
+                                                // Orange, not navy — a bay booking is
+                                                // its own colour on this sheet, and
+                                                // the block's height is its duration.
+                                                bgcolor: appColors.orange,
                                                 color: "#fff",
                                                 flexDirection: "column",
-                                                alignItems: "flex-start",
+                                                alignItems: "stretch",
                                                 justifyContent: "flex-start",
                                                 px: 1.25,
                                                 py: 0.75,
                                                 textAlign: "left",
+                                                borderRadius: "3px",
                                             }}
                                         >
-                                            <Typography sx={{ fontSize: 13, fontWeight: 500 }} noWrap>
-                                                ({b.party}) {b.name}
-                                            </Typography>
-                                            <Typography sx={{ fontSize: 12, opacity: 0.8 }}>
-                                                {fmt(b.start)} · {b.duration}m · {money(b.price)}
-                                            </Typography>
+                                            <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                                                <PersonIcon sx={{ fontSize: 17 }} />
+                                                <Typography sx={{ flex: 1, fontSize: 14, fontWeight: 600 }} noWrap>
+                                                    {b.name}
+                                                </Typography>
+                                                <GroupsIcon sx={{ fontSize: 17 }} />
+                                                <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{b.party}</Typography>
+                                            </Stack>
+
+                                            <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                                                <AccessTimeIcon sx={{ fontSize: 16 }} />
+                                                <Typography sx={{ fontSize: 13 }}>{fmt(b.start)}</Typography>
+                                            </Stack>
+
+                                            <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                                                <GolfCourseIcon sx={{ fontSize: 16 }} />
+                                                <Typography sx={{ fontSize: 13 }} noWrap>
+                                                    {b.fee}
+                                                </Typography>
+                                            </Stack>
+
+                                            {/*
+                                             * UNPAID is bold italic with a struck-out
+                                             * bolt — the block says what it owes but
+                                             * never what it costs, so the amount is
+                                             * only knowable by opening it.
+                                             */}
+                                            <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                                                <FlashOffIcon sx={{ fontSize: 16 }} />
+                                                <Typography sx={{ fontSize: 13, fontWeight: 700, fontStyle: "italic" }}>
+                                                    {b.paid ? "PAID" : "UNPAID"}
+                                                </Typography>
+                                            </Stack>
                                         </ButtonBase>
                                     ))}
                             </Box>
