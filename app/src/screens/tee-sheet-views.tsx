@@ -119,13 +119,17 @@ export const SheetBody = ({
     times,
     course,
     slotMenu,
+    menuFor,
     onOpenTime,
+    onOpenMenu,
 }: {
     view: SheetView;
     times: TeeTimeBooking[];
     course: string;
     slotMenu?: React.ReactNode;
+    menuFor?: string;
     onOpenTime: (time: string) => void;
+    onOpenMenu?: (time: string) => void;
 }) => {
     if (view === "grid") return <TeeSheetGridView cards={toGridCards(times)} onOpenTime={onOpenTime} />;
     if (view === "multi") return <TeeSheetMultiView columns={toMultiColumns(times, course)} />;
@@ -133,5 +137,15 @@ export const SheetBody = ({
         const { front, back } = toBackNine(times);
         return <TeeSheetBackNineView front={front} back={back} />;
     }
-    return <TeeSheetListView rows={toListRows(times)} slotMenu={slotMenu} onOpenTime={onOpenTime} />;
+    // The gear menu only exists in List view; the other three have no per-time
+    // affordance on the device either.
+    return (
+        <TeeSheetListView
+            rows={toListRows(times)}
+            slotMenu={slotMenu}
+            menuFor={menuFor}
+            onOpenTime={onOpenTime}
+            onOpenMenu={onOpenMenu}
+        />
+    );
 };

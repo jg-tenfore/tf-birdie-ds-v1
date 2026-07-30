@@ -18,6 +18,7 @@ import { ActionButton } from "@/components/app-chrome/app-shell";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
 import { money, useActions, useStore, type SheetView, type TeeTimeBooking } from "../store";
+import { SlotSettingsMenu } from "@/components/screens/tee-sheet/tee-sheet-chrome";
 import { SheetBody } from "./tee-sheet-views";
 
 /**
@@ -263,10 +264,37 @@ const Counts = ({ times }: { times: TeeTimeBooking[] }) => {
 /** One of the four playing positions. */
 export const TeeSheetScreen = () => {
     const { state, teeTimes, lines, total } = useStore();
-    const { setCourse } = useActions();
+    const { setCourse, squeezeTime, cloneTime, clearTime, movePlayers } = useActions();
     const navigate = useNavigate();
     const [view, setView] = useState<SheetView>("list");
     const [courseOpen, setCourseOpen] = useState(false);
+    const [menuFor, setMenuFor] = useState<string | null>(null);
+    const [moveFrom, setMoveFrom] = useState<string | null>(null);
+
+    /**
+     * The gear menu's six commands.
+     *
+     * Move Player(s) is the only one that needs a second step, so it opens a
+     * target list rather than acting immediately — moving a group to an unnamed
+     * "next" time is how a foursome ends up on the wrong tee.
+     */
+    const runSlotAction = (item: string, time: string) => {
+        setMenuFor(null);
+        switch (item) {
+            case "Squeeze Before":
+                return squeezeTime(time, "before");
+            case "Squeeze After":
+                return squeezeTime(time, "after");
+            case "Clone Before":
+                return cloneTime(time, "before");
+            case "Clone After":
+                return cloneTime(time, "after");
+            case "Clear Time":
+                return clearTime(time);
+            case "Move Player(s)":
+                return setMoveFrom(time);
+        }
+    };
     const courseMenu = courseOpen ? (
         <ClickAwayListener onClickAway={() => setCourseOpen(false)}>
             {/* Opens upward from the bottom bar, as the device does. */}
@@ -295,7 +323,58 @@ export const TeeSheetScreen = () => {
             showCart
             subBar={<SubBar />}
             actionBarBg={appColors.sheetCanvas}
-            overlay={courseMenu}
+            overlay={
+                <>
+                    {courseMenu}
+                    {moveFrom && (
+                        <ClickAwayListener onClickAway={() => setMoveFrom(null)}>
+                            <Box
+                                sx={{
+                                    position: "fixed",
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    top: 140,
+                                    bottom: 100,
+                                    width: 420,
+                                    zIndex: 1300,
+                                    bgcolor: appColors.surface,
+                                    boxShadow: 10,
+                                    overflowY: "auto",
+                                }}
+                            >
+                                <Typography sx={{ fontSize: 20, px: 2.5, py: 2 }}>Move {moveFrom} to…</Typography>
+                                {teeTimes
+                                    .filter((t) => t.time !== moveFrom && !t.blocked && t.positions.some((p) => !p))
+                                    .map((t) => {
+                                        const room = t.positions.filter((p) => !p).length;
+                                        return (
+                                            <ButtonBase
+                                                key={t.time}
+                                                onClick={() => {
+                                                    movePlayers(moveFrom, t.time);
+                                                    setMoveFrom(null);
+                                                }}
+                                                sx={{
+                                                    display: "flex",
+                                                    width: "100%",
+                                                    justifyContent: "space-between",
+                                                    px: 2.5,
+                                                    py: 1.75,
+                                                    borderTop: `1px solid ${appColors.divider}`,
+                                                }}
+                                            >
+                                                <Typography sx={{ fontSize: 17 }}>{t.time}</Typography>
+                                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
+                                                    {room} open
+                                                </Typography>
+                                            </ButtonBase>
+                                        );
+                                    })}
+                            </Box>
+                        </ClickAwayListener>
+                    )}
+                </>
+            }
             actionBar={
                 <>
                     <ActionButton onClick={() => navigate("/proshop")}>Pro Shop</ActionButton>
@@ -346,7 +425,10 @@ export const TeeSheetScreen = () => {
                     view={view}
                     times={teeTimes}
                     course={state.course}
+                    menuFor={menuFor ?? ""}
+                    slotMenu={menuFor ? <SlotSettingsMenu onSelect={(item) => runSlotAction(item, menuFor)} /> : undefined}
                     onOpenTime={(time) => navigate(`/teesheet/${encodeURIComponent(time)}`)}
+                    onOpenMenu={(time) => setMenuFor((open) => (open === time ? null : time))}
                 />
             </Box>
         </Shell>
