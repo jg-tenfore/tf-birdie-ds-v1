@@ -90,9 +90,19 @@ await step("quick-cash keys fill the cash amount", async () => {
     await page.waitForSelector('input[value="$20.00"]', { timeout: 4000 });
 });
 
-await step("PAY closes the ticket", async () => {
+await step("PAY closes the ticket and prints the receipt", async () => {
     await page.getByRole("button", { name: "Pay", exact: true }).click();
-    await page.waitForSelector("text=Approved", { timeout: 6000 });
+    await page.waitForSelector("text=Order Complete", { timeout: 6000 });
+    // The receipt lists every line the device prints, including the zeroes.
+    for (const t of ["Order Items", "Payments", "SubTotal", "Taxes and Fees", "Credit Surcharge", "Grand Total"])
+        await page.waitForSelector(`text=${t}`, { timeout: 4000 });
+    // Cash carries the tendered figure, so Change Due is real.
+    const body = await page.locator("body").innerText();
+    if (!/Change Due \$/.test(body)) throw new Error("no change line");
+    await page.getByText("PRINT RECEIPT", { exact: true }).click();
+    await page.waitForSelector("text=Print job queued up!", { timeout: 4000 });
+    await page.getByText("PRO SHOP", { exact: true }).click();
+    await page.waitForSelector("text=Scan Mode", { timeout: 6000 });
 });
 
 await step("Order Lookup searches and finds the closed sale", async () => {

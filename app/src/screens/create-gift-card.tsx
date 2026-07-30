@@ -132,7 +132,7 @@ export const CreateGiftCardScreen = () => {
     const value = Number(amount) || 0;
 
     const commit = () => {
-        addItem({ id: `giftcard-${Date.now().toString(36)}`, name: "Gift Card", price: value }, "Pro Shop");
+        addItem({ id: `giftcard-${Date.now().toString(36)}`, name: "Gift Card", price: value, taxable: false }, "Pro Shop");
         navigate("/proshop");
     };
 

@@ -33,6 +33,8 @@ export interface Line {
     seat?: number;
     image?: string;
     note?: string;
+    /** Gift cards are stored value, not a sale — tax lands when they are spent. */
+    taxable?: boolean;
 }
 
 export interface Punch {
@@ -120,7 +122,19 @@ interface State {
     /** Rolling counter so new tickets get plausible sequential numbers. */
     nextNumber: number;
     /** Last completed sale, so the approved screen has something to show. */
-    lastSale: { ticket: Ticket; total: number; tender: string } | null;
+    /** Everything the Order Complete receipt prints. */
+    lastSale: {
+        ticket: Ticket;
+        subtotal: number;
+        tax: number;
+        total: number;
+        tender: string;
+        /** Cash handed over; equals the total for every other tender. */
+        tendered: number;
+        change: number;
+        /** The receipt's own number, distinct from the ticket's. */
+        orderNumber: string;
+    } | null;
     bayBookings: BayBooking[];
     /**
      * Court and bay reservations, keyed `date|resource|time`.
@@ -156,8 +170,16 @@ export const TAX_RATE = 0.06;
 
 export const lineTotal = (l: Line) => l.qty * l.unitPrice;
 export const subtotalOf = (lines: Line[]) => lines.reduce((s, l) => s + lineTotal(l), 0);
-export const taxOf = (lines: Line[]) => subtotalOf(lines) * TAX_RATE;
-export const totalOf = (lines: Line[]) => subtotalOf(lines) * (1 + TAX_RATE);
+
+/**
+ * Tax is charged on the taxable lines only.
+ *
+ * A gift card is not a sale, it is stored value — the tax lands when the card is
+ * spent. The reference receipt makes this visible: a $20 gift card prints
+ * `Taxes and Fees $0.00`, which a flat rate on the subtotal cannot reproduce.
+ */
+export const taxOf = (lines: Line[]) => lines.filter((l) => l.taxable !== false).reduce((s, l) => s + lineTotal(l), 0) * TAX_RATE;
+export const totalOf = (lines: Line[]) => subtotalOf(lines) + taxOf(lines);
 export const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
 /* ------------------------------------------------------------------ *
@@ -241,14 +263,14 @@ const initial: State = {
 type Action =
     | { type: "signIn"; operator: Operator }
     | { type: "signOut" }
-    | { type: "addItem"; item: { id: string; name: string; price: number; image?: string }; seat?: number; source: Ticket["source"] }
+    | { type: "addItem"; item: { id: string; name: string; price: number; image?: string; taxable?: boolean }; seat?: number; source: Ticket["source"] }
     | { type: "changeQty"; lineId: string; delta: number; seat?: number }
     | { type: "removeLine"; lineId: string; seat?: number }
     | { type: "clearCart" }
     | { type: "holdTicket" }
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
-    | { type: "pay"; tender: NonNullable<Ticket["tender"]> }
+    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number }
     | { type: "setSheetDate"; date: string }
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
@@ -364,6 +386,7 @@ function reducer(state: State, action: Action): State {
                               qty: 1,
                               unitPrice: action.item.price,
                               image: action.item.image,
+                              taxable: action.item.taxable,
                               seat: action.seat,
                           },
                       ];
@@ -441,7 +464,16 @@ function reducer(state: State, action: Action): State {
                 ...state,
                 tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, status: "paid", tender: action.tender } : t)),
                 activeTicketId: null,
-                lastSale: { ticket: { ...current, status: "paid", tender: action.tender }, total, tender: action.tender },
+                lastSale: {
+                    ticket: { ...current, status: "paid", tender: action.tender },
+                    subtotal: subtotalOf(current.lines),
+                    tax: taxOf(current.lines),
+                    total,
+                    tender: action.tender,
+                    tendered: action.tendered ?? total,
+                    change: Math.max(0, (action.tendered ?? total) - total),
+                    orderNumber: String(5593000 + state.tickets.length * 7 + 62),
+                },
                 toast: null,
             };
         }
@@ -835,7 +867,7 @@ export function useActions() {
             signIn: (operator: Operator) => dispatch({ type: "signIn", operator }),
             signOut: () => dispatch({ type: "signOut" }),
             addItem: (
-                item: { id: string; name: string; price: number; image?: string },
+                item: { id: string; name: string; price: number; image?: string; taxable?: boolean },
                 source: Ticket["source"] = "Pro Shop",
                 seat?: number,
             ) => dispatch({ type: "addItem", item, source, seat }),
@@ -845,7 +877,7 @@ export function useActions() {
             holdTicket: () => dispatch({ type: "holdTicket" }),
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
-            pay: (tender: NonNullable<Ticket["tender"]>) => dispatch({ type: "pay", tender }),
+            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number) => dispatch({ type: "pay", tender, tendered }),
             setSheetDate: (date: string) => dispatch({ type: "setSheetDate", date }),
             shiftSheetDate: (days: number) => dispatch({ type: "shiftSheetDate", days }),
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),
