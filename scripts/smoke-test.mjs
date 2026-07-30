@@ -143,7 +143,10 @@ await step("court sheet renders six resource columns", async () => {
 await step("bay sheet renders the time-axis calendar", async () => {
     await page.goto(`${BASE}#/baysheet`, { waitUntil: "networkidle" });
     await page.waitForSelector("text=ZOOM OUT", { timeout: 5000 });
-    await page.waitForSelector("text=/\\(2\\) Sutton, K\\./", { timeout: 5000 });
+    // Blocks print the person, the party count, the fee and the paid state on
+    // separate lines now — the old "(2) Name" label is gone.
+    await page.waitForSelector("text=Sutton, K.", { timeout: 5000 });
+    await page.waitForSelector("text=UNPAID", { timeout: 5000 });
 });
 
 await step("quick order drills a category into a product list", async () => {
