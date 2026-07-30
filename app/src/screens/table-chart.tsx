@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Dialog from "@mui/material/Dialog";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
@@ -16,8 +16,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutlined";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
-import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import RedoIcon from "@mui/icons-material/Redo";
 import RemoveIcon from "@mui/icons-material/Remove";
 import UndoIcon from "@mui/icons-material/Undo";
@@ -732,26 +730,6 @@ export const TableChartScreen = () => {
                         )}
                     </Box>
 
-                    {/* Floating room pill, as in the artifact. */}
-                    <ButtonBase
-                        onClick={() => setRoomsOpen(true)}
-                        sx={{
-                            position: "absolute",
-                            top: 12,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            bgcolor: "#fff",
-                            boxShadow: 2,
-                            borderRadius: 999,
-                            px: 2.5,
-                            py: 1,
-                            gap: 1.5,
-                        }}
-                    >
-                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>Floor plan</Typography>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{room}</Typography>
-                    </ButtonBase>
-
                     {/* Zoom pill. */}
                     <Stack
                         direction="row"
@@ -778,47 +756,62 @@ export const TableChartScreen = () => {
                 </Box>
             </Stack>
 
-            {/* Room picker. Each room's layout saves on its own. */}
-            <Dialog open={roomsOpen} onClose={() => setRoomsOpen(false)} slotProps={{ paper: { sx: { width: 480, borderRadius: 1 } } }}>
-                <Typography sx={{ fontSize: 22, px: 3, pt: 3, pb: 2 }}>Floor plans</Typography>
-                {floorRoomOrder.map((r) => {
-                    const count = (state.floorPlans[r] ?? []).length;
-                    return (
-                        <ButtonBase
-                            key={r}
-                            onClick={() => {
-                                setFloorRoom(r);
-                                setRoomsOpen(false);
-                            }}
-                            sx={{
-                                display: "flex",
-                                width: "100%",
-                                px: 3,
-                                py: 2,
-                                gap: 2,
-                                justifyContent: "flex-start",
-                                bgcolor: r === room ? "#EFF6FF" : "transparent",
-                            }}
-                        >
-                            <DashboardIcon sx={{ color: "#2F6BB5" }} />
-                            <Stack sx={{ alignItems: "flex-start" }}>
-                                <Typography sx={{ fontSize: 16 }}>{r}</Typography>
-                                {count === 0 && (
-                                    <Typography sx={{ fontSize: 12, color: appColors.textSecondary }}>Empty — set it up</Typography>
-                                )}
-                            </Stack>
-                            <Box sx={{ ml: "auto", color: r === room ? "#2F6BB5" : appColors.textSecondary }}>
-                                {r === room ? <RadioButtonCheckedIcon /> : <RadioButtonUncheckedIcon />}
-                            </Box>
-                        </ButtonBase>
-                    );
-                })}
-                <Stack direction="row" sx={{ justifyContent: "flex-end", p: 2 }}>
-                    <ButtonBase onClick={() => navigate("/tables")} sx={{ px: 2, py: 1, fontSize: 14, color: appColors.textSecondary }}>
-                        VIEW LIVE FLOOR
-                    </ButtonBase>
-                </Stack>
-            </Dialog>
+            {/*
+             * Room picker, from references/072926/7-tables/. A dark full-height
+             * sheet centred over the canvas, not a Material dialog — eleven rooms
+             * at 60px a row do not fit any other way, and only three of them have
+             * a layout, so scrolling past the empty ones is the real experience.
+             */}
+            {roomsOpen && (
+                <ClickAwayListener onClickAway={() => setRoomsOpen(false)}>
+                    <Box
+                        role="menu"
+                        sx={{
+                            position: "fixed",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            top: 120,
+                            bottom: 96,
+                            width: 366,
+                            zIndex: 1300,
+                            bgcolor: appColors.sheetFill,
+                            boxShadow: 10,
+                            overflowY: "auto",
+                            py: 1,
+                        }}
+                    >
+                        {floorRoomOrder.map((r) => {
+                            const count = (state.floorPlans[r] ?? []).length;
+                            return (
+                                <ButtonBase
+                                    key={r}
+                                    role="menuitem"
+                                    aria-current={r === room || undefined}
+                                    onClick={() => {
+                                        setFloorRoom(r);
+                                        setRoomsOpen(false);
+                                    }}
+                                    sx={{
+                                        display: "block",
+                                        width: "100%",
+                                        py: 2.5,
+                                        px: 2,
+                                        fontSize: 15,
+                                        textAlign: "center",
+                                        color: "#fff",
+                                        // The current room is the only one weighted —
+                                        // the sheet has no checkmarks or radios.
+                                        fontWeight: r === room ? 600 : 400,
+                                        opacity: count === 0 ? 0.6 : 1,
+                                    }}
+                                >
+                                    {r}
+                                </ButtonBase>
+                            );
+                        })}
+                    </Box>
+                </ClickAwayListener>
+            )}
         </Shell>
     );
 };

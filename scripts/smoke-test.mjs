@@ -156,6 +156,62 @@ const bg = (locator) => locator.evaluate((el) => getComputedStyle(el).background
 const rgb = (c) => c.match(/\d+/g).map(Number);
 const dateBar = () => page.getByRole("button", { name: /2026$/ }).first();
 
+const openFirstBooking = async () => {
+    await page.goto(`${BASE}#/teesheet`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(500);
+    await page.locator("text=/^\\(\\d\\) /").first().click();
+    await page.waitForTimeout(600);
+};
+
+await step("tee time detail prints the reservation's whole commercial line", async () => {
+    await openFirstBooking();
+    await page.waitForSelector("text=/ID:\\d{8}/", { timeout: 6000 });
+    await page.waitForSelector("text=/holes/", { timeout: 3000 });
+});
+
+await step("History opens the reservation audit log", async () => {
+    await page.getByRole("button", { name: /History/ }).first().click();
+    await page.waitForSelector("text=/Reservation History \\d+/", { timeout: 5000 });
+    await page.getByRole("button", { name: "OK" }).click();
+    await page.waitForTimeout(300);
+});
+
+await step("notes dialogs save against the reservation and the time", async () => {
+    await page.getByRole("button", { name: "CUSTOMER NOTES" }).first().click();
+    await page.waitForSelector("text=Customer Notes", { timeout: 4000 });
+    await page.locator("textarea").first().fill("Prefers the back nine");
+    await page.getByRole("button", { name: "Save" }).click();
+    await page.waitForTimeout(400);
+
+    await page.getByRole("button", { name: "Tee time notes" }).click();
+    await page.waitForSelector("text=Tee Time Notes", { timeout: 4000 });
+    await page.locator("textarea").first().fill("Shotgun start");
+    await page.getByRole("button", { name: "Save" }).click();
+    await page.waitForTimeout(400);
+});
+
+await step("Edit rewrites the reservation's fees", async () => {
+    await page.getByRole("button", { name: /^Edit/ }).first().click();
+    await page.waitForSelector("text=Transportation Fee Information", { timeout: 6000 });
+    await page.getByRole("button", { name: "Dunes Rack Prime" }).click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    // The fee name the edit screen wrote is what the detail line now prints.
+    await page.waitForSelector("text=/Dunes Rack Prime : \\$/", { timeout: 5000 });
+});
+
+await step("cart signout will not complete without a cart number and the waiver", async () => {
+    await page.getByRole("button", { name: /Cart signout/ }).first().click();
+    await page.waitForSelector("text=Sign Here", { timeout: 5000 });
+    const btn = page.getByRole("button", { name: /Sign out cart/ });
+    const locked = await btn.evaluate((el) => getComputedStyle(el).backgroundColor);
+    await page.locator('input[placeholder="Cart Number"]').fill("42");
+    await page.locator('input[type="checkbox"]').first().check();
+    await page.waitForTimeout(250);
+    if ((await btn.evaluate((el) => getComputedStyle(el).backgroundColor)) === locked) throw new Error("gate never opened");
+    await btn.click();
+    await page.waitForSelector("text=/ID:\\d{8}/", { timeout: 5000 });
+});
+
 await step("tee sheet date bar is orange away from today", async () => {
     await page.goto(`${BASE}#/teesheet`, { waitUntil: "networkidle" });
     await page.waitForSelector("text=TUESDAY, MAY 12 2026", { timeout: 5000 });
@@ -210,6 +266,31 @@ await step("the 19th Hole menu carries real dishes, prices and descriptions", as
     await page.waitForTimeout(900);
     const broken = await page.evaluate(() => [...document.images].filter((i) => i.complete && !i.naturalWidth).length);
     if (broken) throw new Error(`${broken} dish photos failed to load`);
+});
+
+await step("Table Chart's room sheet lists every configured room", async () => {
+    await page.goto(`${BASE}#/tablechart`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "FLOOR PLAN" }).click();
+    for (const r of ["smallroom", "bigroom", "Private Hall", "New Table Designer Room"])
+        await page.waitForSelector(`text=${r}`, { timeout: 4000 });
+});
+
+await step("Customer Search finds a record and opens it", async () => {
+    await page.goto(`${BASE}#/customersearch`, { waitUntil: "networkidle" });
+    await page.fill('input[placeholder^="Search by customer name"]', "west");
+    await page.waitForTimeout(400);
+    await page.locator("text=/@(example\\.com|tenfore\\.golf)/").first().click();
+    for (const s of ["Memberships", "Customer Types", "Gift Cards", "Tee Time History", "General Info"])
+        await page.waitForSelector(`text=${s}`, { timeout: 5000 });
+});
+
+await step("tapping a table opens its check and DONE returns to the floor", async () => {
+    await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=seated", { timeout: 6000 });
+    await page.locator('[data-table="9"]').first().click();
+    await page.waitForSelector("text=/Table Detached \\d+ \\| Order ID/", { timeout: 6000 });
+    await page.getByRole("button", { name: "Done" }).click();
+    await page.waitForSelector("text=seated", { timeout: 5000 });
 });
 
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");

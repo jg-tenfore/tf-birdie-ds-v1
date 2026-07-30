@@ -346,8 +346,27 @@ const stool = (i: number, num: string, status: TableStatus, party?: FloorElement
     party,
 });
 
-/** The three rooms the artifact seeds, in its own order. */
-export const floorRoomOrder = ["bigroom", "Patio", "Lounge"] as const;
+/**
+ * Every room the device has configured, in its own order.
+ *
+ * Only three carry a layout. The other eight are real rooms with nothing laid
+ * out in them, which is worth keeping rather than trimming the list: an operator
+ * scrolling eleven rooms to find the two that are set up is the actual
+ * experience, and the empty-room state is one the editor has to handle.
+ */
+export const floorRoomOrder = [
+    "[Detached Tables]",
+    "smallroom",
+    "bigroom",
+    "Private Hall",
+    "banquet",
+    "Lounge",
+    "Trivia Pub/Bar",
+    "Astor Creek Test Room",
+    "Big Bar",
+    "Open Tabs",
+    "New Table Designer Room",
+] as const;
 
 export const seededFloorPlans: Record<string, FloorElement[]> = {
     bigroom: [
@@ -485,8 +504,8 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
         },
         { id: "t11", kind: "table", shape: "rectangle", x: 520, y: 550, w: 180, h: 100, num: "11", seats: 8, status: "blocked" },
     ],
-    Patio: [
-        { id: "p-label", kind: "label", x: 380, y: 90, w: 80, h: 24, text: "Patio" },
+    "Private Hall": [
+        { id: "p-label", kind: "label", x: 380, y: 90, w: 110, h: 24, text: "Private Hall" },
         { id: "p1", kind: "table", shape: "circle", x: 180, y: 180, w: 96, h: 96, num: "1", seats: 2, lockAR: true, status: "empty" },
         { id: "p2", kind: "table", shape: "circle", x: 320, y: 180, w: 96, h: 96, num: "2", seats: 2, lockAR: true, status: "empty" },
         { id: "p3", kind: "table", shape: "circle", x: 460, y: 180, w: 110, h: 110, num: "3", seats: 4, lockAR: true, status: "empty" },
@@ -498,4 +517,12 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
     ],
     // Deliberately blank — the empty room is a state the editor has to handle.
     Lounge: [],
+    "[Detached Tables]": [],
+    smallroom: [],
+    banquet: [],
+    "Trivia Pub/Bar": [],
+    "Astor Creek Test Room": [],
+    "Big Bar": [],
+    "Open Tabs": [],
+    "New Table Designer Room": [],
 };

@@ -9,18 +9,15 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import Dialog from "@mui/material/Dialog";
-import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import BoltIcon from "@mui/icons-material/Bolt";
-import CheckIcon from "@mui/icons-material/Check";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
-import { money, useActions, useStore, type Position, type SheetView, type TeeTimeBooking } from "../store";
+import { money, useActions, useStore, type SheetView, type TeeTimeBooking } from "../store";
 import { SheetBody } from "./tee-sheet-views";
 
 /**
@@ -351,150 +348,6 @@ export const TeeSheetScreen = () => {
                     course={state.course}
                     onOpenTime={(time) => navigate(`/teesheet/${encodeURIComponent(time)}`)}
                 />
-            </Box>
-        </Shell>
-    );
-};
-
-/* ------------------------------------------------------------------ *
- * Tee time detail — a LIGHT screen, not dark.
- * ------------------------------------------------------------------ */
-
-const SummaryBand = () => (
-    <Stack direction="row" sx={{ bgcolor: appColors.slate, color: "#fff", px: 3, py: 2, alignItems: "center", gap: 4 }}>
-        {["Customer", "Current Membership(s)", "Rounds", "Rewards Balance:"].map((label) => (
-            <Stack key={label} sx={{ flex: 1, alignItems: "center" }}>
-                <Typography sx={{ fontSize: 13 }}>{label}</Typography>
-                <Typography sx={{ fontSize: 13, color: "rgba(255,255,255,.75)" }}>--------</Typography>
-            </Stack>
-        ))}
-        <Box sx={{ bgcolor: "#8f9296", color: "#fff", px: 3, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
-            <CheckIcon sx={{ fontSize: 20 }} />
-            <Typography sx={{ fontSize: 14, letterSpacing: "0.06em" }}>RESERVE</Typography>
-        </Box>
-    </Stack>
-);
-
-const PlayerAction = ({ label, tone = "dark", onClick }: { label: string; tone?: "dark" | "red" | "green"; onClick?: () => void }) => (
-    <ButtonBase
-        onClick={onClick}
-        sx={{
-            flex: 1,
-            minHeight: 52,
-            px: 1,
-            fontSize: 14,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "#fff",
-            bgcolor: tone === "red" ? "#E53935" : tone === "green" ? appColors.green : appColors.slate,
-            "&:hover": { filter: "brightness(1.1)" },
-        }}
-    >
-        {label}
-    </ButtonBase>
-);
-
-export const TeeTimeDetailScreen = () => {
-    const { time = "" } = useParams();
-    const decoded = decodeURIComponent(time);
-    const { teeTimes } = useStore();
-    const { chargeTeeTime } = useActions();
-    const navigate = useNavigate();
-
-    const slot = teeTimes.find((t) => t.time === decoded);
-    const booked = slot?.positions.map((p, i) => ({ p, i })).filter((x): x is { p: Position; i: number } => Boolean(x.p)) ?? [];
-    const total = booked.reduce((s, { p }) => s + p.price, 0);
-
-    return (
-        <Shell
-            title={`The Dunes of Delgado PROD - North Course - ${decoded} - FRONT`}
-            active="teesheet"
-            showCart
-            showLogOut={false}
-            accountLabel=""
-            actionBar={
-                <>
-                    <ActionButton onClick={() => navigate("/teesheet")}>Tee Sheet</ActionButton>
-                    <ActionButton onClick={() => navigate("/proshop")}>Pro Shop</ActionButton>
-                    <ActionButton
-                        tone={booked.length ? "default" : "disabled"}
-                        onClick={() => {
-                            if (!booked.length) return;
-                            chargeTeeTime(decoded);
-                            navigate("/proshop");
-                        }}
-                    >
-                        Add all to cart
-                    </ActionButton>
-                    <ActionButton>Tee time notes</ActionButton>
-                    <ActionButton tone={booked.length ? "primary" : "disabled"} onClick={() => booked.length && navigate("/pay")}>
-                        {booked.length ? `Pay ${money(total)}` : "Pay"}
-                    </ActionButton>
-                </>
-            }
-        >
-            <Box sx={{ bgcolor: "#fff", minHeight: "100%" }}>
-                <Stack direction="row" sx={{ bgcolor: "#E3E3E3", px: 3, py: 2.5, gap: 4 }}>
-                    <InputBase placeholder="Search by customer name, email, or phone…" sx={{ flex: 2, fontSize: 20 }} />
-                    <InputBase placeholder="Member Number…" sx={{ flex: 1, fontSize: 20 }} />
-                </Stack>
-
-                <SummaryBand />
-
-                <Stack spacing={1.5} sx={{ p: 1.5 }}>
-                    {booked.length === 0 && (
-                        <Typography sx={{ p: 3, fontSize: 18, color: appColors.textSecondary }}>
-                            This time is open. Search for a customer above to reserve it.
-                        </Typography>
-                    )}
-
-                    {booked.map(({ p, i }) => (
-                        <Box key={i} sx={{ bgcolor: appColors.detailCard, p: 2 }}>
-                            <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-                                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: 30 }}>{p.name}</Typography>
-                                    {p.balance && <Typography sx={{ fontSize: 22 }}>$</Typography>}
-                                    {p.raincheck && <BoltIcon sx={{ fontSize: 22 }} />}
-                                </Stack>
-                                <Typography sx={{ fontSize: 26 }}>{money(p.price)}</Typography>
-                            </Stack>
-
-                            <Typography sx={{ fontSize: 13, color: "#5a6068", mb: 1.5 }}>
-                                {p.holes} holes &nbsp; {p.rate} : {money(p.price)} &nbsp; ID:1039014{i} &nbsp;{" "}
-                                {p.checkedIn ? "Checked in" : "Not checked in"}
-                            </Typography>
-
-                            <Stack direction="row" spacing={1}>
-                                {p.paid ? (
-                                    <>
-                                        <PlayerAction label="Raincheck" tone="red" />
-                                        <PlayerAction label="History" />
-                                        <PlayerAction label="Edit" />
-                                        <PlayerAction label="Print starter" />
-                                        <PlayerAction label="Print receipt" />
-                                        <PlayerAction label="Cart key" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlayerAction label="Cancel" tone="red" />
-                                        <PlayerAction label="No show" tone="red" />
-                                        <PlayerAction label="History" />
-                                        <PlayerAction label="Edit" />
-                                        <PlayerAction label="Cart signout" />
-                                        <PlayerAction
-                                            label="Add to cart"
-                                            tone="green"
-                                            onClick={() => {
-                                                chargeTeeTime(decoded, i);
-                                                navigate("/proshop");
-                                            }}
-                                        />
-                                    </>
-                                )}
-                            </Stack>
-                        </Box>
-                    ))}
-                </Stack>
             </Box>
         </Shell>
     );

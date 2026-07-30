@@ -16,7 +16,9 @@ import { TablesScreen } from "./screens/tables";
 import { TabDetailScreen, TabsScreen } from "./screens/tabs";
 import { BaySheetScreen } from "./screens/bay-sheet";
 import { CourtSheetScreen } from "./screens/court-sheet";
-import { TeeSheetScreen, TeeTimeDetailScreen } from "./screens/tee-sheet";
+import { TeeSheetScreen } from "./screens/tee-sheet";
+import { TeeTimeDetailScreen } from "./screens/tee-time-detail";
+import { TeeTimeCartSignOutScreen, TeeTimeEditScreen } from "./screens/tee-time-edit";
 import { SignInScreen } from "./screens/sign-in";
 import { CustomerRecordScreen, CustomerSearchScreen } from "./screens/customer-search";
 import { StubScreen } from "./screens/misc";
@@ -41,6 +43,8 @@ const routes: [string, React.ReactNode][] = [
     ["/pay", <PaymentScreen />],
     ["/teesheet", <TeeSheetScreen />],
     ["/teesheet/:time", <TeeTimeDetailScreen />],
+    ["/teesheet/:time/:index/edit", <TeeTimeEditScreen />],
+    ["/teesheet/:time/:index/cartsignout", <TeeTimeCartSignOutScreen />],
     ["/tabs", <TabsScreen />],
     ["/tabs/:id", <TabDetailScreen />],
     ["/tables", <TablesScreen />],
