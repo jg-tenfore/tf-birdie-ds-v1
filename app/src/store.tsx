@@ -1,6 +1,7 @@
 import { seededFloorPlans, type FloorElement } from "@/components/screens/restaurant/floor-plan";
 import { customers as seededCustomers, type Customer } from "@/data/crm";
 import { modifierSurcharge } from "@/data/modifiers";
+import { nextRaincheckId, raincheckValue, rainchecks as seededRainchecks, type Raincheck } from "@/data/rainchecks";
 import {
     buildDaySheet,
     may12Sheet,
@@ -70,7 +71,7 @@ export interface Ticket {
     source: "Pro Shop" | "Quick Order" | "Tab" | "Table" | "Tee Sheet";
     seats?: number;
     /** Set once tendered. */
-    tender?: "Card" | "Cash" | "Member account" | "Gift card";
+    tender?: "Card" | "Cash" | "Member account" | "Gift card" | "Rain Check";
     customer?: string;
 }
 
@@ -143,8 +144,17 @@ interface State {
         tax: number;
         total: number;
         tender: string;
-        /** Cash handed over; equals the total for every other tender. */
-        tendered: number;
+        /** What the receipt's Payments line prints — the full amount settled. */
+        paid: number;
+        /**
+         * Cash actually handed over.
+         *
+         * Separate from `paid` because Order Complete's headline is literally
+         * "Cash Tendered" on every tender, not "<tender> Tendered" — a raincheck
+         * sale reads "Cash Tendered $0.00" over a "Rain Check $53.48" payment
+         * line. One number is the drawer, the other is the ticket.
+         */
+        cash: number;
         change: number;
         /** The receipt's own number, distinct from the ticket's. */
         orderNumber: string;
@@ -166,6 +176,13 @@ interface State {
      * customer created at the counter is findable a second later.
      */
     customers: Customer[];
+    /**
+     * The raincheck ledger, shared by both screens that touch one: the tee
+     * sheet's Raincheck button appends here, and the register's RAIN tab spends
+     * from here. Keeping it as one list is what makes a credit created in the
+     * prototype findable at the till a moment later.
+     */
+    rainchecks: Raincheck[];
     shiftOpen: boolean;
     clockedIn: boolean;
     /** Time-clock punches, newest first — what the Time Clock log renders. */
@@ -278,6 +295,7 @@ const initial: State = {
     resourceBookings: {},
     courtDate: "2026-07-21",
     customers: seededCustomers,
+    rainchecks: seededRainchecks,
     floorPlans: seededFloorPlans,
     floorRoom: "bigroom",
     toast: null,
@@ -303,7 +321,7 @@ type Action =
     | { type: "holdTicket" }
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
-    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number }
+    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number; raincheckId?: string }
     | { type: "setSheetDate"; date: string }
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
@@ -311,7 +329,7 @@ type Action =
     | { type: "cancelPosition"; time: string; index: number }
     | { type: "markNoShow"; time: string; index: number }
     | { type: "signOutCart"; time: string; index: number }
-    | { type: "issueRaincheck"; time: string; index: number }
+    | { type: "issueRaincheck"; time: string; index: number; holesPlayed: number }
     | { type: "setPositionNotes"; time: string; index: number; field: "customerNotes" | "groupNotes"; value: string }
     | { type: "setTeeTimeNotes"; time: string; value: string }
     | { type: "squeezeTime"; time: string; side: "before" | "after" }
@@ -341,6 +359,12 @@ export function minutesOf(time: string): number {
     const h = Number(m[1]) % 12 + (m[3].toUpperCase() === "PM" ? 12 : 0);
     return h * 60 + Number(m[2]);
 }
+
+/** `2026-05-12` → `5/12/2026`, the form every dated row in the app prints. */
+export const slashDate = (iso: string) => {
+    const [y, m, d] = iso.split("-");
+    return `${Number(m)}/${Number(d)}/${y}`;
+};
 
 export function formatTime(mins: number): string {
     const wrapped = ((mins % 1440) + 1440) % 1440;
@@ -612,18 +636,40 @@ function reducer(state: State, action: Action): State {
             const current = activeTicket(state);
             if (!current || current.lines.length === 0) return state;
             const total = totalOf(current.lines);
+
+            // A raincheck has to cover the whole ticket here. The device can take
+            // a short one as a part payment and leave a balance — this store has
+            // no split-tender model, so rather than silently swallow the credit,
+            // refuse and say by how much it falls short.
+            const credit = action.raincheckId ? state.rainchecks.find((r) => r.id === action.raincheckId) : undefined;
+            if (action.raincheckId && !credit) return { ...state, toast: "That raincheck no longer exists" };
+            if (credit && credit.balance + 0.001 < total) {
+                return { ...state, toast: `Raincheck ${credit.id} is ${money(total - credit.balance)} short of the total` };
+            }
+
+            const cash = action.tender === "Cash" ? (action.tendered ?? total) : 0;
+
             return {
                 ...state,
                 tickets: state.tickets.map((t) => (t.id === current.id ? { ...t, status: "paid", tender: action.tender } : t)),
                 activeTicketId: null,
+                // Spending a raincheck draws its balance down rather than closing
+                // it — a $72.22 credit against a $53.48 ticket leaves $18.74 that
+                // the same customer can spend again next week.
+                rainchecks: credit
+                    ? state.rainchecks.map((r) =>
+                          r.id === credit.id ? { ...r, spent: +(r.spent + total).toFixed(2), balance: +(r.balance - total).toFixed(2) } : r,
+                      )
+                    : state.rainchecks,
                 lastSale: {
                     ticket: { ...current, status: "paid", tender: action.tender },
                     subtotal: subtotalOf(current.lines),
                     tax: taxOf(current.lines),
                     total,
                     tender: action.tender,
-                    tendered: action.tendered ?? total,
-                    change: Math.max(0, (action.tendered ?? total) - total),
+                    paid: total,
+                    cash,
+                    change: Math.max(0, cash - total),
                     orderNumber: String(5593000 + state.tickets.length * 7 + 62),
                 },
                 toast: null,
@@ -661,10 +707,70 @@ function reducer(state: State, action: Action): State {
          * than each rebuilding the nested state by hand — that was where an
          * earlier pass lost updates.
          */
+        /**
+         * Cut a raincheck from a round.
+         *
+         * Two writes, which is why this is not folded in with the other
+         * per-position buttons below: the position gains the bolt glyph so the
+         * sheet shows what happened, and a credit lands in the ledger so the
+         * register can find it. Doing only the first — which is what an earlier
+         * pass did — produces a marked booking and no money anywhere.
+         */
+        case "issueRaincheck": {
+            const sheet = sheetFor(state);
+            const booking = sheet.find((t) => t.time === action.time);
+            const position = booking?.positions[action.index];
+            if (!booking || !position) return state;
+
+            const id = nextRaincheckId(state.rainchecks);
+            const awarded = raincheckValue(position.price, position.holes, action.holesPlayed);
+            // Straight off the booking. Matching on the printed name would fail
+            // for exactly the people it matters for — "Sutton, K." and the "G-"
+            // guest accounts are not what their records are called.
+            const owner = position.customerId ? state.customers.find((c) => c.id === position.customerId) : undefined;
+
+            return {
+                ...state,
+                teeSheets: {
+                    ...state.teeSheets,
+                    [state.sheetDate]: sheet.map((t) =>
+                        t.time !== action.time
+                            ? t
+                            : { ...t, positions: t.positions.map((p, i) => (i === action.index && p ? { ...p, raincheck: true } : p)) },
+                    ),
+                },
+                rainchecks: [
+                    {
+                        id,
+                        customerId: owner?.id ?? "",
+                        // The record's name, falling back to the booking's. A
+                        // credit found at the till should read the way the
+                        // customer's own record does.
+                        customerName: owner?.displayName ?? position.name,
+                        email: position.email ?? owner?.email,
+                        reservation: position.id,
+                        // The round this came off, stamped now — the sheet for
+                        // that day will not be loaded when the register or the
+                        // customer's record goes looking for it.
+                        teeTime: `${slashDate(state.sheetDate)} ${booking.time}`,
+                        issued: state.sheetDate,
+                        expires: `${Number(state.sheetDate.slice(0, 4)) + 1}${state.sheetDate.slice(4)}`,
+                        roundPrice: position.price,
+                        totalHoles: position.holes,
+                        holesPlayed: action.holesPlayed,
+                        awarded,
+                        spent: 0,
+                        balance: awarded,
+                    },
+                    ...state.rainchecks,
+                ],
+                toast: `Raincheck ${id} created for ${money(awarded)}`,
+            };
+        }
+
         case "cancelPosition":
         case "markNoShow":
         case "signOutCart":
-        case "issueRaincheck":
         case "setPositionNotes":
         case "editPositionFees": {
             const sheet = sheetFor(state);
@@ -683,8 +789,6 @@ function reducer(state: State, action: Action): State {
                                 return { ...p, noShow: true };
                             case "signOutCart":
                                 return { ...p, keyed: true };
-                            case "issueRaincheck":
-                                return { ...p, raincheck: true };
                             case "setPositionNotes":
                                 return { ...p, [action.field]: action.value };
                             case "editPositionFees":
@@ -701,11 +805,9 @@ function reducer(state: State, action: Action): State {
                       ? "Marked no show"
                       : action.type === "signOutCart"
                         ? "Cart signed out"
-                        : action.type === "issueRaincheck"
-                          ? "Raincheck issued"
-                          : action.type === "editPositionFees"
-                            ? "Fees saved"
-                            : "Notes saved";
+                        : action.type === "editPositionFees"
+                          ? "Fees saved"
+                          : "Notes saved";
 
             return { ...state, teeSheets: { ...state.teeSheets, [state.sheetDate]: next }, toast };
         }
@@ -1038,7 +1140,8 @@ export function useActions() {
             holdTicket: () => dispatch({ type: "holdTicket" }),
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
-            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number) => dispatch({ type: "pay", tender, tendered }),
+            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number, raincheckId?: string) =>
+                dispatch({ type: "pay", tender, tendered, raincheckId }),
             setSheetDate: (date: string) => dispatch({ type: "setSheetDate", date }),
             shiftSheetDate: (days: number) => dispatch({ type: "shiftSheetDate", days }),
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),
@@ -1047,7 +1150,8 @@ export function useActions() {
             cancelPosition: (time: string, index: number) => dispatch({ type: "cancelPosition", time, index }),
             markNoShow: (time: string, index: number) => dispatch({ type: "markNoShow", time, index }),
             signOutCart: (time: string, index: number) => dispatch({ type: "signOutCart", time, index }),
-            issueRaincheck: (time: string, index: number) => dispatch({ type: "issueRaincheck", time, index }),
+            issueRaincheck: (time: string, index: number, holesPlayed: number) =>
+                dispatch({ type: "issueRaincheck", time, index, holesPlayed }),
             setPositionNotes: (time: string, index: number, field: "customerNotes" | "groupNotes", value: string) =>
                 dispatch({ type: "setPositionNotes", time, index, field, value }),
             setTeeTimeNotes: (time: string, value: string) => dispatch({ type: "setTeeTimeNotes", time, value }),

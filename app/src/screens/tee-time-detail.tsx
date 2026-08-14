@@ -112,7 +112,7 @@ export const TeeTimeDetailScreen = () => {
     const { time = "" } = useParams();
     const decoded = decodeURIComponent(time);
     const { state, teeTimes } = useStore();
-    const { chargeTeeTime, cancelPosition, markNoShow, signOutCart, issueRaincheck, setPositionNotes, setTeeTimeNotes } = useActions();
+    const { chargeTeeTime, cancelPosition, markNoShow, signOutCart, setPositionNotes, setTeeTimeNotes } = useActions();
     const navigate = useNavigate();
 
     const slot = teeTimes.find((t) => t.time === decoded);
@@ -190,7 +190,20 @@ export const TeeTimeDetailScreen = () => {
                         <Box key={`${p.id}-${i}`} sx={{ bgcolor: appColors.detailCard, p: 2 }}>
                             <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
                                 <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: 30 }}>{p.name}</Typography>
+                                    {/* The name opens the record when there is
+                                        one behind it. Leagues and outings are
+                                        bookings without a customer, so theirs
+                                        stays plain text rather than a dead link. */}
+                                    {p.customerId ? (
+                                        <ButtonBase
+                                            onClick={() => navigate(`/customersearch/${p.customerId}`)}
+                                            sx={{ fontSize: 30, textDecoration: "underline", textUnderlineOffset: 5 }}
+                                        >
+                                            {p.name}
+                                        </ButtonBase>
+                                    ) : (
+                                        <Typography sx={{ fontSize: 30 }}>{p.name}</Typography>
+                                    )}
                                     {p.balance && <Typography sx={{ fontSize: 22 }}>$</Typography>}
                                     {p.raincheck && <BoltIcon sx={{ fontSize: 22 }} />}
                                     {p.keyed && <VpnKeyIcon sx={{ fontSize: 20 }} />}
@@ -225,7 +238,11 @@ export const TeeTimeDetailScreen = () => {
                                             label="Raincheck"
                                             tone="red"
                                             icon={<BoltIcon sx={{ fontSize: 18 }} />}
-                                            onClick={() => issueRaincheck(decoded, i)}
+                                            // Opens the create screen rather than
+                                            // issuing outright — how many holes
+                                            // were played is the whole decision,
+                                            // and only a human knows it.
+                                            onClick={() => navigate(`/teesheet/${encodeURIComponent(decoded)}/${i}/raincheck`)}
                                         />
                                         <CardAction
                                             label="History"
