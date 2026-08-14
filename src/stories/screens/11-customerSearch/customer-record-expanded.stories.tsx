@@ -19,9 +19,15 @@ import {
 } from "@/components/screens/operations/customer-search-panel";
 
 /**
- * The same record with every section open. Each expands in place into a white
- * card under its navy bar, so the page simply gets longer — there is no tabbing
- * and no accordion that closes its siblings. Scroll to see all five.
+ * The same record with every section open, exactly as the device draws it —
+ * empty Gift Cards header, five sections, no rainchecks anywhere.
+ *
+ * Each expands in place into a white card under its navy bar, so the page simply
+ * gets longer; opening one never closes its siblings. Scroll to see all five.
+ *
+ * The bars are now tap targets — see **Customer profile** for the composed
+ * version with real data, a Rain Checks section, and a balance on each closed
+ * bar. This story stays as the as-is reference.
  */
 const meta = {
     title: "App Screens/11-customerSearch/Customer record — sections expanded",

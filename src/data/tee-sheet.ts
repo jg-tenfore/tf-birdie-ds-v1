@@ -17,6 +17,8 @@
  * one.
  */
 
+import { customersByBookingName, type CrmTeeTime } from "./crm";
+
 export interface ReservationEvent {
     at: string;
     by: string;
@@ -49,6 +51,16 @@ export interface Position {
     /** Free text the device shows for punch-card rounds, e.g. `9 rounds`. */
     rounds?: string;
     email?: string;
+    /**
+     * The customer record this booking belongs to.
+     *
+     * Absent for a league or an outing, which are bookings without a person
+     * behind them. Present everywhere else, and it is what turns a name on the
+     * sheet into something you can look up: the detail screen opens the record
+     * from it, a raincheck is filed against it, and the profile finds the round
+     * again by it.
+     */
+    customerId?: string;
     /** Audit trail behind the History button. */
     history: ReservationEvent[];
     /** Cart keys signed out — shows the key glyph. */
@@ -115,7 +127,13 @@ const CARTS = [
 const WALKING = { name: "Dunes Walking", price: 8.58 };
 
 /**
- * Members and guests who appear on the sheet.
+ * Who appears on the sheet.
+ *
+ * Every entry that is a person is a booking name in `customers.json`, so a
+ * position resolves to a record rather than to a plausible-looking string. The
+ * four that are not — the two leagues, the outing, the group — resolve to
+ * nothing on purpose: a league is a booking with no customer behind it, and any
+ * design that assumes a name implies a person breaks on them.
  *
  * Deliberately includes repeat names — the same family booking three positions,
  * a league taking a whole time — because that is what makes a real sheet hard to
@@ -252,7 +270,11 @@ export function buildDaySheet({
                 pointsEarn: Math.round(price * 4),
                 pointsRedeem: rand() > 0.7 ? -Math.round(price * 40) : 0,
                 rounds: cart.name === "Free Punch Cart" ? `${Math.ceil(rand() * 9)} rounds` : undefined,
-                email: `${name.split(" ")[0].toLowerCase().replace(/[^a-z]/g, "")}@example.com`,
+                // Both come off the customer record when there is one. A league
+                // has neither, and prints a course address instead of nothing so
+                // the detail screen's layout does not collapse.
+                customerId: customersByBookingName[name]?.id,
+                email: customersByBookingName[name]?.email ?? "golfshop@dunesofdelgado.example",
                 keyed: paid && rand() > 0.6,
                 raincheck: rand() > 0.94,
                 balance: !paid && rand() > 0.78,
@@ -271,6 +293,37 @@ export function buildDaySheet({
 
         return { time, positions, confirmation: conf, nine: "FRONT" as const };
     });
+}
+
+/**
+ * Every round this customer has on the sheets the terminal is holding.
+ *
+ * The profile's Tee Time History was an archive and nothing else, so the one
+ * thing a counter is usually looking at a record to find out — *are they on
+ * today?* — was the one thing it could not say. These rows come from the live
+ * sheets and carry a status, so a booking made ten minutes ago shows up.
+ *
+ * Pure, and takes the sheets as an argument, so a story can pass the seeded days
+ * and the prototype can pass whatever the store currently holds.
+ */
+export function bookingsForCustomer(customerId: string, sheets: Record<string, TeeTimeBooking[]>): CrmTeeTime[] {
+    const rows: CrmTeeTime[] = [];
+    for (const [date, sheet] of Object.entries(sheets)) {
+        const [y, m, d] = date.split("-");
+        for (const booking of sheet) {
+            for (const position of booking.positions) {
+                if (!position || position.customerId !== customerId) continue;
+                rows.push({
+                    id: position.id,
+                    date: `${Number(m)}/${Number(d)}/${y} ${booking.time}`,
+                    time: booking.time,
+                    players: position.party,
+                    status: position.noShow ? "No show" : position.paid ? "Paid" : position.checkedIn ? "Checked in" : "Booked",
+                });
+            }
+        }
+    }
+    return rows.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /** May 12 — the day the reference screenshots were taken on. */

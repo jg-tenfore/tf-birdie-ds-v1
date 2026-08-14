@@ -5,6 +5,7 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-d
 import { appReplicaTheme } from "@/theme/app-replica-theme";
 import { StoreProvider, useStore } from "./store";
 import { CombosScreen } from "./screens/combos";
+import { CreateRaincheckScreen } from "./screens/create-raincheck";
 import { CreateGiftCardScreen } from "./screens/create-gift-card";
 import { EventDetailScreen, EventsScreen } from "./screens/events";
 import { GiftCardsScreen } from "./screens/gift-cards";
@@ -48,6 +49,7 @@ const routes: [string, React.ReactNode][] = [
     ["/teesheet/:time", <TeeTimeDetailScreen />],
     ["/teesheet/:time/:index/edit", <TeeTimeEditScreen />],
     ["/teesheet/:time/:index/cartsignout", <TeeTimeCartSignOutScreen />],
+    ["/teesheet/:time/:index/raincheck", <CreateRaincheckScreen />],
     ["/tabs", <TabsScreen />],
     ["/tabs/:id", <TabDetailScreen />],
     ["/tables", <TablesScreen />],
