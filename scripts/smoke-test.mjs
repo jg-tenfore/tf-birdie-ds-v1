@@ -571,6 +571,151 @@ await step("the line kebab fires, discounts and splits", async () => {
     );
 });
 
+/* ------------------------------------------------------------- rainchecks */
+
+/**
+ * Everything above has moved the sheet date, cleared times and left lines in the
+ * cart. The store is in memory, so a full reload is the cheapest way to get a
+ * known sheet and an empty register back — these steps assert on specific
+ * bookings and specific totals and cannot run on whatever the suite left behind.
+ */
+await step("a full reload returns the terminal to seed state", async () => {
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.fill('input[aria-label="Enter your PIN"]', "1234");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await page.waitForSelector("text=Pro Shop Order", { timeout: 8000 });
+});
+
+await step("a paid booking's Raincheck button opens the create screen", async () => {
+    await page.goto(`${BASE}#/teesheet/${encodeURIComponent("7:10 AM")}`, { waitUntil: "networkidle" });
+    await page.waitForSelector("text=Randy Orton", { timeout: 6000 });
+    await page
+        .getByRole("button", { name: /^Raincheck$/i })
+        .first()
+        .click();
+    await page.waitForSelector("text=Raincheck Total", { timeout: 5000 });
+    // The round being refunded, restated — wrong reservation, wrong refund.
+    if (!/10390151/.test(await page.locator("body").innerText())) throw new Error("reservation number missing");
+});
+
+await step("holes played drives the credit and the percentage", async () => {
+    const read = async () => (await page.locator("body").innerText()).match(/\$[\d,]+\.\d\d \(\d+%\)/)?.[0];
+    // Nothing played returns the whole round; half the holes returns half.
+    if (!/\(100%\)/.test((await read()) ?? "")) throw new Error("0 holes should be 100%");
+    await page.getByLabel("9 holes played", { exact: true }).check();
+    if (!/\$33\.00 \(50%\)/.test((await read()) ?? "")) throw new Error("9 of 18 on a $66 round should be $33.00 (50%)");
+});
+
+await step("CREATE RAINCHECK issues a credit against the round", async () => {
+    await page.getByRole("button", { name: /create raincheck/i }).click();
+    await page.waitForSelector("text=/Raincheck \\d+ created for \\$33\\.00/", { timeout: 5000 });
+});
+
+await step("the RAIN tender finds every credit one customer holds", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /Green Fees/i }).click();
+    await page.getByText("Green fee — 18", { exact: true }).first().click();
+    await page
+        .getByRole("button", { name: /Pay \$/ })
+        .first()
+        .click();
+    await page.waitForSelector("text=Credit Card Payment", { timeout: 5000 });
+
+    await page.getByText("RAIN", { exact: true }).click();
+    await page.getByLabel("Enter Raincheck id, customer name, or email").fill("weston");
+    // Two chips for one name is the whole reason the picker exists.
+    await page.waitForSelector("text=ID : 41331", { timeout: 4000 });
+    await page.waitForSelector("text=ID : 51381", { timeout: 4000 });
+});
+
+await step("choosing a credit fills the amount and the green band", async () => {
+    await page.getByText("ID : 41331", { exact: true }).click();
+    await page.waitForSelector('input[value="$103.90"]', { timeout: 4000 });
+    const body = await page.locator("body").innerText();
+    if (!/TenFore Raincheck ID/.test(body) || !/Weston Senior/.test(body)) throw new Error("result band did not fill");
+});
+
+await step("APPLY RAINCHECK settles the ticket without touching the drawer", async () => {
+    await page.getByRole("button", { name: /apply raincheck/i }).click();
+    await page.waitForSelector("text=Order Complete", { timeout: 6000 });
+    const body = await page.locator("body").innerText();
+    if (!/Rain Check/.test(body)) throw new Error("receipt has no Rain Check payment line");
+    // The headline is about cash, not about the tender — $0.00 is correct here.
+    if (!/Cash Tendered \$0\.00/.test(body)) throw new Error("headline should read Cash Tendered $0.00");
+});
+
+await step("spending a raincheck draws its balance down", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /Green Fees/i }).click();
+    await page.getByText("Green fee — 18", { exact: true }).first().click();
+    await page
+        .getByRole("button", { name: /Pay \$/ })
+        .first()
+        .click();
+    await page.getByText("RAIN", { exact: true }).click();
+    await page.getByLabel("Enter Raincheck id, customer name, or email").fill("41331");
+    await page.waitForSelector("text=ID : 41331", { timeout: 4000 });
+    if (/\$103\.90/.test(await page.locator("body").innerText())) throw new Error("balance was not drawn down");
+});
+
+await step("a credit too small for the ticket is refused, with the shortfall", async () => {
+    await page.goto(`${BASE}#/proshop`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /Green Fees/i }).click();
+    await page.getByText("Green fee — 18", { exact: true }).first().click();
+    for (let i = 0; i < 4; i++)
+        await page
+            .getByRole("button", { name: /^Increase/ })
+            .first()
+            .click();
+    await page
+        .getByRole("button", { name: /Pay \$/ })
+        .first()
+        .click();
+    await page.getByText("RAIN", { exact: true }).click();
+    await page.getByLabel("Enter Raincheck id, customer name, or email").fill("51381");
+    await page.getByText("ID : 51381", { exact: true }).click();
+    await page.getByRole("button", { name: /apply raincheck/i }).click();
+    await page.waitForSelector("text=/short of the total/", { timeout: 5000 });
+});
+
+/* ------------------------------------------ customers tied to tee times */
+
+await step("a booking's name opens the customer record behind it", async () => {
+    await page.goto(`${BASE}#/teesheet/${encodeURIComponent("7:10 AM")}`, { waitUntil: "networkidle" });
+    await page
+        .getByRole("button", { name: "Randy Orton", exact: true })
+        .first()
+        .click();
+    await page.waitForSelector("text=General Info", { timeout: 6000 });
+    const body = await page.locator("body").innerText();
+    if (!/Randy/.test(body) || !/Orton/.test(body)) throw new Error("opened the wrong record");
+});
+
+await step("the record lists the round that is on the sheet, with a live status", async () => {
+    const body = await page.locator("body").innerText();
+    // Same reservation id the tee sheet prints — one round, two screens.
+    if (!/10390151/.test(body)) throw new Error("reservation 10390151 is not in the record");
+    if (!/on the sheet/.test(body)) throw new Error("no live-booking summary on the section bar");
+    if (!/Paid|Checked in|Booked|No show/.test(body)) throw new Error("no status column");
+});
+
+await step("an abbreviated booking name still resolves to a customer", async () => {
+    // "Sutton, K." is how the sheet prints Kelsey Sutton. Matching on the
+    // printed name alone would never find this record.
+    await page.goto(`${BASE}#/customersearch`, { waitUntil: "networkidle" });
+    await page.fill('input[placeholder^="Search by customer name"]', "Sutton");
+    await page.waitForSelector("text=/Kelsey Sutton/", { timeout: 5000 });
+});
+
+await step("a league is a booking with no customer behind it", async () => {
+    await page.goto(`${BASE}#/teesheet`, { waitUntil: "networkidle" });
+    const league = page.getByText(/League$/).first();
+    if (!(await league.count())) throw new Error("no league on the sheet");
+    // Nothing to assert beyond it existing and not being a link — the point is
+    // that the model allows a name with no record, and the UI does not pretend
+    // otherwise.
+});
+
 console.log(errors.length ? `\nRUNTIME ERRORS (${errors.length}):` : "\nNo runtime errors.");
 errors.slice(0, 6).forEach((e) => console.log("  " + e.slice(0, 160)));
 if (errors.length) process.exitCode = 1;

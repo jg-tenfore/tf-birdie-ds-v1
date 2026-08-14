@@ -1,0 +1,108 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Weston's ideas/Overview" />
+
+# Weston's ideas
+
+Concepts, not decisions. Everything in this folder comes from two conversations —
+the **Aug 12** raincheck walkthrough and the **Aug 13** follow-up — and exists so
+the ideas can be argued about as screens rather than as sentences in a
+transcript.
+
+Nothing here is wired into the prototype. The shipping screens are unchanged and
+live under **Flows → Rainchecks** steps 1–5.
+
+## The ground rule
+
+> *"we can just change that in the existing system and use this as a good breeding
+> ground — this is a new flow that we're trying with the old design system, but a
+> new flow."*
+
+So these concepts introduce **no new tokens, no new colours and no new button
+styles**. Same navy bars, same green, same MD2 surfaces. What changes is the
+arrangement, the defaults, and what the screen says out loud.
+
+## What he was actually complaining about
+
+> *"the issuing's the part where I'm like, man, it just feels weird… you can get
+> it done, but it could be more clear."*
+
+The shipping issuance screen asks one question — how many holes — and leaves
+three others implicit:
+
+| Question | Where the shipping screen answers it |
+| :-- | :-- |
+| Which round is being refunded? | Implied by which player's button you tapped |
+| How much comes back? | The radios. This part works |
+| Whose account receives it? | The unlabelled chips at the bottom |
+| Has this round already been credited? | Nowhere |
+
+The third is the one that bit. Weston could not state with confidence what the
+chips did — *"I think what that's doing is where I issue it for you because
+you're out of town, but to my name. And that's just not clear really
+whatsoever."* If the person who owns the product hedges on it, no operator is
+getting it right.
+
+## The checklist, and where each item landed
+
+| # | Idea | His words | Status |
+| :-- | :-- | :-- | :-- |
+| 1 | Say who is receiving it, in a sentence | *"like a dialogue — you are issuing a raincheck to Weston Farnsworth"* | Concepted |
+| 2 | Label the recipient picker | *"maybe you can change that to anybody in the foursome"* | Concepted |
+| 3 | Title the screen for the operation | *"issue rain check for this reservation"* | Concepted |
+| 4 | Handle four players | *"four boxes across the bottom"* | Concepted |
+| 5 | Separate round from recipient | *"issue rain check for player three, but issue it to Weston's account"* | Concepted |
+| 6 | Default them together | *"it defaults to that player"* | Concepted |
+| 7 | Support the guest case | *"you're my buddy visiting — just issue the raincheck to me"* | Concepted |
+| 8 | Grey out already-issued rounds | *"I already issued Justin's raincheck for 72 — that's greyed out"* | Concepted |
+| 9 | One screen per reservation | *"anytime you hit rain check, it just takes you there"* | Concepted |
+| 10 | An issuance log | Justin's extension of #8 | Concepted |
+| 11 | Leave the red button alone in v1 | *"people are used to it. I do want to change it in v2"* | Honoured |
+| 12 | Record the red-button finding | Justin read it as delete | Written up below |
+| 13 | Rainchecks on the customer profile | *"Do we display raincheck there?" — "We should."* | Shipped |
+| 14 | And on customer lookup | *"On the customer lookup for sure"* | Shipped |
+| 15 | Carry the round's date and time | — | Shipped |
+| 16 | Checkout knows who is in the cart | *"it shows the rainchecks that I have to my name"* | Concepted |
+| 17 | Anchor the model on the reservation | *"it's tied to that reservation you've booked"* | Open |
+| 18 | Carry the fee breakdown | *"the tee fee you booked, the cart fees, that whole structure"* | Concepted |
+| 19 | Resolve found-by-name vs stored-by-reservation | *"that's where a lot of the confusion happens"* | Open |
+
+## What the concepts change
+
+**1 — Issue for this reservation.** All four questions asked out loud: a list of
+positions with their fee structure and their raincheck state, the holes control
+with the amount *below* it rather than above, a labelled recipient picker, and a
+plain sentence stating the whole outcome before you commit. Already-credited
+rounds are greyed and cannot be selected.
+
+**2 — Checkout knows who is in the cart.** The tender opens on the ticket
+customer's credits instead of an empty search field. Each credit names the round
+it came from — the seven o'clock on the twentieth, not "51381" — and says
+whether it clears the ticket *before* you apply it rather than after.
+
+## The finding worth keeping
+
+Justin, who had never used the flow:
+
+> *"I literally thought that was like delete customer. Because I never looked at a
+> big red button — I always think red buttons is delete."*
+
+And Weston, one day earlier, on why the button exists at all:
+
+> *"you can't delete it, you don't want to cancel it — it's already paid for.
+> That's the only way to do something with it."*
+
+A refund affordance wearing a destructive colour, and it is the only action a
+paid reservation has. Worth carrying into the v2 conversation even though the
+button is deliberately not moving now.
+
+## Still open
+
+- **Does the recipient picker match the real behaviour?** The concept assumes
+  Weston's reading — the chips choose the account, not the round. He said "I
+  think". Confirm against the device before this is more than a concept.
+- **Should a raincheck be spendable on anything, or only on a tee time?** It is
+  built from a green fee and a cart fee. It is currently a general tender.
+- **Partial redemption.** The device leaves a balance owing; the prototype
+  refuses. The concept's "$31.68 would still be owed" line assumes the device's
+  behaviour is the one to keep.

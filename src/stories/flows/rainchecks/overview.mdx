@@ -1,0 +1,77 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Overview" />
+
+# Rainchecks
+
+A raincheck is a credit for a round the weather cut short. It is created on the
+tee sheet, lives on the customer's record, and is spent at the register — three
+screens, days apart, on one object.
+
+Everywhere else in this Storybook is organised by screen, mirroring the
+reference folders one for one. This folder is organised by **journey**, because
+the interesting failures in rainchecks are not inside any single screen. They are
+in the joins: a credit created against a booking whose name does not match any
+customer, a balance a counter cannot find, a credit spent twice. The same
+components appear here and under **App Screens** — this is a second way in, not a
+second implementation.
+
+## The loop
+
+| # | Story | Screen | What happens |
+| :-- | :-- | :-- | :-- |
+| 1 | **Booking with a raincheck** | Tee time detail | A paid round gains a red **Raincheck** action |
+| 2 | **Create raincheck** | Raincheck | Holes played sets the credit; **CREATE RAINCHECK** files it |
+| 3 | **The credit on the record** | Customer record | It appears under Gift Cards, with a running balance |
+| 4 | **Redeem at the register** | Checkout, RAIN tender | Look it up by id, name or email; pick it; apply it |
+| 5 | **Order complete** | Order Complete | The receipt prints a `Rain Check` payment line |
+
+## The pricing rule
+
+The credit is the **unplayed** share of the round, at the price actually paid:
+
+```
+credit = roundPrice × (totalHoles − holesPlayed) ÷ totalHoles
+```
+
+An 18-hole round at $100 abandoned after 5 holes returns 13/18 — `$72.22 (72%)`.
+Two consequences worth being deliberate about:
+
+- **0 holes played returns everything.** A group that never teed off gets the
+  round back in full, which is right, and means the create screen's default state
+  is the most generous one it can produce.
+- **There is no option for 18.** A completed round has nothing to give back, so
+  the radios stop at 17. On a 9-hole round they stop at 8.
+
+The percentage is rounded to a whole number while the amount is not, so `72%`
+sits beside `$72.22`. Those two numbers match only because the round cost exactly
+$100 — a $66 round shows `$47.67 (72%)`.
+
+## Where the code lives
+
+| Piece | File |
+| :-- | :-- |
+| Model, pricing, lookup | `src/data/rainchecks.ts` |
+| Ledger of credits | `src/data/customers.json` owners, `state.rainchecks` at runtime |
+| Create screen | `src/components/screens/tee-sheet/raincheck-form.tsx` |
+| Record section | `RainChecksTable` in `src/components/screens/operations/customer-search-panel.tsx` |
+| RAIN tender | `src/components/screens/checkout/checkout-panes.tsx` |
+| Order Complete | `src/components/screens/checkout/order-complete.tsx` |
+
+The ledger is one list. The tee sheet appends to it and the register spends from
+it, which is what makes a credit created in the prototype findable at the till a
+moment later. Modelling it the other way — a `raincheck: true` flag on the round
+plus a discount at checkout — is the shape this started in, and it cannot answer
+"how much am I owed?" from any screen.
+
+## Open questions
+
+- **Partial redemption.** The device can take a credit that does not cover the
+  ticket and leave a balance owing. The prototype refuses and names the
+  shortfall, because there is no split-tender model behind it. Worth a decision
+  before this ships.
+- **Expiry.** Every credit carries an expiry date and nothing enforces it — an
+  expired raincheck is still offered as a chip at the register.
+- **Who can issue one.** Any operator can cut a credit for any amount up to the
+  full round. There is no approval step and no audit beyond the reservation's own
+  history.

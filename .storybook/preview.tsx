@@ -104,6 +104,7 @@ const preview: Preview = {
                             "Dialog — tee time notes",
                             "Edit reservation — fees",
                             "Cart sign out",
+                            "Create raincheck",
                         ],
                         "3-coursheet",
                         "4-baysheet",
@@ -125,7 +126,16 @@ const preview: Preview = {
                         "10-tablechart",
                         ["Detached tables", "Room picker", "Empty room", "Create table", "Layout saved"],
                         "11-customerSearch",
-                        ["Empty search", "Search results", "Customer record", "Customer record — sections expanded"],
+                        [
+                            "Empty search",
+                            "Search results",
+                            "Customer record",
+                            "Customer record — sections expanded",
+                            "Customer profile",
+                            // Nested one level deeper: these are the stories
+                            // inside that title, not siblings of it.
+                            ["Default", "Sections collapsed", "On the sheet today"],
+                        ],
                         "12-orderlookup",
                         "13-timeclock",
                         "14-giftcards",
@@ -133,6 +143,38 @@ const preview: Preview = {
                         "16-inventory",
                         ["Count list", "Category picker open", "New count", "Count detail"],
                         "17-shift",
+                        // Unnumbered because the reference folder is. Ordered by
+                        // the tab strip left to right, so the sidebar reads the
+                        // way the screen does.
+                        "checkoutScreens",
+                        ["Credit", "Cash", "Gift card", "Rain check", "Check", "Member"],
+                    ],
+                    // A second axis through the same components. App Screens is
+                    // organised by screen, mirroring the reference folders; this
+                    // is organised by journey, because the failures that matter
+                    // in a flow live in the joins between screens rather than
+                    // inside any one of them.
+                    "Flows",
+                    [
+                        "Rainchecks",
+                        [
+                            "Overview",
+                            "1 — Booking with a raincheck",
+                            "2 — Create raincheck",
+                            "3 — The credit on the record",
+                            "4 — Redeem at the register",
+                            "5 — Order complete",
+                            // Proposals, after the five steps that describe what
+                            // ships — so the folder reads as "here is the flow,
+                            // and here is what we would change about it".
+                            "Weston's ideas",
+                            [
+                                "Overview",
+                                "1 — Issue for this reservation",
+                                "2 — Checkout knows the cart",
+                                ["Opens on the cart's customer", "Search field tapped", "Searching another account", "Neither credit covers it", "This customer has none"],
+                            ],
+                        ],
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would
                     // split this into two nested folders in the sidebar.
