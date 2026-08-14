@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
@@ -17,8 +16,9 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
-import { CustomerField, CustomerSection } from "@/components/screens/operations/customer-search-panel";
-import { CUSTOMER_TYPES, customerById, searchCustomers, type Customer } from "@/data/crm";
+import { CustomerRecordPanel } from "@/components/screens/operations/customer-record";
+import { customerById, searchCustomers, type Customer } from "@/data/crm";
+import { bookingsForCustomer } from "@/data/tee-sheet";
 import { appColors } from "@/theme/app-replica-tokens";
 import { Shell } from "../pos-shell";
 import { money, useActions, useStore } from "../store";
@@ -140,13 +140,6 @@ export const CustomerSearchScreen = () => {
     );
 };
 
-const InfoRow = ({ label, value }: { label: string; value: string }) => (
-    <Stack direction="row" sx={{ py: 0.75 }}>
-        <Typography sx={{ flex: 1, fontSize: 17, fontStyle: "italic", color: appColors.textSecondary }}>{label}</Typography>
-        <Typography sx={{ fontSize: 17 }}>{value}</Typography>
-    </Stack>
-);
-
 export const CustomerRecordScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -202,118 +195,19 @@ export const CustomerRecordScreen = () => {
                 </>
             }
         >
-            <Box sx={{ bgcolor: "#fff", minHeight: "100%", pb: 4 }}>
-                {/* The record's three field rows. */}
-                <Box sx={{ px: 1, pt: 1 }}>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.75, mb: 1.75 }}>
-                        <CustomerField label="First Name" value={customer.firstName} />
-                        <CustomerField label="Last Name" value={customer.lastName} />
-                        <CustomerField label="Enter Customer Email" value={customer.email} />
-                    </Box>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.75, mb: 1.75 }}>
-                        <CustomerField label="Phone Number" value={customer.phone} />
-                        <CustomerField label="Customer Birthday" value={customer.birthday} />
-                        <CustomerField label="Enter notes for this customer" value={customer.notes} />
-                    </Box>
-                    {/* Street keeps a third of the width; the rest share what is left. */}
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1.47fr 1fr 1fr 1fr", gap: 1.75 }}>
-                        <CustomerField label="Street Address" value={customer.street} />
-                        <CustomerField label="City" value={customer.city} />
-                        <CustomerField label="State" value={customer.state} />
-                        <CustomerField label="Zip Code" value={customer.zip} />
-                    </Box>
-                </Box>
-
-                <CustomerSection title="Memberships">
-                    {customer.memberships.length === 0 ? (
-                        <Typography sx={{ px: 2, py: 1.5, fontSize: 17, color: appColors.textSecondary }}>No memberships.</Typography>
-                    ) : (
-                        customer.memberships.map((m) => (
-                            <Stack key={m.name} direction="row" sx={{ px: 2, py: 1.5, gap: 2 }}>
-                                <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{m.name}</Typography>
-                                <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>Expires</Typography>
-                                <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{m.expires}</Typography>
-                            </Stack>
-                        ))
-                    )}
-                </CustomerSection>
-
-                {/* Every configured type, checked or not — the list is the same on
-                    every record, which is why it is so long. */}
-                <CustomerSection title="Customer Types">
-                    <Box sx={{ px: 1, py: 0.5 }}>
-                        {CUSTOMER_TYPES.map((t) => (
-                            <Stack key={t} direction="row" sx={{ alignItems: "center" }}>
-                                <Checkbox
-                                    checked={types.includes(t)}
-                                    onChange={(e) => setTypes((prev) => (e.target.checked ? [...prev, t] : prev.filter((x) => x !== t)))}
-                                    size="small"
-                                />
-                                <Typography sx={{ fontSize: 17 }}>{t}</Typography>
-                            </Stack>
-                        ))}
-                    </Box>
-                </CustomerSection>
-
-                <CustomerSection title="Gift Cards">
-                    {customer.giftCards.length === 0 ? (
-                        <Typography sx={{ px: 2, py: 1.5, fontSize: 17, color: appColors.textSecondary }}>No gift cards.</Typography>
-                    ) : (
-                        customer.giftCards.map((g) => (
-                            <Stack key={g.id} direction="row" sx={{ px: 2, py: 1.25, borderBottom: `1px solid ${appColors.divider}` }}>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{g.id}</Typography>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{g.type}</Typography>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{g.expires}</Typography>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{money(g.awarded)}</Typography>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{money(g.spent)}</Typography>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{money(g.balance)}</Typography>
-                            </Stack>
-                        ))
-                    )}
-                </CustomerSection>
-
-                <CustomerSection title="Tee Time History">
-                    {customer.teeTimes.length === 0 ? (
-                        <Typography sx={{ px: 2, py: 1.5, fontSize: 17, color: appColors.textSecondary }}>No rounds on record.</Typography>
-                    ) : (
-                        customer.teeTimes.map((t) => (
-                            <Stack key={t.id} direction="row" sx={{ px: 2, py: 1.25, borderBottom: `1px solid ${appColors.divider}` }}>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{t.id}</Typography>
-                                <Typography sx={{ flex: 2, fontSize: 16 }}>{t.date}</Typography>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>
-                                    {t.players} {t.players === 1 ? "player" : "players"}
-                                </Typography>
-                            </Stack>
-                        ))
-                    )}
-                </CustomerSection>
-
-                <CustomerSection title="Punch Cards">
-                    {customer.punchCards.length === 0 ? (
-                        <Typography sx={{ px: 2, py: 1.5, fontSize: 17, color: appColors.textSecondary }}>No punch cards.</Typography>
-                    ) : (
-                        customer.punchCards.map((p) => (
-                            <Stack key={p.name} direction="row" sx={{ px: 2, py: 1.25, gap: 3 }}>
-                                <Typography sx={{ flex: 1, fontSize: 16 }}>{p.name}</Typography>
-                                <Typography sx={{ fontSize: 16 }}>
-                                    {p.remaining} of {p.total} left
-                                </Typography>
-                                <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>Expires {p.expires}</Typography>
-                            </Stack>
-                        ))
-                    )}
-                </CustomerSection>
-
-                <Box sx={{ px: 2, mt: 3 }}>
-                    <Typography sx={{ fontSize: 19, mb: 1 }}>General Info</Typography>
-                    <InfoRow label="Customer ID" value={customer.id} />
-                    <InfoRow label="Golf Course Customer ID" value={customer.courseId} />
-                    <InfoRow label="Rewards Balance:" value={String(customer.rewardsBalance)} />
-                    <InfoRow label="Customer Balance" value={money(customer.balance)} />
-                    <InfoRow label="Card on File" value={customer.cardOnFile ?? "—"} />
-                    <InfoRow label="Card on File Expires" value={customer.cardExpires ?? "—"} />
-                </Box>
-            </Box>
+            <CustomerRecordPanel
+                customer={customer}
+                // The credits this person is holding, from the same ledger the
+                // register spends out of — a raincheck cut ten minutes ago on
+                // the tee sheet shows up here.
+                rainchecks={state.rainchecks.filter((r) => r.customerId === customer.id)}
+                // Every round this person has on any sheet the terminal is
+                // holding, live — check someone in on the tee sheet and their
+                // record says "Checked in" a moment later.
+                booked={bookingsForCustomer(customer.id, state.teeSheets)}
+                selectedTypes={types}
+                onToggleType={(t) => setTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))}
+            />
         </Shell>
     );
 };

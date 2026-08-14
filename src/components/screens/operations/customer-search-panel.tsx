@@ -1,11 +1,14 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 import EmailIcon from "@mui/icons-material/Email";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PhoneIcon from "@mui/icons-material/Phone";
 
+import type { Raincheck } from "@/data/rainchecks";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 
 /**
@@ -168,36 +171,83 @@ export interface CustomerRecord {
     zip?: string;
 }
 
-/** Navy bar. On its own it is a collapsed section; with children it caps a white card. */
-export const CustomerSection = ({ title, children }: { title: string; children?: ReactNode }) => (
-    <Box sx={{ px: 1, mt: 3 }}>
-        <Box
-            sx={
-                children
-                    ? {
-                          bgcolor: appColors.surface,
-                          border: `1px solid ${appColors.divider}`,
-                          borderRadius: `${appRadius.card}px`,
-                      }
-                    : undefined
-            }
-        >
+/**
+ * A navy section bar over a white card.
+ *
+ * The record is a stack of these and it is long — memberships, types, gift
+ * cards, rainchecks, a hundred rounds of history, punch cards — so each one
+ * collapses to its bar. That is what the bars have always looked like they did;
+ * until now they were decoration and the whole record was always open, which is
+ * why finding General Info meant scrolling past thirty tee times.
+ *
+ * With children it is an accordion. Without them it is a plain bar, which is the
+ * empty state: a section with nothing in it has nothing to expand to.
+ */
+export const CustomerSection = ({
+    title,
+    children,
+    defaultOpen = true,
+    /** Shown on the right of the bar — a count, a balance, whatever is worth seeing while closed. */
+    summary,
+}: {
+    title: string;
+    children?: ReactNode;
+    defaultOpen?: boolean;
+    summary?: string;
+}) => {
+    const [open, setOpen] = useState(defaultOpen);
+    const collapsible = Boolean(children);
+    const isOpen = collapsible && open;
+
+    const bar = (
+        <>
+            <Typography sx={{ flex: 1, textAlign: "left", fontSize: 15, fontWeight: 500, color: "#fff" }}>{title}</Typography>
+            {summary && <Typography sx={{ fontSize: 15, color: "rgba(255,255,255,0.82)", mr: 1.5 }}>{summary}</Typography>}
+            {collapsible && (
+                <ExpandMoreIcon
+                    sx={{ fontSize: 22, color: "#fff", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 120ms linear" }}
+                />
+            )}
+        </>
+    );
+
+    return (
+        <Box sx={{ px: 1, mt: 3 }}>
             <Box
-                sx={{
-                    bgcolor: appColors.navy,
-                    borderRadius: `${appRadius.card}px`,
-                    px: 2,
-                    minHeight: 44,
-                    display: "flex",
-                    alignItems: "center",
-                }}
+                sx={
+                    children
+                        ? { bgcolor: appColors.surface, border: `1px solid ${appColors.divider}`, borderRadius: `${appRadius.card}px` }
+                        : undefined
+                }
             >
-                <Typography sx={{ fontSize: 15, fontWeight: 500, color: "#fff" }}>{title}</Typography>
+                {collapsible ? (
+                    <ButtonBase
+                        onClick={() => setOpen((v) => !v)}
+                        aria-expanded={isOpen}
+                        sx={{
+                            width: "100%",
+                            bgcolor: appColors.navy,
+                            borderRadius: `${appRadius.card}px`,
+                            px: 2,
+                            minHeight: 48,
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        {bar}
+                    </ButtonBase>
+                ) : (
+                    <Box
+                        sx={{ bgcolor: appColors.navy, borderRadius: `${appRadius.card}px`, px: 2, minHeight: 44, display: "flex", alignItems: "center" }}
+                    >
+                        {bar}
+                    </Box>
+                )}
+                {isOpen && children}
             </Box>
-            {children}
         </Box>
-    </Box>
-);
+    );
+};
 
 /** Membership rows read "<name>  Expires  <date>" on one line. */
 export const MembershipRow = ({ name, expires }: { name: string; expires: string }) => (
@@ -230,6 +280,72 @@ export const GiftCardsTable = () => (
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>UPC</Typography>
             <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>Balance</Typography>
+        </Box>
+    </Box>
+);
+
+const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+
+/** What the course still owes this customer in rainchecks. */
+export const raincheckOwed = (rows: Raincheck[]) => +rows.reduce((sum, r) => sum + r.balance, 0).toFixed(2);
+
+/**
+ * Rain Checks — a new section, sitting under Gift Cards.
+ *
+ * Both sections are stored value, and the record already had one of them. A
+ * raincheck was only ever visible as a bolt glyph on a tee time and as a chip at
+ * the till, so the one question a counter actually gets asked — *how much do I
+ * have?* — could not be answered from the customer's own record.
+ *
+ * The balance is the point, so it is on the bar as well as in the table: a
+ * closed section still answers the question. Columns are the raincheck's whole
+ * life — what it was cut from, what it was worth, what is left — because a
+ * partly-spent credit is common and a bare balance hides it.
+ */
+// Identity columns left, money right; the slack sits between them so the three
+// dollar figures stay flush with the section's right edge.
+const RAINCHECK_COLUMNS = "96px 170px 1fr 90px 110px 110px 110px";
+
+const RAINCHECK_HEADINGS = ["Raincheck ID", "Tee time", "Reservation", "Holes", "Awarded", "Spent", "Balance"];
+
+export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
+    <Box sx={{ px: 2, py: 1.5 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, mb: 0.5 }}>
+            {RAINCHECK_HEADINGS.map((h, i) => (
+                <Typography key={h} sx={{ fontSize: 15, color: appColors.textSecondary, textAlign: i >= 3 ? "right" : "left" }}>
+                    {h}
+                </Typography>
+            ))}
+        </Box>
+
+        {rows.length === 0 ? (
+            <Typography sx={{ py: 2, fontSize: 17, color: appColors.textSecondary }}>No rainchecks.</Typography>
+        ) : (
+            rows.map((r) => (
+                <Box key={r.id} sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, py: 0.4 }}>
+                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{r.id}</Typography>
+                    {/* The round it came off. A credit whose origin cannot be
+                        named is one nobody can check against the customer's
+                        story — the date and time are what settles that. */}
+                    <Typography sx={{ fontSize: 14, color: appColors.textPrimary }}>{r.teeTime ?? "—"}</Typography>
+                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{r.reservation}</Typography>
+                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>
+                        {r.holesPlayed} of {r.totalHoles}
+                    </Typography>
+                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>{usd(r.awarded)}</Typography>
+                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>{usd(r.spent)}</Typography>
+                    <Typography sx={{ fontSize: 14, color: appColors.textPrimary, textAlign: "right", fontWeight: 700 }}>
+                        {usd(r.balance)}
+                    </Typography>
+                </Box>
+            ))
+        )}
+
+        <Box sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, mt: 1.5, pt: 1.25, borderTop: `1px solid ${appColors.divider}` }}>
+            <Typography sx={{ gridColumn: "1 / 7", fontSize: 16, color: appColors.textPrimary }}>Total owed to this customer</Typography>
+            <Typography sx={{ gridColumn: "7", fontSize: 16, fontWeight: 700, color: appColors.greenTee, textAlign: "right" }}>
+                {usd(raincheckOwed(rows))}
+            </Typography>
         </Box>
     </Box>
 );
