@@ -11,6 +11,7 @@
         "typecheck": "tsc --noEmit",
         "format": "prettier --write .",
         "generate:catalog": "node scripts/generate-catalog.mjs",
+        "generate:customers": "node scripts/generate-customers.mjs",
         "dev:app": "vite",
         "build-app": "vite build",
         "smoke": "node scripts/smoke-test.mjs",

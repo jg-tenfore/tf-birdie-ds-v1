@@ -1,19 +1,21 @@
 /**
- * The customer database behind Customer Search.
+ * The customer database.
  *
- * Lives in the design system, like the tee sheet fixtures, so a flow proven in
- * the prototype can be turned into a story without retyping its data.
+ * The records live in `customers.json` beside this file and are committed, not
+ * generated at boot. That is the important part: the tee sheet books against
+ * these people, the raincheck ledger is owned by them, and the smoke tests
+ * assert on them by name, so the database has to be a fixed thing you can open
+ * and read rather than a function of a seed. `npm run generate:customers`
+ * regrows it; edit the JSON directly for one-off changes.
  *
  * A hundred records rather than a handful, because the interesting problems in
- * this screen only appear at volume: several people sharing a phone number, the
- * same first name on six rows, a member and their guest account being nearly
- * indistinguishable, and names long enough to truncate. A six-row fixture makes
- * the search look easy when it is not.
- *
- * Everything is generated deterministically — the smoke tests assert against
- * these records, and a database that reshuffles on reload makes any screenshot
- * comparison worthless.
+ * Customer Search only appear at volume: a household sharing one phone number,
+ * three people with the same first name, a member and their guest account
+ * separated by two characters, and names long enough to truncate. A six-row
+ * fixture makes the search look easy when it is not.
  */
+
+import records from "./customers.json";
 
 export interface Membership {
     name: string;
@@ -34,6 +36,14 @@ export interface CrmTeeTime {
     id: string;
     date: string;
     players: number;
+    /**
+     * Absent on archive rows. Live bookings read off the tee sheets carry one,
+     * so the profile can say which rounds are still to come.
+     */
+    status?: "Booked" | "Checked in" | "Paid" | "No show";
+    /** Where it is on the sheet. Live rows only. */
+    time?: string;
+    course?: string;
 }
 
 export interface CrmPunchCard {
@@ -56,6 +66,14 @@ export interface Customer {
      * why two records for one person can look like two different people.
      */
     displayName: string;
+    /**
+     * How a tee-time booking prints them, when that differs.
+     *
+     * The course abbreviates some regulars to "Sutton, K." and prefixes guest
+     * accounts with "G-". Without this the name on a booking is just a string
+     * that resembles a customer, and cannot be resolved to one.
+     */
+    sheetName?: string;
     /** A short code some records carry, shown bold-italic above the name. */
     tag?: string;
     email: string;
@@ -69,6 +87,7 @@ export interface Customer {
     memberships: Membership[];
     customerTypes: string[];
     giftCards: CrmGiftCard[];
+    /** Rounds already played. Live bookings come from the tee sheets. */
     teeTimes: CrmTeeTime[];
     punchCards: CrmPunchCard[];
     rewardsBalance: number;
@@ -77,6 +96,8 @@ export interface Customer {
     cardOnFile?: string;
     cardExpires?: string;
 }
+
+export const customers = records as Customer[];
 
 /**
  * Every type the course has configured, in the order the new-customer form lays
@@ -110,178 +131,25 @@ export const CUSTOMER_TYPES = [
  */
 export const EMAIL_DOMAINS = ["@gmail.com", "@yahoo.com", "@hotmail.com", "@aol.com", "@sbcglobal.net", "@att.net"] as const;
 
-const MEMBERSHIP_NAMES = [
-    "30 Day booking window",
-    "Full Golf",
-    "Weekday Golf",
-    "Social",
-    "Junior",
-    "Corporate — 4 seat",
-    "Trial Month",
-] as const;
-
-const FIRST = [
-    "Weston", "Tony", "Randy", "Tom", "Oda", "Ivar", "Rufus", "Igor", "Marissa", "Priya",
-    "Chris", "Kelsey", "Dermot", "Ana", "Hugh", "Nadia", "Owen", "Simone", "Callum", "Ines",
-    "Bao", "Grete", "Milo", "Rosa", "Teo", "Wren", "Amara", "Dov", "Fionn", "Suri",
-] as const;
-
-const LAST = [
-    "Farnsworth", "Finau", "Orton", "Watson", "Brennevin", "Kuznetsov", "Chen", "Raman", "Moreno", "Sutton",
-    "Doyle", "Hamlet", "Okafor", "Lindqvist", "Baptiste", "Nakamura", "Achebe", "Vasquez", "Delgado", "Halloran",
-    "Petrov", "Ferreira", "Nguyen", "Mbeki", "Salvatore", "Kaur", "Bergstrom", "Ito", "Marchetti", "Osei",
-] as const;
-
-const CITIES = [
-    ["Bethesda", "MD", "20814"],
-    ["Rockville", "MD", "20850"],
-    ["Silver Spring", "MD", "20901"],
-    ["Potomac", "MD", "20854"],
-    ["Arlington", "VA", "22201"],
-    ["Alexandria", "VA", "22314"],
-] as const;
-
-const NOTE_POOL = [
-    "free golf for life",
-    "prefers the 7:40 time",
-    "walks — never wants a cart",
-    "left-handed rental clubs",
-    "always pays on account",
-    "do not seat near the bar",
-    "wife's birthday in June — comp dessert",
-    "has a standing Saturday foursome",
-    "",
-    "",
-] as const;
-
-const STREETS = ["N/A", "18 Fairway Ln", "402 Bunker Rd", "77 Greenside Ct", "1201 Tee Box Way", "9 Dogleg Dr"] as const;
+/** How a booking prints this person — the abbreviation if there is one. */
+export const bookingName = (customer: Customer) => customer.sheetName ?? `${customer.firstName} ${customer.lastName}`;
 
 /**
- * Deterministic pseudo-random. See the same note in `tee-sheet.ts` — the records
- * must be byte-identical on every run.
+ * Booking name → record.
+ *
+ * Built once. This is the join that makes a name on the tee sheet a person: the
+ * detail screen, the raincheck ledger and the profile all resolve through it.
  */
-const rng = (seed: number) => () => {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    return seed / 0x7fffffff;
-};
-
-const pad = (n: number, len = 2) => String(n).padStart(len, "0");
-
-const dateString = (rand: () => number, yearFrom: number, yearTo: number) =>
-    `${pad(1 + Math.floor(rand() * 12))}/${pad(1 + Math.floor(rand() * 28))}/${yearFrom + Math.floor(rand() * (yearTo - yearFrom + 1))}`;
-
-/** Builds the customer database. */
-export function buildCustomers(count = 100, seed = 13): Customer[] {
-    const rand = rng(seed);
-    let customerId = 458336;
-    let courseId = 313489;
-    let giftCardId = 261900;
-    let teeTimeId = 9024700;
-
-    return Array.from({ length: count }, (_, index) => {
-        const firstName = FIRST[index % FIRST.length];
-        const lastName = LAST[Math.floor(index / FIRST.length + index * 7) % LAST.length];
-
-        const memberships: Membership[] =
-            rand() > 0.55
-                ? [
-                      {
-                          name: MEMBERSHIP_NAMES[Math.floor(rand() * MEMBERSHIP_NAMES.length)],
-                          expires: dateString(rand, 2026, 2028),
-                      },
-                  ]
-                : [];
-
-        const types = CUSTOMER_TYPES.filter(() => rand() > 0.86);
-
-        // The suffix is part of the printed name, not a separate field. A member
-        // and their guest account differ only by a "G-" prefix on the device,
-        // which is exactly how staff pick the wrong one.
-        const suffix = memberships[0]?.name ?? types[0] ?? "";
-        const displayName = suffix ? `${firstName} ${lastName} - ${suffix}` : `${firstName} ${lastName}`;
-
-        const [city, state, zip] = CITIES[Math.floor(rand() * CITIES.length)];
-        // Shared phone numbers are common — a household books under one number.
-        const phone = rand() > 0.12 ? `801${pad(Math.floor(rand() * 10000000), 7)}` : undefined;
-
-        const giftCards: CrmGiftCard[] = Array.from({ length: Math.floor(rand() * 3) }, () => {
-            const awarded = [25, 50, 100, 175, 200, 800][Math.floor(rand() * 6)];
-            const spent = rand() > 0.6 ? +(awarded * rand()).toFixed(2) : 0;
-            const id = String(giftCardId++);
-            return {
-                id,
-                type: rand() > 0.5 ? "Purchased" : "Winnings",
-                expires: dateString(rand, 2027, 2032),
-                awarded,
-                spent,
-                balance: +(awarded - spent).toFixed(2),
-                upc: rand() > 0.4 ? `${Math.floor(rand() * 900000 + 100000)}807261` : "",
-            };
-        });
-
-        const teeTimes: CrmTeeTime[] = Array.from({ length: Math.floor(rand() * 12) }, () => {
-            const hour = 6 + Math.floor(rand() * 12);
-            return {
-                id: String(teeTimeId++),
-                date: `${dateString(rand, 2026, 2026)} ${hour % 12 || 12}:${pad(Math.floor(rand() * 4) * 15)} ${hour < 12 ? "AM" : "PM"}`,
-                players: 1 + Math.floor(rand() * 4),
-            };
-        });
-
-        const punchCards: CrmPunchCard[] = Array.from({ length: rand() > 0.75 ? 1 : 0 }, () => {
-            const total = [5, 10, 20][Math.floor(rand() * 3)];
-            return {
-                name: `${total}-Round Punch Card`,
-                remaining: Math.floor(rand() * (total + 1)),
-                total,
-                expires: dateString(rand, 2026, 2027),
-            };
-        });
-
-        const hasCard = rand() > 0.35;
-
-        return {
-            id: String(customerId++),
-            courseId: String(courseId++),
-            firstName,
-            lastName,
-            displayName,
-            tag: rand() > 0.92 ? `(tr${Math.floor(rand() * 900 + 100)})` : undefined,
-            // The device's own records use plus-addressing heavily because they
-            // are test accounts; keeping that makes search behave realistically.
-            email:
-                rand() > 0.7
-                    ? `${firstName.toLowerCase()}.${lastName.toLowerCase()}+${index}@tenfore.golf`
-                    : `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
-            phone,
-            birthday: rand() > 0.6 ? dateString(rand, 1948, 2004) : undefined,
-            notes: NOTE_POOL[Math.floor(rand() * NOTE_POOL.length)] || undefined,
-            street: STREETS[Math.floor(rand() * STREETS.length)],
-            city: rand() > 0.15 ? city : "N/A",
-            state,
-            zip: rand() > 0.25 ? zip : undefined,
-            memberships,
-            customerTypes: [...types],
-            giftCards,
-            teeTimes,
-            punchCards,
-            rewardsBalance: Math.floor(rand() * 3000),
-            balance: rand() > 0.7 ? +(rand() * 2500).toFixed(2) : 0,
-            cardOnFile: hasCard ? String(Math.floor(rand() * 9000 + 1000)) : undefined,
-            cardExpires: hasCard ? `${pad(1 + Math.floor(rand() * 12))}/${2027 + Math.floor(rand() * 15)}` : undefined,
-        };
-    });
-}
-
-export const customers = buildCustomers();
+export const customersByBookingName: Record<string, Customer> = Object.fromEntries(customers.map((c) => [bookingName(c), c]));
 
 /**
  * The lookup the search field runs.
  *
- * Matches name, email and phone, because that is what the placeholder promises.
- * Results are capped — the device returns everything and the list just keeps
- * going, which is fine on a real CRM but makes a demo look broken when a
- * two-letter query returns ninety rows.
+ * Matches name, email and phone, because that is what the placeholder promises,
+ * plus the customer id and the booking name so a person found on the tee sheet
+ * can be found again here. Results are capped — the device returns everything
+ * and the list just keeps going, which is fine on a real CRM but makes a demo
+ * look broken when a two-letter query returns ninety rows.
  */
 export function searchCustomers(query: string, limit = 8, list: Customer[] = customers): Customer[] {
     const q = query.trim().toLowerCase();
@@ -290,6 +158,7 @@ export function searchCustomers(query: string, limit = 8, list: Customer[] = cus
         .filter(
             (c) =>
                 c.displayName.toLowerCase().includes(q) ||
+                bookingName(c).toLowerCase().includes(q) ||
                 c.email.toLowerCase().includes(q) ||
                 (c.phone ?? "").includes(q) ||
                 c.id.includes(q),
@@ -298,6 +167,10 @@ export function searchCustomers(query: string, limit = 8, list: Customer[] = cus
 }
 
 export const customerById = (id: string, list: Customer[] = customers) => list.find((c) => c.id === id) ?? null;
+
+/** The record a booking belongs to, or null for a league or an outing. */
+export const customerByBookingName = (name: string, list: Customer[] = customers) =>
+    list.find((c) => bookingName(c) === name) ?? null;
 
 /**
  * Builds a record from what the new-customer form collects.
