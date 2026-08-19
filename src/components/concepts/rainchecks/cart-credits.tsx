@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
 
-import { isExpired, isRedeemable, isSpentOut, type Raincheck } from "@/data/rainchecks";
+import { isExpired, isRedeemable, isSpentOut, isVoided, type Raincheck } from "@/data/rainchecks";
 import { appColors } from "@/theme/app-replica-tokens";
 
 /**
@@ -68,9 +68,10 @@ const RedemptionLines = ({ credit }: { credit: Raincheck }) => {
 };
 
 const CreditCard = ({ credit, selected, onSelect, owed }: { credit: Raincheck; selected: boolean; onSelect?: () => void; owed: number }) => {
-    const used = isSpentOut(credit);
-    const expired = !used && isExpired(credit);
-    const dead = used || expired;
+    const voided = isVoided(credit);
+    const used = !voided && isSpentOut(credit);
+    const expired = !voided && !used && isExpired(credit);
+    const dead = voided || used || expired;
     const covers = credit.balance + 0.001 >= owed;
     return (
         <ButtonBase
@@ -101,13 +102,13 @@ const CreditCard = ({ credit, selected, onSelect, owed }: { credit: Raincheck; s
                     <Typography
                         sx={{
                             fontSize: 13,
-                            color: expired ? appColors.orange : appColors.textSecondary,
-                            border: `1px solid ${expired ? appColors.orange : appColors.divider}`,
+                            color: voided ? appColors.red : expired ? appColors.orange : appColors.textSecondary,
+                            border: `1px solid ${voided ? appColors.red : expired ? appColors.orange : appColors.divider}`,
                             px: 1,
                             py: 0.25,
                         }}
                     >
-                        {used ? "USED" : "EXPIRED"}
+                        {voided ? "VOIDED" : used ? "USED" : "EXPIRED"}
                     </Typography>
                 )}
                 <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>Raincheck {credit.id}</Typography>
@@ -122,6 +123,11 @@ const CreditCard = ({ credit, selected, onSelect, owed }: { credit: Raincheck; s
 
             {/* Says whether it settles the ticket before the operator commits,
                 rather than after — the shipping flow only finds out on apply. */}
+            {voided && (
+                <Typography sx={{ fontSize: 14, mt: 0.75, color: appColors.red }}>
+                    Voided {credit.voided!.at} by {credit.voided!.by} — {credit.voided!.reason}
+                </Typography>
+            )}
             {expired && (
                 <Typography sx={{ fontSize: 14, mt: 0.75, color: appColors.orange }}>
                     Expired {credit.expires} — {usd(credit.balance)} was still on it
@@ -309,8 +315,8 @@ export const CartCredits = ({
     // The pane always lists this ticket's customer. Search is a different screen
     // now, so the list underneath never changes out from under the operator.
     const available = credits.filter((c) => isRedeemable(c));
-    const expired = credits.filter((c) => !isSpentOut(c) && isExpired(c));
-    const used = credits.filter(isSpentOut);
+    const expired = credits.filter((c) => !isVoided(c) && !isSpentOut(c) && isExpired(c));
+    const used = credits.filter((c) => isVoided(c) || isSpentOut(c));
 
     const setSearching = (next: boolean) => {
         setOpen(next);
@@ -365,8 +371,7 @@ export const CartCredits = ({
                                 </Box>
                             )}
                             <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 1 }}>
-                                Already used — {used.length === 1 ? "1 raincheck" : `${used.length} rainchecks`}, nothing left on{" "}
-                                {used.length === 1 ? "it" : "them"}
+                                Used or voided — {used.length === 1 ? "1 raincheck" : `${used.length} rainchecks`} that cannot be taken
                             </Typography>
                             {used.map((c) => (
                                 <CreditCard key={c.id} credit={c} owed={owed} selected={false} />

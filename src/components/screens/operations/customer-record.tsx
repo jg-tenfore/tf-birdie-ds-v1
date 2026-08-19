@@ -76,6 +76,8 @@ export interface CustomerRecordPanelProps {
     onToggleType?: (type: string) => void;
     /** Opens every section closed, which is how a long record should arrive. */
     startCollapsed?: boolean;
+    /** Makes the Rain Checks rows tappable. Omit for the read-only record. */
+    onSelectRaincheck?: (id: string) => void;
 }
 
 const defaultCustomer = customers.find((c) => c.displayName === "Weston Senior") ?? customers[0];
@@ -88,6 +90,7 @@ export const CustomerRecordPanel = ({
     selectedTypes,
     onToggleType,
     startCollapsed = false,
+    onSelectRaincheck,
 }: CustomerRecordPanelProps) => {
     const checked = selectedTypes ?? customer.customerTypes;
     const owed = raincheckOwed(rainchecks);
@@ -168,7 +171,7 @@ export const CustomerRecordPanel = ({
             {/* Directly under Gift Cards, because the two are the same kind of
                 thing: money the course is holding on this person's behalf. */}
             <CustomerSection title="Rain Checks" defaultOpen={!startCollapsed} summary={usd(owed)}>
-                <RainChecksTable rows={rainchecks} />
+                <RainChecksTable rows={rainchecks} onSelect={onSelectRaincheck} />
             </CustomerSection>
 
             <CustomerSection

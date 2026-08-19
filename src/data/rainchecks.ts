@@ -61,6 +61,18 @@ export interface Raincheck {
      * actually has to settle.
      */
     redemptions?: Redemption[];
+    /**
+     * Cancelled after the fact.
+     *
+     * Void rather than delete: a raincheck is a financial record, and a deleted
+     * one takes its audit trail with it. A voided credit stays in the ledger,
+     * stays visible on the customer's record, and releases the round it came
+     * from so a correct one can be cut.
+     *
+     * A reason is required. The commonest mistake this exists for — issuing to
+     * the wrong player — is invisible a week later without one.
+     */
+    voided?: { at: string; by: string; reason: string };
 }
 
 /** One draw against a credit. */
@@ -76,6 +88,22 @@ export interface Redemption {
 
 /** A credit with nothing left on it. */
 export const isSpentOut = (r: Raincheck) => r.balance <= 0.001;
+
+/** Cancelled by an operator. Still in the ledger, but worth nothing. */
+export const isVoided = (r: Raincheck) => Boolean(r.voided);
+
+/**
+ * Why a credit was voided. Free text would be left blank; a fixed list means
+ * the ledger can be asked how often the wrong player gets one, which is the
+ * number that would justify redesigning the issue screen.
+ */
+export const VOID_REASONS = [
+    "Issued to the wrong player",
+    "Wrong hole count",
+    "Issued in error",
+    "Customer declined it",
+    "Duplicate of another raincheck",
+] as const;
 
 /**
  * The day the terminal thinks it is. Fixed, like `TODAY` on the tee sheet, so
@@ -100,7 +128,7 @@ export const isExpired = (r: Raincheck, today: Date = RAINCHECK_TODAY) => {
 };
 
 /** Spendable: something left on it, and still in date. */
-export const isRedeemable = (r: Raincheck, today: Date = RAINCHECK_TODAY) => !isSpentOut(r) && !isExpired(r, today);
+export const isRedeemable = (r: Raincheck, today: Date = RAINCHECK_TODAY) => !isSpentOut(r) && !isVoided(r) && !isExpired(r, today);
 
 /**
  * The share of the round being returned.
@@ -213,6 +241,22 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         awarded: 49.67,
         spent: 0,
         balance: 49.67,
+    },
+    // Voided — cut for the wrong player and cancelled twenty minutes later.
+    // The round it came from is issuable again; this row is what is left.
+    {
+        id: "51379",
+        reservation: "10314912",
+        teeTime: "7/20/2026 7:00 PM",
+        issued: "07/20/2026",
+        expires: "07/20/2027",
+        roundPrice: 55.08,
+        totalHoles: 18,
+        holesPlayed: 5,
+        awarded: 39.78,
+        spent: 0,
+        balance: 39.78,
+        voided: { at: "7/20/2026 2:52 PM", by: "John Admin", reason: "Issued to the wrong player" },
     },
     // Spent out. Invisible to the shipping lookup, which is exactly why the
     // customer insisting they have one cannot be answered at the counter.
