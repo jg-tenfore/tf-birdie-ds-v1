@@ -53,8 +53,17 @@ export interface RaincheckPosition {
     holes: number;
     greenFee: RaincheckFee;
     cartFee: RaincheckFee;
-    /** Already credited. Present means this round is spent as far as issuing goes. */
-    issued?: { raincheckId: string; amount: number; at: string; to: string };
+    /**
+     * Already credited. Present means this round is spent as far as issuing
+     * goes — a round cannot be rainchecked twice.
+     *
+     * `since` is what has happened to that credit *after* it was cut. Issuance
+     * and redemption are different screens on different days, and this row is
+     * the only place they meet: without it, "already issued" is where the story
+     * stops, and nobody at this screen can tell whether the money was ever
+     * actually taken.
+     */
+    issued?: { raincheckId: string; amount: number; at: string; to: string; since?: string };
 }
 
 export const positionTotal = (p: RaincheckPosition) => +(p.greenFee.price + p.cartFee.price).toFixed(2);
@@ -113,11 +122,17 @@ const PositionRow = ({
             </Typography>
 
             {done ? (
-                <Stack direction="row" sx={{ alignItems: "center", gap: 0.75, mt: 0.75 }}>
-                    <CheckCircleIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
-                    <Typography sx={{ fontSize: 14, color: appColors.greenTee }}>
-                        Raincheck {position.issued!.raincheckId} · {usd(position.issued!.amount)} to {position.issued!.to} · {position.issued!.at}
-                    </Typography>
+                <Stack sx={{ mt: 0.75, gap: 0.25 }}>
+                    <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
+                        <Typography sx={{ fontSize: 14, color: appColors.greenTee }}>
+                            Raincheck {position.issued!.raincheckId} · {usd(position.issued!.amount)} to {position.issued!.to} ·{" "}
+                            {position.issued!.at}
+                        </Typography>
+                    </Stack>
+                    {position.issued!.since && (
+                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>{position.issued!.since}</Typography>
+                    )}
                 </Stack>
             ) : (
                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.75 }}>No raincheck issued</Typography>
@@ -368,7 +383,13 @@ export const foursome: RaincheckPosition[] = [
         holes: 18,
         greenFee: { name: "Dunes Rack Prime", price: 73.18 },
         cartFee: { name: "Dunes Cart", price: 26.82 },
-        issued: { raincheckId: "51380", amount: 72.22, at: "2:30 PM", to: "Justin Girard" },
+        issued: {
+            raincheckId: "51380",
+            amount: 72.22,
+            at: "2:30 PM",
+            to: "Justin Girard",
+            since: "Spent in full — $72.22 on 8/2/2026, order #5734120",
+        },
     },
     {
         id: "10314912",

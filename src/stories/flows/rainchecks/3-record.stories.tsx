@@ -37,9 +37,9 @@ type Story = StoryObj<typeof meta>;
 const SHEETS = { "2026-05-12": may12Sheet, "2026-07-29": todaySheet };
 const weston = customers.find((c) => c.displayName === "Weston Senior")!;
 
-/** Two credits, $176.12 owed. Every bar toggles. */
+/** Four credits in three states — two untouched, one partly spent, one used up. $190.88 owed. */
 export const Default: Story = {
-    name: "Two credits",
+    name: "Four credits",
     render: () => (
         <AppShell title="Customer Search" active="customersearch" topBarRight={AddCustomerAction} actionBar={RecordActionBar}>
             <CustomerRecordPanel
@@ -54,7 +54,7 @@ export const Default: Story = {
 /**
  * The same record with everything shut.
  *
- * `Rain Checks $176.12` on a closed bar is the whole answer, without scrolling
+ * `Rain Checks $190.88` on a closed bar is the whole answer, without scrolling
  * and without opening anything. This is how the record should arrive.
  */
 export const Collapsed: Story = {

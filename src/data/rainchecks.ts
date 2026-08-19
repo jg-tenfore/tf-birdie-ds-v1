@@ -52,7 +52,55 @@ export interface Raincheck {
     awarded: number;
     spent: number;
     balance: number;
+    /**
+     * Where the money went.
+     *
+     * A raincheck is not spent once — $103.90 can pay for a round in June and a
+     * sleeve of balls in August. Without this the customer's record can say a
+     * credit is empty but not what emptied it, which is the argument a counter
+     * actually has to settle.
+     */
+    redemptions?: Redemption[];
 }
+
+/** One draw against a credit. */
+export interface Redemption {
+    /** When it was spent, as the receipt dates it. */
+    at: string;
+    amount: number;
+    /** The order it paid for, so the sale can be looked up. */
+    order: string;
+    /** What was bought, in the words the receipt used. */
+    what: string;
+}
+
+/** A credit with nothing left on it. */
+export const isSpentOut = (r: Raincheck) => r.balance <= 0.001;
+
+/**
+ * The day the terminal thinks it is. Fixed, like `TODAY` on the tee sheet, so
+ * "expired" is a stable fact rather than something that changes under a demo.
+ */
+export const RAINCHECK_TODAY = new Date("2026-08-19T12:00:00");
+
+/**
+ * Past its expiry date.
+ *
+ * Kept as a state rather than a filter. Every credit carries an expiry and
+ * nothing has ever enforced it, so the first question is what an expired one
+ * should even look like — the answer from the pro shop is that it has to be
+ * *visible*, because the awkward moment is a customer holding a slip the
+ * terminal claims does not exist. Whether an expired credit can still be
+ * honoured, and how long they are kept at all, is not settled.
+ */
+export const isExpired = (r: Raincheck, today: Date = RAINCHECK_TODAY) => {
+    const [m, d, y] = r.expires.split("/").map(Number);
+    if (!m || !d || !y) return false;
+    return new Date(y, m - 1, d) < today;
+};
+
+/** Spendable: something left on it, and still in date. */
+export const isRedeemable = (r: Raincheck, today: Date = RAINCHECK_TODAY) => !isSpentOut(r) && !isExpired(r, today);
 
 /**
  * The share of the round being returned.
@@ -135,6 +183,56 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         spent: 0,
         balance: 72.22,
     },
+    // Partly spent — a round in June took most of it. The case the register
+    // has to render without making it look like a full credit.
+    {
+        id: "38204",
+        reservation: "10241887",
+        teeTime: "5/30/2026 6:40 AM",
+        issued: "05/30/2026",
+        expires: "05/30/2027",
+        roundPrice: 88.4,
+        totalHoles: 18,
+        holesPlayed: 4,
+        awarded: 68.76,
+        spent: 54.0,
+        balance: 14.76,
+        redemptions: [{ at: "6/18/2026", amount: 54.0, order: "5719044", what: "Senior Weekday, Dunes Cart" }],
+    },
+    // Expired with money still on it — the slip in the customer's hand that the
+    // terminal will not honour. The pro shop's awkward moment, in data.
+    {
+        id: "22470",
+        reservation: "10099213",
+        teeTime: "8/02/2025 7:40 AM",
+        issued: "08/02/2025",
+        expires: "08/02/2026",
+        roundPrice: 74.5,
+        totalHoles: 18,
+        holesPlayed: 6,
+        awarded: 49.67,
+        spent: 0,
+        balance: 49.67,
+    },
+    // Spent out. Invisible to the shipping lookup, which is exactly why the
+    // customer insisting they have one cannot be answered at the counter.
+    {
+        id: "29115",
+        reservation: "10188342",
+        teeTime: "4/11/2026 3:20 PM",
+        issued: "04/11/2026",
+        expires: "04/11/2027",
+        roundPrice: 62.0,
+        totalHoles: 18,
+        holesPlayed: 9,
+        awarded: 31.0,
+        spent: 31.0,
+        balance: 0,
+        redemptions: [
+            { at: "4/25/2026", amount: 18.5, order: "5698210", what: "Glove, 2 sleeves Pro V1" },
+            { at: "5/02/2026", amount: 12.5, order: "5701883", what: "Twilight green fee" },
+        ],
+    },
 ];
 
 /**
@@ -196,14 +294,18 @@ export const rainchecks = buildRainchecks();
  *
  * Matches the raincheck id, the customer's name and their email, because that is
  * exactly what the field promises: "Enter Raincheck id, customer name, or email".
- * Spent-out rainchecks are filtered rather than shown greyed — a zero balance
- * tenders nothing, and offering it as a chip only invites the tap.
+ *
+ * Spent-out credits are filtered by default, which is what the device does, and
+ * is a defensible-looking decision that costs real time at a counter: a customer
+ * who is sure they have a raincheck gets "no results", and the operator has no
+ * way to say "you spent it on the 25th of April". Pass `includeSpent` to get
+ * them back — the concepts do, and show them as history rather than as offers.
  */
-export function searchRainchecks(query: string, list: Raincheck[] = rainchecks, limit = 6): Raincheck[] {
+export function searchRainchecks(query: string, list: Raincheck[] = rainchecks, limit = 6, includeSpent = false): Raincheck[] {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return [];
     return list
-        .filter((r) => r.balance > 0)
+        .filter((r) => includeSpent || isRedeemable(r))
         .filter((r) => r.id.includes(q) || r.customerName.toLowerCase().includes(q) || (r.email ?? "").toLowerCase().includes(q))
         .slice(0, limit);
 }
