@@ -20,6 +20,8 @@ import {
     type RaincheckPosition,
 } from "@/components/concepts/rainchecks/reservation-raincheck";
 import { raincheckValue } from "@/data/rainchecks";
+
+const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 import { appColors } from "@/theme/app-replica-tokens";
 
 /**
@@ -41,11 +43,12 @@ import { appColors } from "@/theme/app-replica-tokens";
  * - **A sentence states the outcome before you commit.** Weston asked for this
  *   nearly verbatim.
  *
- * Compare against **Flows → Rainchecks → 2 — Create raincheck** for the version
+ * Same number as the core step it replaces. Compare **Flows → Rainchecks →
+ * 2 — Create raincheck** — one screen up, outside this folder — for the version
  * that ships.
  */
 const meta = {
-    title: "Flows/Rainchecks/Weston's ideas/1 — Issue for this reservation",
+    title: "Flows/Rainchecks/Weston's ideas/2 — Create raincheck",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 
@@ -126,6 +129,23 @@ const Concept = ({ seed, startAt, startRecipient }: { seed: RaincheckPosition[];
         }
     };
 
+    const voidCredit = (positionId: string, reason: string) => {
+        const target = positions.find((p) => p.id === positionId);
+        if (!target?.issued) return;
+        const { raincheckId, amount, to } = target.issued;
+
+        // The credit is cancelled and the round comes back — that is the whole
+        // point. Nothing is deleted: the ledger keeps it, and so does the log.
+        setPositions((prev) => prev.map((p) => (p.id === positionId ? { ...p, issued: undefined } : p)));
+        setLog((prev) => [
+            { at: "7/20/2026 2:52 PM", what: `Raincheck ${raincheckId} (${usd(amount)} to ${to}) voided — ${reason} — by John Admin` },
+            ...prev,
+        ]);
+        setSelectedId(positionId);
+        setRecipientId(positionId);
+        setFlash(`Raincheck ${raincheckId} voided. ${target.name}'s round can be rainchecked again.`);
+    };
+
     return (
         <Frame onIssue={issue} canIssue={canIssue}>
             <Stack sx={{ height: "100%", minHeight: 0 }}>
@@ -151,6 +171,7 @@ const Concept = ({ seed, startAt, startRecipient }: { seed: RaincheckPosition[];
                         onRecipient={setRecipientId}
                         holesPlayed={holesPlayed}
                         onHolesPlayed={setHolesPlayed}
+                        onVoid={voidCredit}
                         log={log}
                     />
                 </Box>
@@ -167,8 +188,13 @@ const Concept = ({ seed, startAt, startRecipient }: { seed: RaincheckPosition[];
  * already credited at 2:30 PM — and cannot be selected. The log underneath says
  * so again in full.
  *
- * Move the radios; switch rounds; then change the recipient and watch the
+ * Move the slider; switch rounds; then change the recipient and watch the
  * sentence change with it.
+ *
+ * Issue one, and the new row gains a **VOID** control — cancelling it releases
+ * the round and writes a line into the history. Justin Girard's credit cannot be
+ * voided: $72.22 of it has already been spent, so the row says so and the
+ * control is dead. At that point it is a refund question, not a correction.
  */
 export const Default: Story = {
     name: "Foursome, one already issued",
@@ -229,6 +255,33 @@ export const AllIssued: Story = {
             </Frame>
         );
     },
+};
+
+/**
+ * A credit that can still be taken back.
+ *
+ * Oda Brennevin's round was rainchecked twenty minutes ago and none of it has
+ * been spent, so the row carries a live **VOID**. Pressing it asks why — the
+ * reason is required, because the correction worth counting is *issued to the
+ * wrong player*, and a blank text field would lose it.
+ *
+ * Voiding releases the round: it becomes selectable again, gets picked up as the
+ * next thing to issue, and the history keeps both the issue and the void.
+ * Nothing is deleted. Compare Justin Girard's row, where the money has already
+ * gone and the control is dead.
+ */
+export const Voidable: Story = {
+    name: "Voiding a credit",
+    render: () => (
+        <Concept
+            seed={foursome.map((p) =>
+                p.id === "10314912"
+                    ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } }
+                    : p,
+            )}
+            startAt="10314910"
+        />
+    ),
 };
 
 /**

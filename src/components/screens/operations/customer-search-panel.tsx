@@ -8,7 +8,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PhoneIcon from "@mui/icons-material/Phone";
 
-import type { Raincheck } from "@/data/rainchecks";
+import { isExpired, isRedeemable, isSpentOut, isVoided, type Raincheck } from "@/data/rainchecks";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 
 /**
@@ -286,8 +286,20 @@ export const GiftCardsTable = () => (
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
-/** What the course still owes this customer in rainchecks. */
-export const raincheckOwed = (rows: Raincheck[]) => +rows.reduce((sum, r) => sum + r.balance, 0).toFixed(2);
+/**
+ * What the course still owes this customer in rainchecks.
+ *
+ * Spendable credits only. A voided one is not owed at all, and an expired one
+ * the terminal will not take should not be quietly folded into a figure a
+ * counter reads out loud — so it gets its own line instead. Whether an expired
+ * credit *should* still be honoured is not settled; showing it separately is
+ * what lets that be argued rather than assumed.
+ */
+export const raincheckOwed = (rows: Raincheck[]) => +rows.filter((r) => isRedeemable(r)).reduce((sum, r) => sum + r.balance, 0).toFixed(2);
+
+/** Money on credits that have lapsed. Not counted as owed, not hidden either. */
+export const raincheckExpired = (rows: Raincheck[]) =>
+    +rows.filter((r) => !isVoided(r) && !isSpentOut(r) && isExpired(r)).reduce((sum, r) => sum + r.balance, 0).toFixed(2);
 
 /**
  * Rain Checks — a new section, sitting under Gift Cards.
@@ -308,7 +320,12 @@ const RAINCHECK_COLUMNS = "96px 170px 1fr 90px 110px 110px 110px";
 
 const RAINCHECK_HEADINGS = ["Raincheck ID", "Tee time", "Reservation", "Holes", "Awarded", "Spent", "Balance"];
 
-export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
+/**
+ * @param onSelect Opens a credit. Rows are inert without it, which is the
+ * shipping behaviour — the record can show you a raincheck but never let you do
+ * anything about one.
+ */
+export const RainChecksTable = ({ rows, onSelect }: { rows: Raincheck[]; onSelect?: (id: string) => void }) => (
     <Box sx={{ px: 2, py: 1.5 }}>
         <Box sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, mb: 0.5 }}>
             {RAINCHECK_HEADINGS.map((h, i) => (
@@ -324,10 +341,20 @@ export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
             rows.map((r) => (
                 <Box
                     key={r.id}
+                    component={onSelect ? ButtonBase : "div"}
+                    onClick={onSelect ? () => onSelect(r.id) : undefined}
                     // Spent-out credits stay listed and read plainly as history.
                     // Dropping them would make "you never had one" and "you used
                     // it in April" the same answer at the counter.
-                    sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, py: 0.4, opacity: r.balance <= 0.001 ? 0.6 : 1 }}
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: RAINCHECK_COLUMNS,
+                        width: "100%",
+                        textAlign: "left",
+                        py: 0.4,
+                        opacity: r.voided || r.balance <= 0.001 ? 0.6 : 1,
+                        ...(onSelect ? { "&:hover": { bgcolor: appColors.canvas } } : {}),
+                    }}
                 >
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{r.id}</Typography>
                     {/* The round it came off. A credit whose origin cannot be
@@ -348,7 +375,7 @@ export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
                             fontWeight: r.balance <= 0.001 ? 400 : 700,
                         }}
                     >
-                        {r.balance <= 0.001 ? "used" : usd(r.balance)}
+                        {r.voided ? "voided" : r.balance <= 0.001 ? "used" : usd(r.balance)}
                     </Typography>
                 </Box>
             ))
@@ -359,6 +386,18 @@ export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
             <Typography sx={{ gridColumn: "7", fontSize: 16, fontWeight: 700, color: appColors.greenTee, textAlign: "right" }}>
                 {usd(raincheckOwed(rows))}
             </Typography>
+
+            {/* Lapsed money, named rather than buried in the figure above. */}
+            {raincheckExpired(rows) > 0 && (
+                <>
+                    <Typography sx={{ gridColumn: "1 / 7", fontSize: 15, color: appColors.textSecondary, mt: 0.5 }}>
+                        Expired, not currently honoured
+                    </Typography>
+                    <Typography sx={{ gridColumn: "7", fontSize: 15, color: appColors.orange, textAlign: "right", mt: 0.5 }}>
+                        {usd(raincheckExpired(rows))}
+                    </Typography>
+                </>
+            )}
         </Box>
     </Box>
 );

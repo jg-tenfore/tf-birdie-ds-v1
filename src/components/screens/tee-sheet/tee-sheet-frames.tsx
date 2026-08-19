@@ -10,6 +10,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
 import { TeeSheetActionBar, TeeSheetSubBar, sheetCanvas, type SheetView } from "./tee-sheet-chrome";
 import type { TeeTimeDetail } from "./tee-sheet-data";
+import type { DetailPlayer, PlayerAction } from "./tee-sheet-data";
 import { TeeTimeDetailBody, TeeTimeDetailTopRight } from "./tee-time-detail";
 
 /**
@@ -81,8 +82,15 @@ export const DetailActionBar = () => (
     </>
 );
 
-export const TeeTimeDetailScreen = ({ detail }: { detail: TeeTimeDetail }) => (
+export const TeeTimeDetailScreen = ({
+    detail,
+    onAction,
+}: {
+    detail: TeeTimeDetail;
+    /** Makes the per-player buttons live. Omit for the documentation frames. */
+    onAction?: (action: PlayerAction, player: DetailPlayer) => void;
+}) => (
     <AppShell title={detail.title} active="teesheet" topBarRight={<TeeTimeDetailTopRight />} actionBar={<DetailActionBar />}>
-        <TeeTimeDetailBody detail={detail} />
+        <TeeTimeDetailBody detail={detail} onAction={onAction} />
     </AppShell>
 );

@@ -1,4 +1,7 @@
+import { useState } from "react";
+
 import Box from "@mui/material/Box";
+import Dialog from "@mui/material/Dialog";
 import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
 import Slider from "@mui/material/Slider";
@@ -9,7 +12,7 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-import { raincheckPercentLabel, raincheckValue } from "@/data/rainchecks";
+import { VOID_REASONS, raincheckPercentLabel, raincheckValue } from "@/data/rainchecks";
 import { appColors } from "@/theme/app-replica-tokens";
 
 /**
@@ -63,7 +66,19 @@ export interface RaincheckPosition {
      * stops, and nobody at this screen can tell whether the money was ever
      * actually taken.
      */
-    issued?: { raincheckId: string; amount: number; at: string; to: string; since?: string };
+    issued?: {
+        raincheckId: string;
+        amount: number;
+        at: string;
+        to: string;
+        since?: string;
+        /**
+         * How much of that credit has already been spent. Any amount at all
+         * blocks the void — at that point the money has left, and taking it
+         * back is a refund question rather than a correction.
+         */
+        spent?: number;
+    };
 }
 
 export const positionTotal = (p: RaincheckPosition) => +(p.greenFee.price + p.cartFee.price).toFixed(2);
@@ -82,16 +97,81 @@ const PositionRow = ({
     position,
     selected,
     onSelect,
+    onVoid,
 }: {
     position: RaincheckPosition;
     selected: boolean;
     onSelect?: () => void;
+    onVoid?: () => void;
 }) => {
     const done = Boolean(position.issued);
+    const spent = position.issued?.spent ?? 0;
+
+    const body = (
+        <>
+            <Stack direction="row" sx={{ alignItems: "baseline", gap: 1.5 }}>
+                <Typography sx={{ fontSize: 20, flex: 1, textAlign: "left" }}>{position.name}</Typography>
+                <Typography sx={{ fontSize: 20 }}>{usd(positionTotal(position))}</Typography>
+            </Stack>
+
+            {/* The fee structure, because this is what the credit is computed
+                from — "it has the tee fee that you booked, the cart fees, that
+                whole structure is built off of that reservation". */}
+            <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.25, textAlign: "left" }}>
+                {position.holes} holes · {position.greenFee.name} {usd(position.greenFee.price)} · {position.cartFee.name}{" "}
+                {usd(position.cartFee.price)} · ID:{position.id}
+            </Typography>
+        </>
+    );
+
+    // Issued rows stop being buttons. A row you cannot select should not look
+    // pressable, and the void control has to live inside it.
+    if (done) {
+        const issued = position.issued!;
+        return (
+            <Box sx={{ px: 2, py: 1.5, borderLeft: "4px solid transparent", borderBottom: `1px solid ${appColors.divider}`, opacity: 0.75 }}>
+                {body}
+                <Stack direction="row" sx={{ alignItems: "flex-start", gap: 1, mt: 0.75 }}>
+                    <Stack sx={{ flex: 1, gap: 0.25 }}>
+                        <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                            <CheckCircleIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
+                            <Typography sx={{ fontSize: 14, color: appColors.greenTee }}>
+                                Raincheck {issued.raincheckId} · {usd(issued.amount)} to {issued.to} · {issued.at}
+                            </Typography>
+                        </Stack>
+                        {issued.since && <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>{issued.since}</Typography>}
+                        {spent > 0 && (
+                            <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>
+                                {usd(spent)} already spent — this can no longer be voided
+                            </Typography>
+                        )}
+                    </Stack>
+
+                    {onVoid && (
+                        <ButtonBase
+                            onClick={spent > 0 ? undefined : onVoid}
+                            disabled={spent > 0}
+                            sx={{
+                                px: 1.5,
+                                py: 0.75,
+                                fontSize: 14,
+                                border: "1px solid",
+                                borderColor: spent > 0 ? appColors.divider : appColors.red,
+                                color: spent > 0 ? appColors.textDisabled : appColors.red,
+                                borderRadius: 0.5,
+                            }}
+                        >
+                            VOID
+                        </ButtonBase>
+                    )}
+                </Stack>
+            </Box>
+        );
+    }
+
     return (
         <ButtonBase
-            onClick={done ? undefined : onSelect}
-            disabled={done}
+            onClick={onSelect}
             sx={{
                 display: "block",
                 width: "100%",
@@ -105,39 +185,89 @@ const PositionRow = ({
                 borderLeft: "4px solid",
                 borderLeftColor: selected ? appColors.greenTee : "transparent",
                 borderBottom: `1px solid ${appColors.divider}`,
-                opacity: done ? 0.55 : 1,
             }}
         >
-            <Stack direction="row" sx={{ alignItems: "baseline", gap: 1.5 }}>
-                <Typography sx={{ fontSize: 20, flex: 1 }}>{position.name}</Typography>
-                <Typography sx={{ fontSize: 20 }}>{usd(positionTotal(position))}</Typography>
-            </Stack>
-
-            {/* The fee structure, because this is what the credit is computed
-                from — "it has the tee fee that you booked, the cart fees, that
-                whole structure is built off of that reservation". */}
-            <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.25 }}>
-                {position.holes} holes · {position.greenFee.name} {usd(position.greenFee.price)} · {position.cartFee.name}{" "}
-                {usd(position.cartFee.price)} · ID:{position.id}
-            </Typography>
-
-            {done ? (
-                <Stack sx={{ mt: 0.75, gap: 0.25 }}>
-                    <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
-                        <CheckCircleIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
-                        <Typography sx={{ fontSize: 14, color: appColors.greenTee }}>
-                            Raincheck {position.issued!.raincheckId} · {usd(position.issued!.amount)} to {position.issued!.to} ·{" "}
-                            {position.issued!.at}
-                        </Typography>
-                    </Stack>
-                    {position.issued!.since && (
-                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>{position.issued!.since}</Typography>
-                    )}
-                </Stack>
-            ) : (
-                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.75 }}>No raincheck issued</Typography>
-            )}
+            {body}
+            <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.75 }}>No raincheck issued</Typography>
         </ButtonBase>
+    );
+};
+
+/**
+ * The void confirmation.
+ *
+ * A reason is required rather than optional. Voiding is almost always a
+ * correction, and the corrections worth counting — how often a credit goes to
+ * the wrong player — are exactly what a blank text field would lose.
+ */
+const VoidDialog = ({
+    position,
+    onCancel,
+    onConfirm,
+}: {
+    position: RaincheckPosition | null;
+    onCancel: () => void;
+    onConfirm: (reason: string) => void;
+}) => {
+    const [reason, setReason] = useState<string | null>(null);
+    const issued = position?.issued;
+
+    return (
+        <Dialog open={Boolean(position)} onClose={onCancel} maxWidth="sm" fullWidth slotProps={{ transition: { onExited: () => setReason(null) } }}>
+            {issued && position && (
+                <Box sx={{ p: 3 }}>
+                    <Typography sx={{ fontSize: 22, mb: 0.5 }}>Void raincheck {issued.raincheckId}?</Typography>
+                    <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>
+                        {usd(issued.amount)} issued to {issued.to} at {issued.at}, for {position.name}&rsquo;s round.
+                    </Typography>
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary, mt: 1.5 }}>
+                        The credit stays on the customer&rsquo;s record marked voided, and this round can be rainchecked again.
+                    </Typography>
+
+                    <Typography sx={{ fontSize: 15, mt: 2.5, mb: 1 }}>Why?</Typography>
+                    <Stack sx={{ gap: 0.75 }}>
+                        {VOID_REASONS.map((r) => (
+                            <ButtonBase
+                                key={r}
+                                onClick={() => setReason(r)}
+                                sx={{
+                                    justifyContent: "flex-start",
+                                    px: 2,
+                                    py: 1.25,
+                                    fontSize: 16,
+                                    border: "1px solid",
+                                    borderColor: reason === r ? appColors.greenTee : appColors.divider,
+                                    bgcolor: reason === r ? "#EAF3EC" : appColors.surface,
+                                    borderRadius: 0.5,
+                                }}
+                            >
+                                {r}
+                            </ButtonBase>
+                        ))}
+                    </Stack>
+
+                    <Stack direction="row" sx={{ gap: 1, mt: 3 }}>
+                        <ButtonBase onClick={onCancel} sx={{ flex: 1, py: 1.75, fontSize: 16, bgcolor: appColors.slate, color: "#fff" }}>
+                            Keep it
+                        </ButtonBase>
+                        <ButtonBase
+                            onClick={() => reason && onConfirm(reason)}
+                            disabled={!reason}
+                            sx={{
+                                flex: 1.4,
+                                py: 1.75,
+                                fontSize: 16,
+                                letterSpacing: "0.06em",
+                                bgcolor: reason ? appColors.red : "#DCDEE0",
+                                color: reason ? "#fff" : "#8A9096",
+                            }}
+                        >
+                            VOID RAINCHECK
+                        </ButtonBase>
+                    </Stack>
+                </Box>
+            )}
+        </Dialog>
     );
 };
 
@@ -253,6 +383,8 @@ export interface ReservationRaincheckProps {
     /** Whose account receives the credit. Starts equal to the selected round's player. */
     recipientId: string;
     onRecipient?: (id: string) => void;
+    /** Cancels an already-issued credit and frees its round. Omit for read-only. */
+    onVoid?: (positionId: string, reason: string) => void;
     /** Everything that has already happened to this reservation. */
     log?: IssuanceEvent[];
 }
@@ -266,8 +398,10 @@ export const ReservationRaincheck = ({
     onHolesPlayed,
     recipientId,
     onRecipient,
+    onVoid,
     log = [],
 }: ReservationRaincheckProps) => {
+    const [voiding, setVoiding] = useState<RaincheckPosition | null>(null);
     const selected = positions.find((p) => p.id === selectedId) ?? positions[0];
     const recipient = positions.find((p) => p.id === recipientId) ?? selected;
     const price = positionTotal(selected);
@@ -291,7 +425,13 @@ export const ReservationRaincheck = ({
                     <Typography sx={{ fontSize: 15, color: appColors.textSecondary, mb: 0.75 }}>Which round are you refunding?</Typography>
                     <Box sx={{ border: `1px solid ${appColors.divider}`, bgcolor: appColors.surface }}>
                         {positions.map((p) => (
-                            <PositionRow key={p.id} position={p} selected={p.id === selected.id} onSelect={() => onSelect?.(p.id)} />
+                            <PositionRow
+                                key={p.id}
+                                position={p}
+                                selected={p.id === selected.id}
+                                onSelect={() => onSelect?.(p.id)}
+                                onVoid={onVoid ? () => setVoiding(p) : undefined}
+                            />
                         ))}
                     </Box>
 
@@ -362,6 +502,15 @@ export const ReservationRaincheck = ({
                     </Box>
                 </Stack>
             </Stack>
+
+            <VoidDialog
+                position={voiding}
+                onCancel={() => setVoiding(null)}
+                onConfirm={(reason) => {
+                    if (voiding) onVoid?.(voiding.id, reason);
+                    setVoiding(null);
+                }}
+            />
         </Stack>
     );
 };
@@ -389,6 +538,7 @@ export const foursome: RaincheckPosition[] = [
             at: "2:30 PM",
             to: "Justin Girard",
             since: "Spent in full — $72.22 on 8/2/2026, order #5734120",
+            spent: 72.22,
         },
     },
     {
