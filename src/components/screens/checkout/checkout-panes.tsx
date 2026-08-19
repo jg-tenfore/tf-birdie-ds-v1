@@ -1,10 +1,12 @@
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import ButtonBase from "@mui/material/ButtonBase";
 import Divider from "@mui/material/Divider";
 import InputBase from "@mui/material/InputBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CloseIcon from "@mui/icons-material/Close";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import CloudIcon from "@mui/icons-material/Cloud";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
@@ -121,6 +123,24 @@ const TotalRow = ({ label, value, green }: { label: string; value: string; green
     </Stack>
 );
 
+/**
+ * A tender already taken against this ticket.
+ *
+ * The shipping pane has a `Total Payments` row and nothing behind it: a ticket
+ * settled by two credits and a card shows one number and no way back. Naming
+ * each payment — and letting it be lifted off again — is what makes a
+ * part-payment reversible instead of a mistake somebody has to void the whole
+ * sale to fix.
+ */
+export interface AppliedPayment {
+    id: string;
+    /** How the receipt would name it, e.g. `Rain Check 51381`. */
+    label: string;
+    amount: number;
+    /** Where it came from, in a phrase the customer would recognise. */
+    note?: string;
+}
+
 export interface CheckoutTicketPaneProps {
     lines?: CheckoutLine[];
     customer?: string;
@@ -130,6 +150,14 @@ export interface CheckoutTicketPaneProps {
     tax?: number;
     total?: number;
     payments?: number;
+    /**
+     * Payments already applied. When given, `Total Payments` is their sum and
+     * each gets its own removable row — omit for the shipping pane, which has
+     * neither.
+     */
+    applied?: AppliedPayment[];
+    /** Offered per payment. Without it the rows are read-only. */
+    onRemovePayment?: (id: string) => void;
     fallbackImage?: string;
 }
 
@@ -140,9 +168,14 @@ export const CheckoutTicketPane = ({
     subtotal = checkoutTotals.subtotal,
     tax = checkoutTotals.tax,
     total = checkoutTotals.total,
-    payments = checkoutTotals.payments,
+    payments,
+    applied,
+    onRemovePayment,
     fallbackImage,
-}: CheckoutTicketPaneProps) => (
+}: CheckoutTicketPaneProps) => {
+    const taken = applied?.reduce((sum, p) => sum + p.amount, 0) ?? payments ?? checkoutTotals.payments;
+    const owed = Math.max(0, +(total - taken).toFixed(2));
+    return (
     <Stack sx={{ width: "42%", minWidth: 0, bgcolor: "#fff", borderRight: `1px solid ${appColors.divider}` }}>
         <Stack sx={{ flex: 1, overflowY: "auto" }} divider={<Divider />}>
             {lines.map((l) => (
@@ -187,14 +220,36 @@ export const CheckoutTicketPane = ({
             <TotalRow label="SubTotal" value={usd(subtotal)} />
             <TotalRow label="Taxes" value={usd(tax)} />
             <TotalRow label="Grand Total" value={usd(total)} />
-            <TotalRow label="Total Payments" value={usd(payments)} green />
+            <TotalRow label="Total Payments" value={usd(taken)} green />
+
+            {/* Each payment on its own line, under the total it contributes to,
+                with the way to take it back off. */}
+            {applied?.map((p) => (
+                <Stack key={p.id} direction="row" sx={{ alignItems: "center", gap: 1, py: 0.5, pl: 1.5 }}>
+                    <Stack sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: 16, color: appColors.greenTee }}>{p.label}</Typography>
+                        {p.note && <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{p.note}</Typography>}
+                    </Stack>
+                    <Typography sx={{ fontSize: 16, color: appColors.greenTee }}>−{usd(p.amount)}</Typography>
+                    {onRemovePayment && (
+                        <IconButton
+                            aria-label={`Remove ${p.label}`}
+                            onClick={() => onRemovePayment(p.id)}
+                            sx={{ width: 40, height: 40, color: appColors.textSecondary }}
+                        >
+                            <CloseIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                    )}
+                </Stack>
+            ))}
         </Box>
         <Stack direction="row" sx={{ justifyContent: "space-between", bgcolor: appColors.greenTee, color: "#fff", px: 2, py: 2, mt: 1.5 }}>
-            <Typography sx={{ fontSize: 22 }}>Total Owed</Typography>
-            <Typography sx={{ fontSize: 22 }}>{usd(Math.max(0, total - payments))}</Typography>
+            <Typography sx={{ fontSize: 22 }}>{owed === 0 && taken > 0 ? "Paid in full" : "Total Owed"}</Typography>
+            <Typography sx={{ fontSize: 22 }}>{usd(owed)}</Typography>
         </Stack>
     </Stack>
-);
+    );
+};
 
 /* ------------------------------------------------------------ tender pane */
 

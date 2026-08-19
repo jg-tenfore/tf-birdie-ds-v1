@@ -322,7 +322,13 @@ export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
             <Typography sx={{ py: 2, fontSize: 17, color: appColors.textSecondary }}>No rainchecks.</Typography>
         ) : (
             rows.map((r) => (
-                <Box key={r.id} sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, py: 0.4 }}>
+                <Box
+                    key={r.id}
+                    // Spent-out credits stay listed and read plainly as history.
+                    // Dropping them would make "you never had one" and "you used
+                    // it in April" the same answer at the counter.
+                    sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, py: 0.4, opacity: r.balance <= 0.001 ? 0.6 : 1 }}
+                >
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{r.id}</Typography>
                     {/* The round it came off. A credit whose origin cannot be
                         named is one nobody can check against the customer's
@@ -334,8 +340,15 @@ export const RainChecksTable = ({ rows }: { rows: Raincheck[] }) => (
                     </Typography>
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>{usd(r.awarded)}</Typography>
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>{usd(r.spent)}</Typography>
-                    <Typography sx={{ fontSize: 14, color: appColors.textPrimary, textAlign: "right", fontWeight: 700 }}>
-                        {usd(r.balance)}
+                    <Typography
+                        sx={{
+                            fontSize: 14,
+                            color: r.balance <= 0.001 ? appColors.textSecondary : appColors.textPrimary,
+                            textAlign: "right",
+                            fontWeight: r.balance <= 0.001 ? 400 : 700,
+                        }}
+                    >
+                        {r.balance <= 0.001 ? "used" : usd(r.balance)}
                     </Typography>
                 </Box>
             ))

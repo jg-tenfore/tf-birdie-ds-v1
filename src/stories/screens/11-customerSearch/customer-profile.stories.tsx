@@ -22,7 +22,7 @@ import { bookingsForCustomer, may12Sheet, todaySheet } from "@/data/tee-sheet";
  *
  * **Each bar carries its own number.** A closed Gift Cards section that says
  * `$0.00` has answered the question without being opened; so has a Rain Checks
- * bar reading `$176.12`. The counter's job here is almost always to answer *how
+ * bar reading `$190.88`. The counter's job here is almost always to answer *how
  * much do I have* — the sections were built to hold records, not to answer that.
  *
  * **Rain Checks is new, and it sits directly under Gift Cards** because the two

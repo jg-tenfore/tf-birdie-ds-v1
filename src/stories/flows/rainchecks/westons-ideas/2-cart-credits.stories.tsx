@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
 import { CartCredits } from "@/components/concepts/rainchecks/cart-credits";
-import { CheckoutTicketPane, TenderTabs } from "@/components/screens/checkout/checkout-panes";
+import { CheckoutTicketPane, TenderTabs, type AppliedPayment } from "@/components/screens/checkout/checkout-panes";
 import { checkoutCustomer, checkoutTotals } from "@/components/screens/checkout/checkout-fixtures";
 import { OrderComplete, raincheckSale } from "@/components/screens/checkout/order-complete";
 import { rainchecks, searchRainchecks, type Raincheck } from "@/data/rainchecks";
@@ -35,15 +35,24 @@ import { rainchecks, searchRainchecks, type Raincheck } from "@/data/rainchecks"
  * — *the seven o'clock on the twentieth* — and say whether the credit clears the
  * ticket **before** you commit rather than after.
  *
- * **What happens when you tap the search field.** It does not open a centred
- * search screen — the app uses that pattern for Customer Search, whose only job
- * is finding somebody, and here the ticket on the left has to stay visible the
- * whole time. Instead the pane switches into a search mode: the field moves from
- * the foot of the pane to the **top**, which is where the shipping RAIN tender
- * puts its lookup, so the moment search is actually in use the layout matches
- * the screen everyone already knows. A back control returns to the ticket
- * customer's credits, because otherwise opening search is a one-way door out of
- * the list you wanted.
+ * **Used credits stay on screen.** A raincheck with nothing left on it is not an
+ * offer, so it greys out and cannot be tapped — but it is still listed, under
+ * "Already used", with where the money went. The shipping lookup filters
+ * spent-out credits away entirely, which looks tidy and costs real time: a
+ * customer who is certain they have one gets "no results", and the operator has
+ * no way to say *you spent it on the 25th of April on a glove and two sleeves*.
+ * That sentence is the one that ends the conversation.
+ *
+ * **What happens when you tap the search field.** The field sits above the list,
+ * and tapping it opens a full-screen search rather than swapping the list
+ * underneath. Searching every account on the system is a different job from
+ * picking one of this customer's two credits, and it does not fit in a
+ * 45%-wide column beneath a tender strip.
+ *
+ * The modal uses the app's own lookup shape — one centred, underlined field, the
+ * same as Customer Search — so it reads as a screen this system already has. The
+ * trade is real and worth naming: the ticket goes off screen while you look, so
+ * the modal's bar restates what is owed.
  *
  * The left pane, the tab strip, the palette and the action bar are all the
  * shipping components, untouched. Only the RAIN pane is new.
@@ -58,16 +67,24 @@ type Story = StoryObj<typeof meta>;
 
 const weston = rainchecks.filter((r) => r.customerName === "Weston Senior");
 
+const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+
 const Frame = ({
     children,
     enabled,
     total = checkoutTotals.total,
     onApply,
+    applied,
+    onRemove,
+    commit = "Apply Raincheck",
 }: {
     children: React.ReactNode;
     enabled?: boolean;
     total?: number;
     onApply?: () => void;
+    applied?: AppliedPayment[];
+    onRemove?: (id: string) => void;
+    commit?: string;
 }) => (
     <AppShell
         title="Credit Card Payment"
@@ -80,13 +97,13 @@ const Frame = ({
                 <ActionButton icon={<PersonIcon />}>{checkoutCustomer}</ActionButton>
                 <ActionButton icon={<NotesIcon />}>Order Notes</ActionButton>
                 <ActionButton icon={<BoltIcon />} tone={enabled ? "primary" : "disabled"} grow={1.6} onClick={enabled ? onApply : undefined}>
-                    Apply Raincheck
+                    {commit}
                 </ActionButton>
             </>
         }
     >
         <Stack direction="row" sx={{ height: "100%", minHeight: 0 }}>
-            <CheckoutTicketPane total={total} />
+            <CheckoutTicketPane total={total} applied={applied} onRemovePayment={onRemove} />
             <Stack sx={{ flex: 1, minWidth: 0 }}>
                 <TenderTabs active="RAIN" />
                 {children}
@@ -99,7 +116,11 @@ const Frame = ({
  * **Live, end to end.** Opens on Weston Senior's two credits, because that is
  * whose ticket this is. Neither of them needed finding.
  *
- * Both clear the $53.48 ticket, and each says so. Pick one and APPLY RAINCHECK
+ * Four credits, in the three states a raincheck can be in: two untouched, one
+ * partly spent, one used up. Only the spendable ones are tappable; the used one
+ * sits under "Already used" with its redemption history.
+ *
+ * The two full credits clear the $53.48 ticket and each says so. Pick one and APPLY RAINCHECK
  * settles it and prints the receipt — with what is left on the credit, which the
  * shipping Order Complete never says. Any exit on that screen brings you back
  * here.
@@ -112,43 +133,74 @@ export const Default: Story = {
     render: function CartCreditsStory() {
         const [selectedId, setSelectedId] = useState<string | undefined>();
         const [query, setQuery] = useState("");
-        const [applied, setApplied] = useState<Raincheck | null>(null);
-        const results = useMemo(() => searchRainchecks(query, rainchecks), [query]);
+        const [applied, setApplied] = useState<Raincheck[]>([]);
+        const [paid, setPaid] = useState(false);
+        const results = useMemo(() => searchRainchecks(query, rainchecks, 6, true), [query]);
 
-        const selected = [...weston, ...results].find((r) => r.id === selectedId);
+        const pool = [...weston, ...results];
+        const selected = pool.find((r) => r.id === selectedId);
+        const total = checkoutTotals.total;
 
-        // APPLY RAINCHECK settles the ticket and prints the receipt, so the
-        // concept can be walked end to end rather than only looked at. The
-        // credit's remaining balance is on the receipt, which the shipping
-        // Order Complete does not say anywhere.
-        if (applied) {
-            const left = +(applied.balance - checkoutTotals.total).toFixed(2);
+        // What each credit contributes. A credit never gives more than is left
+        // on it, and never more than the ticket still owes.
+        const rows: AppliedPayment[] = [];
+        let running = 0;
+        for (const c of applied) {
+            const amount = Math.min(c.balance, +(total - running).toFixed(2));
+            if (amount <= 0) continue;
+            running = +(running + amount).toFixed(2);
+            rows.push({
+                id: c.id,
+                label: `Rain Check ${c.id}`,
+                amount,
+                note: `${c.teeTime ?? c.reservation}${c.balance > amount ? ` · ${usd(c.balance - amount)} left on it` : " · spent out"}`,
+            });
+        }
+        const owed = +(total - running).toFixed(2);
+
+        if (paid) {
             return (
                 <OrderComplete
                     sale={{
                         ...raincheckSale,
                         orderNumber: "5823991",
-                        tender: `Rain Check ${applied.id}`,
-                        paid: checkoutTotals.total,
+                        tender: rows.map((r) => r.label).join(" + "),
+                        paid: running,
                         cash: 0,
                         change: 0,
                     }}
                     email="weston.farnsworth+senior@tenfore.golf"
-                    toast={`Raincheck ${applied.id} — $${left.toFixed(2)} left on it.`}
+                    toast={rows.length > 1 ? `Two credits settled this ticket.` : `${rows[0]?.label} applied.`}
                     onExit={() => {
-                        setApplied(null);
+                        setPaid(false);
+                        setApplied([]);
                         setSelectedId(undefined);
                     }}
                 />
             );
         }
 
+        const canApply = Boolean(selected) && !applied.some((a) => a.id === selected!.id) && owed > 0;
+
         return (
-            <Frame enabled={Boolean(selected)} onApply={() => selected && setApplied(selected)}>
+            <Frame
+                enabled={owed <= 0 ? true : canApply}
+                total={total}
+                applied={rows}
+                onRemove={(id) => setApplied((prev) => prev.filter((c) => c.id !== id))}
+                commit={owed <= 0 ? "Complete Sale" : "Apply Raincheck"}
+                onApply={() => {
+                    if (owed <= 0) return setPaid(true);
+                    if (selected) {
+                        setApplied((prev) => [...prev, selected]);
+                        setSelectedId(undefined);
+                    }
+                }}
+            >
                 <CartCredits
                     customerName="Weston Senior"
-                    credits={weston}
-                    owed={checkoutTotals.total}
+                    credits={weston.filter((c) => !applied.some((a) => a.id === c.id))}
+                    owed={owed}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
                     query={query}
@@ -158,6 +210,46 @@ export const Default: Story = {
             </Frame>
         );
     },
+};
+
+/**
+ * A customer whose credits are all spent.
+ *
+ * Not the same as having none, and the pane says so: "Nothing left to spend",
+ * then the history. The shipping tender cannot draw this state at all — a
+ * spent-out credit is filtered before it reaches the screen, so this customer
+ * and a customer who has never had a raincheck look identical.
+ */
+export const AllSpent: Story = {
+    name: "Every credit already used",
+    render: () => (
+        <Frame>
+            <CartCredits customerName="Weston Senior" credits={weston.filter((r) => r.balance <= 0)} owed={checkoutTotals.total} />
+        </Frame>
+    ),
+};
+
+/**
+ * A credit with some of it gone.
+ *
+ * $68.76 was issued, $54.00 went on a round in June, $14.76 is left. The card
+ * leads with what is spendable and shows the draw underneath, because "$14.76"
+ * on its own invites the question this answers.
+ *
+ * It also cannot cover the $53.48 ticket, so it says what would still be owed —
+ * before the operator commits rather than after.
+ */
+export const PartlySpent: Story = {
+    name: "Partly spent",
+    render: () => (
+        <Frame>
+            <CartCredits
+                customerName="Weston Senior"
+                credits={weston.filter((r) => r.id === "38204")}
+                owed={checkoutTotals.total}
+            />
+        </Frame>
+    ),
 };
 
 /**
@@ -198,14 +290,18 @@ export const NoCredits: Story = {
 /**
  * The moment the field is tapped, before anything is typed.
  *
- * The field has moved to the top, the header says the scope has widened past
- * this ticket's customer, and there is a way back. Compare with the shipping
- * tender, where the same empty field and the same empty green band mean both
- * "no such credit" and "I have not looked yet".
+ * Full screen, one centred field, and the bar carries the amount owed so the
+ * number does not disappear with the ticket. Compare with the shipping tender,
+ * where the same empty field and the same empty green band mean both "no such
+ * credit" and "I have not looked yet".
  */
 export const SearchFocused: Story = {
     name: "Search field tapped",
-    render: () => <Frame><CartCredits customerName="Weston Senior" credits={weston} owed={checkoutTotals.total} searching /></Frame>,
+    render: () => (
+        <Frame>
+            <CartCredits customerName="Weston Senior" credits={weston} owed={checkoutTotals.total} searching />
+        </Frame>
+    ),
 };
 
 /**
@@ -213,8 +309,9 @@ export const SearchFocused: Story = {
  *
  * The guest case in reverse: the round was played by a visitor, the credit was
  * issued to their host, and now the host is at the till on a different ticket.
- * Search is the escape hatch, and the header changes to say the scope has
- * widened past this ticket's customer.
+ *
+ * Results get the width the pane could not give them. Picking one closes the
+ * modal and drops back to the tender with that credit selected.
  */
 export const Searching: Story = {
     name: "Searching another account",

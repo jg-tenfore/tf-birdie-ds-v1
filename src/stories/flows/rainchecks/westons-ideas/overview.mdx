@@ -80,6 +80,50 @@ customer's credits instead of an empty search field. Each credit names the round
 it came from — the seven o'clock on the twentieth, not "51381" — and says
 whether it clears the ticket *before* you apply it rather than after.
 
+It also shows the three states a raincheck can be in, rather than only the one
+that can be spent:
+
+| State | How it reads |
+| :-- | :-- |
+| Untouched | Full balance, tappable, says whether it clears the ticket |
+| Partly spent | What is left leads; the draw that took the rest sits underneath |
+| Used up | Greyed, `USED`, not tappable, with where every dollar went |
+| Expired | Greyed, `EXPIRED` in orange, with what was still on it when it lapsed |
+
+Both dead states come from the pro shop rather than from us. MCG's feedback was
+about the awkward counter moment when a customer produces a slip the terminal
+insists does not exist — which happens both when the credit has been spent and
+when it has lapsed. Showing them is the fix; **how long expired credits are kept,
+and whether one can still be honoured, is not settled.**
+
+The used row is the one worth arguing about. The shipping lookup filters
+spent-out credits away before they reach the screen, which looks tidy and costs
+real time: a customer who is certain they have a raincheck gets "no results", and
+the operator cannot say *you spent it on the 25th of April on a glove and two
+sleeves*. That sentence ends the conversation; "nothing found" starts a longer
+one. It also means a customer with nothing left and a customer who never had one
+are indistinguishable at the counter.
+
+Search sits **above** the list and opens **full screen**. Two reasons, and the
+second is the one that settled it. Finding a credit on somebody else's account is
+a different job from picking one of this customer's two, and a 45%-wide column
+under a tender strip is the wrong room for it. And on glass, **the keyboard eats
+a field low on the screen** — which is also why moving the search bar to the
+bottom only makes sense if every payment type moves with it. The modal borrows
+the app's own lookup shape: one centred, underlined field, the same as Customer
+Search. The trade is that the ticket leaves the screen while you look, so the
+modal's bar restates what is owed.
+
+**Applied credits land in the order summary, and come back off.** Each one is its
+own line under Total Payments — `Rain Check 38204 · −$14.76 · $0.00 left on it` —
+with an X. Two credits can settle one ticket between them, and the band reads
+"Paid in full" when they do. The shipping pane has a Total Payments row and
+nothing behind it, so a part-payment applied by mistake means voiding the sale.
+
+The same gap runs the other way on the issue screen: an already-credited round
+now carries what happened to that credit afterwards, so issuance and redemption
+meet on one row instead of living on two screens a month apart.
+
 ## The finding worth keeping
 
 Justin, who had never used the flow:
