@@ -59,12 +59,13 @@ const actionTone = (action: PlayerAction) => {
     return { bg: appColors.slate, hover: appColors.slateDark };
 };
 
-const PlayerActionButton = ({ action }: { action: PlayerAction }) => {
+const PlayerActionButton = ({ action, onClick }: { action: PlayerAction; onClick?: () => void }) => {
     const tone = actionTone(action);
 
     return (
         <Button
             startIcon={actionIcon[action]}
+            onClick={onClick}
             sx={{
                 flex: "1 1 0",
                 minHeight: 52,
@@ -92,7 +93,12 @@ const NoteButton = ({ label }: { label: string }) => (
     </Button>
 );
 
-const PlayerCard = ({ player }: { player: DetailPlayer }) => (
+/**
+ * @param onAction Makes the row's buttons live. Omitted everywhere the screen is
+ * documentation, which is most places — this is a transcription of the shipping
+ * detail screen, and its buttons do nothing there either.
+ */
+const PlayerCard = ({ player, onAction }: { player: DetailPlayer; onAction?: (action: PlayerAction, player: DetailPlayer) => void }) => (
     <Box sx={{ bgcolor: playerCardFill, borderRadius: `${appRadius.card}px`, px: 2, py: 1.5, mb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
             <Typography sx={{ fontSize: 30, color: appColors.textPrimary, lineHeight: 1.2 }}>{player.name}</Typography>
@@ -124,7 +130,7 @@ const PlayerCard = ({ player }: { player: DetailPlayer }) => (
         {player.actions.length > 0 && (
             <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                 {player.actions.map((action) => (
-                    <PlayerActionButton key={action} action={action} />
+                    <PlayerActionButton key={action} action={action} onClick={onAction ? () => onAction(action, player) : undefined} />
                 ))}
             </Box>
         )}
@@ -198,14 +204,14 @@ export const TeeTimeDetailTopRight = () => (
 );
 
 /** The scrolling body: search band, summary band, one card per reservation. */
-export const TeeTimeDetailBody = ({ detail }: { detail: TeeTimeDetail }) => (
+export const TeeTimeDetailBody = ({ detail, onAction }: { detail: TeeTimeDetail; onAction?: (action: PlayerAction, player: DetailPlayer) => void }) => (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100%", bgcolor: appColors.canvas }}>
         <CustomerSearchBand />
         <CustomerSummaryBand />
 
         <Box sx={{ p: 1, flex: 1 }}>
             {detail.players.map((player) => (
-                <PlayerCard key={`${player.name}-${player.amount}`} player={player} />
+                <PlayerCard key={`${player.name}-${player.amount}`} player={player} onAction={onAction} />
             ))}
         </Box>
     </Box>

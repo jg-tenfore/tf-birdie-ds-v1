@@ -169,9 +169,24 @@ const preview: Preview = {
                             // and here is what we would change about it".
                             "Weston's ideas",
                             [
+                                // Numbered to match the five core steps above,
+                                // so a concept pairs with the screen it replaces.
+                                // 1 (the booking) and 5 (Order Complete) have no
+                                // concept on purpose — the entry point is the one
+                                // thing Weston asked to leave alone, and the
+                                // receipt is unchanged.
                                 "Overview",
-                                "1 — Issue for this reservation",
-                                "2 — Checkout knows the cart",
+                                "2 — Create raincheck",
+                                [
+                                    "Foursome, one already issued",
+                                    "Issuing to somebody else's account",
+                                    "Voiding a credit",
+                                    "Nothing left to issue",
+                                    "One player",
+                                ],
+                                "3 — The credit on the record",
+                                ["Credits you can open", "Collapsed", "Details only, no void"],
+                                "4 — Redeem at the register",
                                 [
                                     "Opens on the cart's customer",
                                     "Partly spent",
@@ -181,6 +196,8 @@ const preview: Preview = {
                                     "Neither credit covers it",
                                     "This customer has none",
                                 ],
+                                // Spans all four, so it sits outside the numbering.
+                                "Create one, end to end",
                             ],
                         ],
                     ],

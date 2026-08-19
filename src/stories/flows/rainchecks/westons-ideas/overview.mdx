@@ -69,13 +69,38 @@ getting it right.
 
 ## What the concepts change
 
-**1 — Issue for this reservation.** All four questions asked out loud: a list of
+They are numbered to match the five core steps above, so each concept pairs with
+the screen it would replace. **1** and **5** have no concept on purpose: the
+booking is the entry point Weston asked to leave alone — *"people are used to it,
+I do want to change it in v2"* — and Order Complete is unchanged.
+
+| Core step | Concept |
+| :-- | :-- |
+| 1 — Booking with a raincheck | *unchanged, deliberately* |
+| 2 — Create raincheck | **2 — Create raincheck** |
+| 3 — The credit on the record | **3 — The credit on the record** |
+| 4 — Redeem at the register | **4 — Redeem at the register** |
+| 5 — Order complete | *unchanged* |
+| — | **Create one, end to end**, which spans 1 to 4 |
+
+**2 — Create raincheck.** All four questions asked out loud: a list of
 positions with their fee structure and their raincheck state, the holes control
 with the amount *below* it rather than above, a labelled recipient picker, and a
 plain sentence stating the whole outcome before you commit. Already-credited
 rounds are greyed and cannot be selected.
 
-**2 — Checkout knows who is in the cart.** The tender opens on the ticket
+**3 — The credit on the record.** The record's raincheck rows open. Tapping one brings up
+the credit in full — the round behind it, the money, every draw against it, the
+void record if it has one — and offers the void from there.
+
+That placement is deliberate. The argument happens at the counter with the
+customer standing there ("that was supposed to be on my account"), and the person
+who can fix it is looking at this record; sending them to find the reservation
+first is a detour through a screen they do not need. Void is two taps here rather
+than one, because the record is a browsing screen and this is the only thing on
+it that destroys value.
+
+**4 — Redeem at the register.** The tender opens on the ticket
 customer's credits instead of an empty search field. Each credit names the round
 it came from — the seven o'clock on the twentieth, not "51381" — and says
 whether it clears the ticket *before* you apply it rather than after.
@@ -89,6 +114,7 @@ that can be spent:
 | Partly spent | What is left leads; the draw that took the rest sits underneath |
 | Used up | Greyed, `USED`, not tappable, with where every dollar went |
 | Expired | Greyed, `EXPIRED` in orange, with what was still on it when it lapsed |
+| Voided | Greyed, `VOIDED` in red, naming who cancelled it, when, and why |
 
 Both dead states come from the pro shop rather than from us. MCG's feedback was
 about the awkward counter moment when a customer produces a slip the terminal
@@ -123,6 +149,48 @@ nothing behind it, so a part-payment applied by mistake means voiding the sale.
 The same gap runs the other way on the issue screen: an already-credited round
 now carries what happened to that credit afterwards, so issuance and redemption
 meet on one row instead of living on two screens a month apart.
+
+**Create one, end to end.** The other three show screens; this one shows the
+*object*. Start on the tee time, tap the red RAINCHECK where it has always been,
+credit a round, and watch the credit land on the customer's record and at the
+till as the same thing — carrying the reservation and the round it was cut from.
+
+That is Weston's point made walkable rather than argued: *"it's not tied to a
+customer, it's tied to that reservation you've booked."* **Issue another** runs it
+again against the same booking, which is how a rained-off foursome is actually
+handled — four credits, one at a time, off one reservation.
+
+## Voiding a credit
+
+Nothing in the flow could take a raincheck back. **BACK** cancels before you
+commit; after that there was no undo on any screen, in a system where a round
+can only be rainchecked once — so a credit cut for the wrong player left that
+round locked as well as the money misplaced. The transcripts never raised it,
+which may mean the policy is deliberate; it is not stated anywhere either way.
+
+**Void, not delete.** A raincheck is a financial record and deleting one takes
+its audit trail with it. Voiding leaves the credit in the ledger marked `VOIDED`,
+keeps it on the customer's record, and releases the round so a correct one can be
+cut.
+
+- Reachable two ways: from the issued row on the reservation, and from the
+  credit's detail sheet on the customer's record. Same rules, same reason list.
+- **A reason is required**, from a fixed list. The correction worth counting is
+  *issued to the wrong player*, and that is the number that would justify
+  redesigning this screen. A free-text box would be left blank.
+- **Blocked once any of it has been spent.** The row says so rather than hiding
+  the control: at that point the money has left and it is a refund question, not
+  a correction.
+- Both the issue and the void land in the reservation's history.
+
+Two things are guesses and should be decided rather than inherited from this
+concept: **whether any operator can void or it needs a manager**, and **whether
+there is a time limit** — same shift, same day, or forever.
+
+The record separates what is owed from what has lapsed, for the same reason:
+`$190.88` owed and `$49.67` expired are different facts, and folding the second
+into the first would have a counter read out a number the terminal will not
+honour.
 
 ## The finding worth keeping
 
