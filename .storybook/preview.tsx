@@ -199,6 +199,42 @@ const preview: Preview = {
                                 // Spans all four, so it sits outside the numbering.
                                 "Create one, end to end",
                             ],
+                            // Dated rather than numbered, because it is not a
+                            // step in the flow — it is a second pass over the
+                            // issuance screen, from the Aug 20 note about
+                            // issuing a whole foursome at once.
+                            "Aug 20",
+                            [
+                                "Overview",
+                                // A before B, and the two option folders carry
+                                // the same story names wherever they show the
+                                // same situation, so the comparison is a
+                                // sideways move rather than a hunt.
+                                "Option A — Row per player",
+                                [
+                                    "Rained-out foursome",
+                                    "Two of them finished",
+                                    "One credit to somebody else",
+                                    "A nine among the eighteens",
+                                    "One round already credited",
+                                    "Two players",
+                                ],
+                                "Option B — One stop for the group",
+                                [
+                                    "Rained-out foursome",
+                                    "One of them played on",
+                                    "Two of them finished",
+                                    "A nine among the eighteens",
+                                    "One round already credited",
+                                    "Two players",
+                                ],
+                                // Last, and holding both options, because it is
+                                // the trip rather than the screen — and running
+                                // A then B back to back is the comparison the
+                                // whole folder exists to make.
+                                "End to end",
+                                ["Option A — row per player", "Option B — one stop for the group"],
+                            ],
                         ],
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would

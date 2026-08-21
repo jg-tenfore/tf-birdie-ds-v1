@@ -1,0 +1,150 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Aug 20/Overview" />
+
+# Aug 20 — issuing the whole group at once
+
+Two options, from one note. Concepts, not decisions, and nothing here is wired
+into the prototype.
+
+## The note
+
+> *"It would be nice to set up all the rainchecks on one screen. So you would not
+> need to click through that flow four separate times for a foursome.*
+>
+> *You would need to be able to deselect the ones you do not want to issue a
+> raincheck for.*
+>
+> *I wonder if something like name of the player you are issuing a raincheck to
+> on the left and on the right of each player there is a drop down to assign it
+> to someone else for each player.*
+>
+> *Could you maybe come up with one or two options we could explore? The thought
+> is just making it easy to issue the raincheck for the whole group at once."*
+
+## What it lands on
+
+**Weston's ideas → 2 — Create raincheck** made a single issuance clear — which
+round, how much, whose account, what has already happened — and then made you do
+it four times. It even advertises the repetition: after each credit, selection
+hops to the next player still owed one. That loop is drawn there as a feature,
+and it is the thing being complained about.
+
+The event these screens exist for is one event. It rains, the horn goes, a
+foursome walks off the ninth together and arrives at the counter as a group. The
+flow treats that as four transactions because a raincheck is cut **per round** —
+true of the record, untrue of the task. Both options keep the record per round
+and make the task per group.
+
+Three requirements came with the note, and both options meet all three:
+
+| # | Requirement | How both options answer it |
+| :-- | :-- | :-- |
+| 1 | Everyone on one screen | One list, one press, one commit |
+| 2 | Deselect | A tick per row. Unticked rows grey but stay legible — you have to be able to see what you turned off |
+| 3 | Reassign per player | The dropdown on the right, exactly as described |
+
+## Where the options differ
+
+One question, and only one: **the hole count**.
+
+| | **Option A — Row per player** | **Option B — One stop for the group** |
+| :-- | :-- | :-- |
+| Hole count | On every row | Once, at the top |
+| Group walks off together | Four identical adjustments | One |
+| Group splits up | Nothing special — it is already per row | Tap that row's hole count to turn it into a stepper; the row marks itself `SET BY HAND` |
+| Nine-hole booking in an eighteen-hole group | Needs no explanation | Needs a banner and a per-row sentence |
+| Row height | Taller — stepper on every row | Shorter — rows carry only what differs |
+| Bets that | Groups stop at **different** holes | Groups stop at the **same** hole |
+
+Everything else is identical on purpose. Same ticks, same dropdown, same amber
+tint on a reassigned row, same band across the bottom, same action bar. The
+comparison is only worth running if one variable moves.
+
+**There is a third design neither file draws:** A, with B's group control at the
+top as a bulk-set. It would probably win. It is left out so the two bets stay
+legible against each other — and so the question underneath gets answered rather
+than designed around.
+
+### The question underneath
+
+**How often does a group stop at different holes?** Nobody in either transcript
+has said, and it decides this. One call to a pro shop settles it:
+
+- *Almost always together* → Option B, and A's per-row steppers are four controls
+  earning their space once a season.
+- *Routinely split* → Option A, and B's group number is a default operators fight.
+- *Both, regularly* → build the hybrid, and the group control is a convenience
+  rather than the model.
+
+## What to look at
+
+| Story | Why |
+| :-- | :-- |
+| **A → Rained-out foursome** | The batch working. Untick a row, reassign one, then issue all of them in one press |
+| **B → Rained-out foursome** | Drag the group slider and watch four different prices move together off one number |
+| **A → Two of them finished** | Requirement 2, on its own |
+| **A → One credit to somebody else** | Requirement 3, on its own — Weston's visiting-buddy case as one dropdown instead of a second trip through the flow |
+| **B → One of them played on** | The exception path — tap a row's hole count — and the `SET BY HAND` mark that stops a later group change dragging it back |
+| **A / B → A nine among the eighteens** | The same fixture in both. A needs no explanation; B needs a banner. This is the clearest single argument between them |
+| **A / B → One round already credited** | A round cannot be rainchecked twice, and neither the shipping screen nor the earlier concept can show that state |
+| **End to end → Option A / Option B** | The same trip through each: tee sheet → the group screen → where the credits land. The only place the batch's claim — one visit, not four — can actually be checked |
+
+## The trip, not just the screen
+
+**End to end** runs each option from the tee sheet. Both use the same harness and
+differ only in the middle step, so anything that feels different between them is
+the hole-count question and nothing else.
+
+Three things live there that neither option story can show:
+
+- **The entry point has not moved.** Step one is the shipping detail screen
+  itself — the same component **Flows → Rainchecks → 1 — Booking with a
+  raincheck** renders — with its buttons made live. Weston asked for the red
+  RAINCHECK button to stay exactly where it is. What changes is where it *goes*:
+  tapping it on one player now opens the whole group, which is his own *"anytime
+  you hit rain check, it just takes you there"* extended from one round to four.
+- **Coming back.** After the batch, every credited player carries a bolt and no
+  longer offers RAINCHECK. The single-issue flow reaches that state after four
+  round trips.
+- **What the dropdown is actually for.** The landing groups new credits by the
+  **account** holding them rather than by round, so a foursome that put two
+  credits on one name shows up as one account with two. That is the only thing
+  reassignment produces, and it is invisible on the issue screen itself.
+
+## Same ground rule as before
+
+> *"we can just change that in the existing system and use this as a good
+> breeding ground — this is a new flow that we're trying with the old design
+> system, but a new flow."*
+
+No new tokens, no new colours, no new button styles. Same navy band, same green,
+same MD2 surfaces, 48dp touch floor throughout. What changes is the arrangement
+and what the screen says out loud.
+
+Two things are borrowed from the earlier concept and worth naming as deliberate:
+the **amber tint** on a reassigned row is the only new signal, and it exists
+because scanning four rows for the odd one out should be a colour rather than a
+reading task. And the action bar states the outcome — **Issue 4 rainchecks ·
+$206.18** — because four credits leaving the course is not something to commit
+behind a bare verb.
+
+## Still open
+
+- **How often groups split.** The question above. Everything else follows from it.
+- **Should the dropdown reach outside the group?** Both options list only the
+  people on the reservation. Weston's guest case is always inside the group; a
+  league organiser collecting four credits under one account may not be. There is
+  no *search for another customer* entry on purpose, so the omission gets noticed
+  rather than assumed.
+- **Does a batch need a confirmation step?** Four credits in one press is a
+  bigger money action than one, and neither option has a dialog. The band and the
+  labelled button are the review. That may not be enough.
+- **What the nine-hole clamp should do.** Crediting Tom Watson from the last hole
+  of his own round leaves him $3.38 against the others' $33.33. That may be right
+  — he finished his nine — or it may be a case for dropping him off the group
+  number rather than clamping him to it.
+- **Does a twosome get this screen at all,** or fall back to the single-issue one?
+- **Undo.** Voiding exists per credit — see **Weston's ideas → 2 — Create
+  raincheck** — but there is no *undo that batch*, and a batch is where a wrong
+  hole count does four times the damage.
