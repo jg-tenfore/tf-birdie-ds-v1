@@ -312,7 +312,10 @@ export const TableChartScreen = () => {
     const navigate = useNavigate();
 
     const room = state.floorRoom;
-    const saved = state.floorPlans[room] ?? [];
+    // Memoised because the `?? []` makes a fresh array on every render for a
+    // room with nothing saved yet, which would make `dirty` below recompute
+    // each time and never settle.
+    const saved = useMemo(() => state.floorPlans[room] ?? [], [state.floorPlans, room]);
 
     const [elements, setElements] = useState<FloorElement[]>(saved);
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -322,50 +325,62 @@ export const TableChartScreen = () => {
 
     // Undo/redo hold whole snapshots. The layouts are small enough that diffing
     // would be more code than it saves.
-    const past = useRef<FloorElement[][]>([]);
-    const future = useRef<FloorElement[][]>([]);
+    //
+    // State rather than refs, for two reasons. The toolbar greys Undo and Redo
+    // from these lengths, and a ref changing does not re-render — so the buttons
+    // would show whatever the last unrelated render happened to see. And pushing
+    // to a ref from inside a `setElements` updater is applied twice under
+    // StrictMode, which put the same snapshot on the stack twice and made undo
+    // take two presses to go back one step.
+    const [past, setPast] = useState<FloorElement[][]>([]);
+    const [future, setFuture] = useState<FloorElement[][]>([]);
     const canvasRef = useRef<HTMLDivElement>(null);
 
     // Switching rooms discards nothing: the working copy is reseeded from the
     // room you switch into, and each room saves independently.
     useEffect(() => {
+        // Reseeding on room change is the intent, not an accident: each room is
+        // its own working copy, and switching into one loads it. The rule is
+        // right in general — a setState in an effect usually means state that
+        // should have been derived — and wrong here.
+        /* eslint-disable react-hooks/set-state-in-effect */
         setElements(state.floorPlans[room] ?? []);
         setSelectedId(null);
-        past.current = [];
-        future.current = [];
+        setPast([]);
+        setFuture([]);
+        /* eslint-enable react-hooks/set-state-in-effect */
     }, [room, state.floorPlans]);
 
     const dirty = useMemo(() => JSON.stringify(elements) !== JSON.stringify(saved), [elements, saved]);
     const selected = elements.find((e) => e.id === selectedId) ?? null;
 
-    const commit = useCallback((next: FloorElement[] | ((prev: FloorElement[]) => FloorElement[])) => {
-        setElements((prev) => {
-            past.current = [...past.current.slice(-40), prev];
-            future.current = [];
-            return typeof next === "function" ? next(prev) : next;
-        });
-    }, []);
+    const commit = useCallback(
+        (next: FloorElement[] | ((prev: FloorElement[]) => FloorElement[])) => {
+            // Every one of these is a pure update. Nothing is pushed from inside
+            // an updater, so a double invocation cannot double-push.
+            setPast((p) => [...p.slice(-40), elements]);
+            setFuture([]);
+            setElements(typeof next === "function" ? next(elements) : next);
+        },
+        [elements],
+    );
 
     /** Live drag updates bypass the undo stack; only the gesture's start is pushed. */
     const nudge = (next: FloorElement[] | ((prev: FloorElement[]) => FloorElement[])) => setElements(next);
 
     const undo = () => {
-        const prev = past.current.pop();
-        if (!prev) return;
-        setElements((current) => {
-            future.current = [...future.current, current];
-            return prev;
-        });
+        if (!past.length) return;
+        setElements(past[past.length - 1]);
+        setPast((p) => p.slice(0, -1));
+        setFuture((f) => [...f, elements]);
         setSelectedId(null);
     };
 
     const redo = () => {
-        const next = future.current.pop();
-        if (!next) return;
-        setElements((current) => {
-            past.current = [...past.current, current];
-            return next;
-        });
+        if (!future.length) return;
+        setElements(future[future.length - 1]);
+        setFuture((f) => f.slice(0, -1));
+        setPast((p) => [...p.slice(-40), elements]);
     };
 
     const addElement = (item: PaletteItem) => {
@@ -410,8 +425,8 @@ export const TableChartScreen = () => {
     const startDrag = (e: React.PointerEvent, el: FloorElement) => {
         e.stopPropagation();
         setSelectedId(el.id);
-        past.current = [...past.current.slice(-40), elements];
-        future.current = [];
+        setPast((p) => [...p.slice(-40), elements]);
+        setFuture([]);
 
         const startX = e.clientX;
         const startY = e.clientY;
@@ -442,8 +457,8 @@ export const TableChartScreen = () => {
 
     const startResize = (e: React.PointerEvent, el: FloorElement, handle: HandleKey) => {
         e.stopPropagation();
-        past.current = [...past.current.slice(-40), elements];
-        future.current = [];
+        setPast((p) => [...p.slice(-40), elements]);
+        setFuture([]);
 
         const startX = e.clientX;
         const startY = e.clientY;
@@ -507,10 +522,10 @@ export const TableChartScreen = () => {
             active="tablechart"
             topBarRight={
                 <Stack direction="row" sx={{ alignItems: "center", gap: 0.5 }}>
-                    <IconButton aria-label="Undo" onClick={undo} sx={{ color: past.current.length ? "#fff" : "rgba(255,255,255,0.3)" }}>
+                    <IconButton aria-label="Undo" onClick={undo} sx={{ color: past.length ? "#fff" : "rgba(255,255,255,0.3)" }}>
                         <UndoIcon />
                     </IconButton>
-                    <IconButton aria-label="Redo" onClick={redo} sx={{ color: future.current.length ? "#fff" : "rgba(255,255,255,0.3)" }}>
+                    <IconButton aria-label="Redo" onClick={redo} sx={{ color: future.length ? "#fff" : "rgba(255,255,255,0.3)" }}>
                         <RedoIcon />
                     </IconButton>
                     <ButtonBase

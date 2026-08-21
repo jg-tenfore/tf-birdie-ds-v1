@@ -21,16 +21,19 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v7
               with:
                   node-version: 22
                   cache: npm
 
             - name: Install dependencies
               run: npm ci
+
+            - name: Lint
+              run: npm run lint
 
             - name: Typecheck
               run: npm run typecheck
@@ -48,7 +51,7 @@ jobs:
               run: npx playwright install --with-deps chromium && node scripts/serve-dist.mjs --smoke
 
             - name: Upload Pages artifact
-              uses: actions/upload-pages-artifact@v3
+              uses: actions/upload-pages-artifact@v5
               with:
                   path: dist
 
@@ -61,4 +64,4 @@ jobs:
         steps:
             - name: Deploy to GitHub Pages
               id: deployment
-              uses: actions/deploy-pages@v4
+              uses: actions/deploy-pages@v5

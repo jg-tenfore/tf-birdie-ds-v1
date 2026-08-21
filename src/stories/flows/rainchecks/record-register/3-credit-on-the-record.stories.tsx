@@ -108,7 +108,6 @@ export const Default: Story = {
  * are there when the answer needs to be about one credit rather than the total.
  */
 export const Collapsed: Story = {
-    name: "Collapsed",
     render: () => <Profile startCollapsed />,
 };
 

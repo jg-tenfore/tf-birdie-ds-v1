@@ -68,6 +68,18 @@ const server = createServer((req, res) => {
     createReadStream(file).pipe(res);
 });
 
+// A stray server from an earlier run is the likeliest way this fails, and a bare
+// EADDRINUSE stack trace does not say that. Name the port and the fix.
+server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+        console.error(`port ${PORT} is already in use — something is still serving there.`);
+        console.error(`  find it:  lsof -nP -iTCP:${PORT} -sTCP:LISTEN`);
+        console.error(`  or pick another:  SMOKE_PORT=8099 npm run smoke:ci`);
+        process.exit(1);
+    }
+    throw err;
+});
+
 server.listen(PORT, () => {
     const base = `http://localhost:${PORT}${PREFIX}/`;
     console.log(`serving dist/ at ${base}`);
