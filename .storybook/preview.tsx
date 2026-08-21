@@ -182,25 +182,18 @@ const preview: Preview = {
                             // Proposals, after the five steps that describe what
                             // ships — so the folder reads as "here is the flow,
                             // and here is what we would change about it".
-                            "Weston's ideas",
-                            [
-                                // Numbered to match the five core steps above,
-                                // so a concept pairs with the screen it replaces.
-                                // 1 (the booking) and 5 (Order Complete) have no
-                                // concept on purpose — the entry point is the one
-                                // thing Weston asked to leave alone, and the
-                                // receipt is unchanged.
-                                "Overview",
-                                "2 — Create raincheck",
-                                "3 — The credit on the record",
-                                "4 — Redeem at the register",
-                                // Spans all four, so it sits outside the numbering.
-                                "Create one, end to end",
-                            ],
-                            // Dated rather than numbered, because it is not a
-                            // step in the flow — it is a second pass over the
-                            // issuance screen, from the Aug 20 note about
-                            // issuing a whole foursome at once.
+                            //
+                            // There used to be a "Weston's ideas" folder holding
+                            // all four Aug 12–13 concepts. Its step 2 was
+                            // superseded by Aug 20 and is retired; steps 3 and 4
+                            // were untouched by Aug 20 and live on below, under a
+                            // name that says where they apply rather than when
+                            // they were drawn.
+                            //
+                            // Aug 20 is dated rather than numbered because it is
+                            // not a step in the flow — it is a second pass over
+                            // the issuance screen, from the note about issuing a
+                            // whole foursome at once.
                             "Aug 20",
                             [
                                 "Overview",
@@ -216,6 +209,8 @@ const preview: Preview = {
                                 // whole folder exists to make.
                                 "End to end",
                             ],
+                            // Steps 3 and 4, which Aug 20 does not touch.
+                            "Record & register",
                         ],
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would

@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Slider from "@mui/material/Slider";
@@ -5,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 import { appColors } from "@/theme/app-replica-tokens";
-import type { RaincheckPosition } from "./reservation-raincheck";
+import { VoidDialog, type RaincheckPosition } from "./reservation-raincheck";
 import {
     AlreadyIssued,
     HeaderRow,
@@ -58,6 +60,11 @@ export interface GroupIssueOneStopProps {
     drafts: GroupDraft[];
     onDraft?: (positionId: string, patch: Partial<GroupDraft>) => void;
     onToggleAll?: (include: boolean) => void;
+    /**
+     * Cancels an already-issued credit and frees its round, so a correct one
+     * can be cut. Omit for a read-only screen.
+     */
+    onVoid?: (positionId: string, reason: string) => void;
 }
 
 export const GroupIssueOneStop = ({
@@ -68,6 +75,7 @@ export const GroupIssueOneStop = ({
     drafts,
     onDraft,
     onToggleAll,
+    onVoid,
 }: GroupIssueOneStopProps) => {
     // Rows that follow the group carry the group's number, not their own stale
     // one — resolved once here so the totals, the band and the rows can never
@@ -77,6 +85,7 @@ export const GroupIssueOneStop = ({
         if (!position) return d;
         return { ...d, holesPlayed: clampHoles(position, d.custom ? d.holesPlayed : groupHoles) };
     });
+    const [voiding, setVoiding] = useState<RaincheckPosition | null>(null);
     const totals = groupTotals(positions, effectiveDrafts);
     const issuable = positions.filter((p) => !p.issued);
     const allOn = issuable.length > 0 && issuable.every((p) => drafts.find((d) => d.positionId === p.id)?.include);
@@ -227,7 +236,10 @@ export const GroupIssueOneStop = ({
                                         </Stack>
                                         {done && (
                                             <Box sx={{ mt: 0.5 }}>
-                                                <AlreadyIssued position={position} />
+                                                <AlreadyIssued
+                                                    position={position}
+                                                    onVoid={onVoid ? () => setVoiding(position) : undefined}
+                                                />
                                             </Box>
                                         )}
                                     </Box>
@@ -333,6 +345,18 @@ export const GroupIssueOneStop = ({
             </Box>
 
             <ReviewBand totals={totals} />
+
+            {/* The same dialog the single-issue concept used, imported rather
+                than reimplemented — one void dialog and one reason list, so the
+                two cannot drift apart. */}
+            <VoidDialog
+                position={voiding}
+                onCancel={() => setVoiding(null)}
+                onConfirm={(reason) => {
+                    if (voiding) onVoid?.(voiding.id, reason);
+                    setVoiding(null);
+                }}
+            />
         </Stack>
     );
 };

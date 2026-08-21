@@ -58,7 +58,7 @@ import { rainchecks, searchRainchecks, type Raincheck } from "@/data/rainchecks"
  * shipping components, untouched. Only the RAIN pane is new.
  */
 const meta = {
-    title: "Flows/Rainchecks/Weston's ideas/4 — Redeem at the register",
+    title: "Flows/Rainchecks/Record & register/4 — Redeem at the register",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

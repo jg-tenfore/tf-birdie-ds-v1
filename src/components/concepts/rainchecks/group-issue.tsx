@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
@@ -23,8 +24,9 @@ import { positionTotal, type RaincheckPosition } from "./reservation-raincheck";
  * > *"It would be nice to set up all the rainchecks on one screen. So you would
  * > not need to click through that flow four separate times for a foursome."*
  *
- * Which is the thing the earlier concept did not fix. **Weston's ideas → 2 —
- * Create raincheck** made one issuance clear — which round, how much, whose
+ * Which is the thing the earlier concept did not fix. The single-issue screen
+ * that preceded this one — retired, and readable in
+ * `concepts/rainchecks/reservation-raincheck.tsx` — made one issuance clear — which round, how much, whose
  * account, what already happened — and then made you do it four times. It even
  * advertises the repetition: after each credit it hops selection to the next
  * player still owed one. That is the loop being complained about, drawn as a
@@ -271,15 +273,59 @@ export const PlayerCell = ({ position }: { position: RaincheckPosition }) => (
     </Stack>
 );
 
-/** What an already-credited round says instead of controls. */
-export const AlreadyIssued = ({ position }: { position: RaincheckPosition }) => (
-    <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
-        <CheckCircleIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
-        <Typography sx={{ fontSize: 14, color: appColors.greenTee }}>
-            Already issued — {position.issued!.raincheckId} · {usd(position.issued!.amount)} to {position.issued!.to}
-        </Typography>
-    </Stack>
-);
+/**
+ * What an already-credited round says instead of controls — and the one thing
+ * it can still do.
+ *
+ * A round cannot be rainchecked twice, so this row has no controls. But a credit
+ * cut for the wrong player leaves the round locked *as well as* the money
+ * misplaced, and voiding is the only thing that releases it. So the void lives
+ * here, on the row that owns the mistake, rather than on a screen the operator
+ * would have to go and find.
+ *
+ * **Blocked once any of it has been spent.** The row says so rather than hiding
+ * the control: at that point the money has left and it is a refund question,
+ * not a correction.
+ */
+export const AlreadyIssued = ({ position, onVoid }: { position: RaincheckPosition; onVoid?: () => void }) => {
+    const issued = position.issued!;
+    const spent = issued.spent ?? 0;
+
+    return (
+        <Stack sx={{ gap: 0.25 }}>
+            <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
+                <CheckCircleIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
+                <Typography sx={{ fontSize: 14, color: appColors.greenTee }}>
+                    Already issued — {issued.raincheckId} · {usd(issued.amount)} to {issued.to}
+                </Typography>
+                {onVoid && (
+                    <ButtonBase
+                        onClick={spent > 0 ? undefined : onVoid}
+                        disabled={spent > 0}
+                        sx={{
+                            px: 1.25,
+                            py: 0.4,
+                            fontSize: 13,
+                            letterSpacing: "0.04em",
+                            border: "1px solid",
+                            borderColor: spent > 0 ? appColors.divider : appColors.red,
+                            color: spent > 0 ? appColors.textDisabled : appColors.red,
+                            borderRadius: 0.5,
+                        }}
+                    >
+                        VOID
+                    </ButtonBase>
+                )}
+            </Stack>
+            {issued.since && <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>{issued.since}</Typography>}
+            {spent > 0 && onVoid && (
+                <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>
+                    {usd(spent)} already spent — this can no longer be voided
+                </Typography>
+            )}
+        </Stack>
+    );
+};
 
 /**
  * The sentence, made plural.

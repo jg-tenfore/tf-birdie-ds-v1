@@ -15,8 +15,9 @@ import { rainedOutFoursome, rainedOutHeading } from "@/components/concepts/rainc
  * entry, the commit and the landing are identical on purpose — so anything that
  * feels different between them is the hole-count question and nothing else.
  *
- * Compare **Weston's ideas → Create one, end to end**, which is this trip taken
- * one player at a time.
+ * The single-issue version of this trip has been retired. What it looked like is
+ * argued about in the Overview, and the screen itself survives as source in
+ * `concepts/rainchecks/reservation-raincheck.tsx`.
  */
 const meta = {
     title: "Flows/Rainchecks/Aug 20/End to end",
