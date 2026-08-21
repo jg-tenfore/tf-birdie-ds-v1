@@ -56,13 +56,7 @@ const navyRows = (times: TeeTimeBooking[]): SheetRow[] =>
 export const toGridCards = (times: TeeTimeBooking[]): GridCard[] =>
     times.map((t) => {
         const filled = t.positions.filter((p): p is Position => Boolean(p));
-        const tone: GridCard["tone"] = t.blocked
-            ? "blocked"
-            : filled.length === 0
-              ? "open"
-              : filled.every((p) => p.paid)
-                ? "paid"
-                : "navy";
+        const tone: GridCard["tone"] = t.blocked ? "blocked" : filled.length === 0 ? "open" : filled.every((p) => p.paid) ? "paid" : "navy";
 
         return {
             time: t.time,
@@ -140,12 +134,6 @@ export const SheetBody = ({
     // The gear menu only exists in List view; the other three have no per-time
     // affordance on the device either.
     return (
-        <TeeSheetListView
-            rows={toListRows(times)}
-            slotMenu={slotMenu}
-            menuFor={menuFor}
-            onOpenTime={onOpenTime}
-            onOpenMenu={onOpenMenu}
-        />
+        <TeeSheetListView rows={toListRows(times)} slotMenu={slotMenu} menuFor={menuFor} onOpenTime={onOpenTime} onOpenMenu={onOpenMenu} />
     );
 };

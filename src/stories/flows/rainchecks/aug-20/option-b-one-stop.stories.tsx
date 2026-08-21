@@ -100,7 +100,9 @@ const Concept = ({
 
         setPositions(next);
         setNextId(id);
-        setFlash(`${totals.count} ${totals.count === 1 ? "raincheck" : "rainchecks"} issued, ${usd(totals.amount)} in total — ${done.join(", ")}.`);
+        setFlash(
+            `${totals.count} ${totals.count === 1 ? "raincheck" : "rainchecks"} issued, ${usd(totals.amount)} in total — ${done.join(", ")}.`,
+        );
     };
 
     return (
@@ -183,7 +185,12 @@ export const Default: Story = {
  */
 export const OneException: Story = {
     name: "One of them played on",
-    render: () => <Concept seed={rainedOutFoursome} tweak={(d) => d.map((x) => (x.positionId === "10314912" ? { ...x, custom: true, holesPlayed: 12 } : x))} />,
+    render: () => (
+        <Concept
+            seed={rainedOutFoursome}
+            tweak={(d) => d.map((x) => (x.positionId === "10314912" ? { ...x, custom: true, holesPlayed: 12 } : x))}
+        />
+    ),
 };
 
 /**

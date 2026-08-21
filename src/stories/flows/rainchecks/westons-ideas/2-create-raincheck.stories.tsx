@@ -238,9 +238,7 @@ export const Voidable: Story = {
     render: () => (
         <Concept
             seed={foursome.map((p) =>
-                p.id === "10314912"
-                    ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } }
-                    : p,
+                p.id === "10314912" ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } } : p,
             )}
             startAt="10314910"
         />
@@ -283,7 +281,6 @@ export const AllIssued: Story = {
         );
     },
 };
-
 
 /**
  * A single-player reservation, for scale.

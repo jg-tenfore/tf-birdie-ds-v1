@@ -84,13 +84,7 @@ interface ChairPos {
  * are special-cased to top → bottom → right → left, because proportional
  * distribution puts two chairs on one edge and looks wrong at low counts.
  */
-export function chairPositions(
-    shape: TableShape,
-    seats: number,
-    w: number,
-    h: number,
-    orientation?: SeatOrientation,
-): ChairPos[] {
+export function chairPositions(shape: TableShape, seats: number, w: number, h: number, orientation?: SeatOrientation): ChairPos[] {
     const inset = CHAIR_SIZE + CHAIR_GAP;
     const tableLeft = inset;
     const tableTop = inset;
@@ -394,17 +388,22 @@ export const floorRoomOrder = [
     "New Table Designer Room",
 ] as const;
 
-
 /* --------------------------------------------------- the other nine rooms */
 
 /** Helpers so a room reads as a room rather than a wall of coordinates. */
-const table = (
-    id: string,
-    num: string,
-    x: number,
-    y: number,
-    opts: Partial<FloorElement> = {},
-): FloorElement => ({ id, kind: "table", shape: "square", x, y, w: 100, h: 100, num, seats: 4, status: "empty", ...opts });
+const table = (id: string, num: string, x: number, y: number, opts: Partial<FloorElement> = {}): FloorElement => ({
+    id,
+    kind: "table",
+    shape: "square",
+    x,
+    y,
+    w: 100,
+    h: 100,
+    num,
+    seats: 4,
+    status: "empty",
+    ...opts,
+});
 
 const round = (id: string, num: string, x: number, y: number, opts: Partial<FloorElement> = {}) =>
     table(id, num, x, y, { shape: "circle", w: 110, h: 110, lockAR: true, ...opts });
@@ -419,8 +418,10 @@ const wall = (id: string, x: number, y: number, w: number, h = 14): FloorElement
 
 const label = (id: string, x: number, y: number, text: string, w = 120): FloorElement => ({ id, kind: "label", x, y, w, h: 24, text });
 
-const seated = (name: string, guests: number, server: string, tab: number) =>
-    ({ status: "occupied" as const, party: { name, guests, server, tab } });
+const seated = (name: string, guests: number, server: string, tab: number) => ({
+    status: "occupied" as const,
+    party: { name, guests, server, tab },
+});
 
 /**
  * The rooms the device has configured but never laid out.
@@ -484,9 +485,7 @@ const lounge: FloorElement[] = [
 const triviaPub: FloorElement[] = [
     label("t-l", 60, 20, "Trivia Pub/Bar", 150),
     wall("t-bar", 60, 70, 900, 18),
-    ...Array.from({ length: 9 }, (_, i) =>
-        seat(`t-s${i}`, `B${i + 1}`, 60 + i * 100, 100, i % 2 === 0 ? seated("Osei", 1, "BT", 22) : {}),
-    ),
+    ...Array.from({ length: 9 }, (_, i) => seat(`t-s${i}`, `B${i + 1}`, 60 + i * 100, 100, i % 2 === 0 ? seated("Osei", 1, "BT", 22) : {})),
     // High-tops on the floor, small and square so a quiz team crowds one.
     ...Array.from({ length: 8 }, (_, i) =>
         table(`t-h${i}`, `T${i + 1}`, 80 + (i % 4) * 220, 260 + Math.floor(i / 4) * 180, {
@@ -512,8 +511,12 @@ const bigBar: FloorElement[] = [
     wall("bb-left", 260, 90, 20, 300),
     wall("bb-right", 860, 90, 20, 300),
     ...Array.from({ length: 7 }, (_, i) => seat(`bb-t${i}`, `B${i + 1}`, 290 + i * 90, 130)),
-    ...Array.from({ length: 3 }, (_, i) => seat(`bb-l${i}`, `B${8 + i}`, 160, 150 + i * 90, i === 1 ? seated("Marchetti", 1, "BT", 31) : {})),
-    ...Array.from({ length: 3 }, (_, i) => seat(`bb-r${i}`, `B${11 + i}`, 900, 150 + i * 90, i === 0 ? seated("Bergstrom", 1, "BT", 44) : {})),
+    ...Array.from({ length: 3 }, (_, i) =>
+        seat(`bb-l${i}`, `B${8 + i}`, 160, 150 + i * 90, i === 1 ? seated("Marchetti", 1, "BT", 31) : {}),
+    ),
+    ...Array.from({ length: 3 }, (_, i) =>
+        seat(`bb-r${i}`, `B${11 + i}`, 900, 150 + i * 90, i === 0 ? seated("Bergstrom", 1, "BT", 44) : {}),
+    ),
     round("bb-1", "1", 380, 460, seated("Ferreira", 4, "AK", 118)),
     round("bb-2", "2", 560, 460),
     round("bb-3", "3", 740, 460),

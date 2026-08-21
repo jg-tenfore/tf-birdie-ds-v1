@@ -204,7 +204,13 @@ export const TeeTimeDetailTopRight = () => (
 );
 
 /** The scrolling body: search band, summary band, one card per reservation. */
-export const TeeTimeDetailBody = ({ detail, onAction }: { detail: TeeTimeDetail; onAction?: (action: PlayerAction, player: DetailPlayer) => void }) => (
+export const TeeTimeDetailBody = ({
+    detail,
+    onAction,
+}: {
+    detail: TeeTimeDetail;
+    onAction?: (action: PlayerAction, player: DetailPlayer) => void;
+}) => (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100%", bgcolor: appColors.canvas }}>
         <CustomerSearchBand />
         <CustomerSummaryBand />

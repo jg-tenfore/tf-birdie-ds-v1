@@ -117,15 +117,7 @@ export const commitDrafts = (
  * land on four accounts or on two, and which of those happened is the only thing
  * the reassignment dropdown was ever for — so it is what this screen leads with.
  */
-const Landed = ({
-    credits,
-    positions,
-    onRestart,
-}: {
-    credits: Raincheck[];
-    positions: RaincheckPosition[];
-    onRestart: () => void;
-}) => {
+const Landed = ({ credits, positions, onRestart }: { credits: Raincheck[]; positions: RaincheckPosition[]; onRestart: () => void }) => {
     const total = +credits.reduce((sum, c) => sum + c.awarded, 0).toFixed(2);
     const byAccount = credits.reduce<Record<string, Raincheck[]>>((acc, c) => {
         (acc[c.customerName] ??= []).push(c);
@@ -149,7 +141,14 @@ const Landed = ({
                     to add is the way to run the trip again from scratch. */}
                 <ButtonBase
                     onClick={onRestart}
-                    sx={{ border: `1px solid ${appColors.divider}`, bgcolor: appColors.surface, px: 2, py: 1, fontSize: 15, borderRadius: 0.5 }}
+                    sx={{
+                        border: `1px solid ${appColors.divider}`,
+                        bgcolor: appColors.surface,
+                        px: 2,
+                        py: 1,
+                        fontSize: 15,
+                        borderRadius: 0.5,
+                    }}
                 >
                     Start over
                 </ButtonBase>
@@ -157,8 +156,8 @@ const Landed = ({
 
             <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
                 {credits.length} credits, {accounts.length} {accounts.length === 1 ? "account" : "accounts"}. Each credit still carries the
-                reservation and the {credits[0]?.teeTime} round it was cut from — the batch changed how many were issued at once, not what any
-                one of them is.
+                reservation and the {credits[0]?.teeTime} round it was cut from — the batch changed how many were issued at once, not what
+                any one of them is.
             </Typography>
 
             {accounts.map(([name, rows]) => {
@@ -272,7 +271,15 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
                         )}   ID:${p.id}${p.issued ? `   Raincheck ${p.issued.raincheckId} : ${usd(p.issued.amount)} to ${p.issued.to}` : ""}`,
                         actions: p.issued
                             ? (["History", "Edit", "Cart Signout", "Print Starter", "Print Receipt", "Cart Key"] as PlayerAction[])
-                            : (["Raincheck", "History", "Edit", "Cart Signout", "Print Starter", "Print Receipt", "Cart Key"] as PlayerAction[]),
+                            : ([
+                                  "Raincheck",
+                                  "History",
+                                  "Edit",
+                                  "Cart Signout",
+                                  "Print Starter",
+                                  "Print Receipt",
+                                  "Cart Key",
+                              ] as PlayerAction[]),
                     })),
                 }}
                 onAction={(action) => {
@@ -328,9 +335,7 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
                     />
                 ))}
 
-            {step === "done" && (
-                <Landed credits={credits} positions={positions} onRestart={restart} />
-            )}
+            {step === "done" && <Landed credits={credits} positions={positions} onRestart={restart} />}
         </AppShell>
     );
 };

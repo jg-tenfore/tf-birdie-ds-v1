@@ -45,7 +45,9 @@ export const CreateRaincheckScreen = () => {
         );
     }
 
-    const players: RaincheckPlayer[] = booking.positions.flatMap((p, i) => (p ? [{ id: p.id, name: i === slot ? p.name : undefined }] : []));
+    const players: RaincheckPlayer[] = booking.positions.flatMap((p, i) =>
+        p ? [{ id: p.id, name: i === slot ? p.name : undefined }] : [],
+    );
 
     return (
         <Shell

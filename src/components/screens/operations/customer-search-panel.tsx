@@ -205,7 +205,12 @@ export const CustomerSection = ({
             {summary && <Typography sx={{ fontSize: 15, color: "rgba(255,255,255,0.82)", mr: 1.5 }}>{summary}</Typography>}
             {collapsible && (
                 <ExpandMoreIcon
-                    sx={{ fontSize: 22, color: "#fff", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 120ms linear" }}
+                    sx={{
+                        fontSize: 22,
+                        color: "#fff",
+                        transform: isOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 120ms linear",
+                    }}
                 />
             )}
         </>
@@ -238,7 +243,14 @@ export const CustomerSection = ({
                     </ButtonBase>
                 ) : (
                     <Box
-                        sx={{ bgcolor: appColors.navy, borderRadius: `${appRadius.card}px`, px: 2, minHeight: 44, display: "flex", alignItems: "center" }}
+                        sx={{
+                            bgcolor: appColors.navy,
+                            borderRadius: `${appRadius.card}px`,
+                            px: 2,
+                            minHeight: 44,
+                            display: "flex",
+                            alignItems: "center",
+                        }}
                     >
                         {bar}
                     </Box>
@@ -295,11 +307,18 @@ const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", curren
  * credit *should* still be honoured is not settled; showing it separately is
  * what lets that be argued rather than assumed.
  */
-export const raincheckOwed = (rows: Raincheck[]) => +rows.filter((r) => isRedeemable(r)).reduce((sum, r) => sum + r.balance, 0).toFixed(2);
+export const raincheckOwed = (rows: Raincheck[]) =>
+    +rows
+        .filter((r) => isRedeemable(r))
+        .reduce((sum, r) => sum + r.balance, 0)
+        .toFixed(2);
 
 /** Money on credits that have lapsed. Not counted as owed, not hidden either. */
 export const raincheckExpired = (rows: Raincheck[]) =>
-    +rows.filter((r) => !isVoided(r) && !isSpentOut(r) && isExpired(r)).reduce((sum, r) => sum + r.balance, 0).toFixed(2);
+    +rows
+        .filter((r) => !isVoided(r) && !isSpentOut(r) && isExpired(r))
+        .reduce((sum, r) => sum + r.balance, 0)
+        .toFixed(2);
 
 /**
  * Rain Checks — a new section, sitting under Gift Cards.
@@ -381,7 +400,9 @@ export const RainChecksTable = ({ rows, onSelect }: { rows: Raincheck[]; onSelec
             ))
         )}
 
-        <Box sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, mt: 1.5, pt: 1.25, borderTop: `1px solid ${appColors.divider}` }}>
+        <Box
+            sx={{ display: "grid", gridTemplateColumns: RAINCHECK_COLUMNS, mt: 1.5, pt: 1.25, borderTop: `1px solid ${appColors.divider}` }}
+        >
             <Typography sx={{ gridColumn: "1 / 7", fontSize: 16, color: appColors.textPrimary }}>Total owed to this customer</Typography>
             <Typography sx={{ gridColumn: "7", fontSize: 16, fontWeight: 700, color: appColors.greenTee, textAlign: "right" }}>
                 {usd(raincheckOwed(rows))}

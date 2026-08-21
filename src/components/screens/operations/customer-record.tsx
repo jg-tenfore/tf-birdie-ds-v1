@@ -7,13 +7,7 @@ import { CUSTOMER_TYPES, customers, type CrmTeeTime, type Customer } from "@/dat
 import { rainchecks as allRainchecks, type Raincheck } from "@/data/rainchecks";
 import { bookingsForCustomer, may12Sheet, todaySheet } from "@/data/tee-sheet";
 import { appColors } from "@/theme/app-replica-tokens";
-import {
-    CustomerRecordFields,
-    CustomerSection,
-    GeneralInfoList,
-    RainChecksTable,
-    raincheckOwed,
-} from "./customer-search-panel";
+import { CustomerRecordFields, CustomerSection, GeneralInfoList, RainChecksTable, raincheckOwed } from "./customer-search-panel";
 
 /**
  * The customer profile, whole.
@@ -149,7 +143,10 @@ export const CustomerRecordPanel = ({
                     <Box sx={{ px: 2, py: 1.5 }}>
                         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", mb: 0.5 }}>
                             {["UPC", "Type", "Expires", "Awarded", "Spent", "Balance"].map((h, i) => (
-                                <Typography key={h} sx={{ fontSize: 15, color: appColors.textSecondary, textAlign: i > 2 ? "right" : "left" }}>
+                                <Typography
+                                    key={h}
+                                    sx={{ fontSize: 15, color: appColors.textSecondary, textAlign: i > 2 ? "right" : "left" }}
+                                >
                                     {h}
                                 </Typography>
                             ))}
@@ -159,8 +156,12 @@ export const CustomerRecordPanel = ({
                                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{g.upc || g.id}</Typography>
                                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{g.type}</Typography>
                                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{g.expires}</Typography>
-                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>{usd(g.awarded)}</Typography>
-                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>{usd(g.spent)}</Typography>
+                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>
+                                    {usd(g.awarded)}
+                                </Typography>
+                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "right" }}>
+                                    {usd(g.spent)}
+                                </Typography>
                                 <Typography sx={{ fontSize: 14, textAlign: "right", fontWeight: 700 }}>{usd(g.balance)}</Typography>
                             </Box>
                         ))}
@@ -189,7 +190,11 @@ export const CustomerRecordPanel = ({
                             {["TeeTime ID", "Date", "Players", "Status", "Raincheck"].map((h, i) => (
                                 <Typography
                                     key={h}
-                                    sx={{ fontSize: 15, color: appColors.textSecondary, textAlign: i === 4 ? "right" : i >= 2 ? "center" : "left" }}
+                                    sx={{
+                                        fontSize: 15,
+                                        color: appColors.textSecondary,
+                                        textAlign: i === 4 ? "right" : i >= 2 ? "center" : "left",
+                                    }}
                                 >
                                     {h}
                                 </Typography>
@@ -216,7 +221,9 @@ export const CustomerRecordPanel = ({
                             <Box key={t.id} sx={{ display: "grid", gridTemplateColumns: TEE_COLUMNS, py: 0.3 }}>
                                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{t.id}</Typography>
                                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{t.date}</Typography>
-                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "center" }}>{t.players}</Typography>
+                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "center" }}>
+                                    {t.players}
+                                </Typography>
                                 <Typography sx={{ fontSize: 14, color: appColors.textSecondary, textAlign: "center" }}>—</Typography>
                                 <RaincheckCell credit={raincheckByReservation.get(t.id)} />
                             </Box>

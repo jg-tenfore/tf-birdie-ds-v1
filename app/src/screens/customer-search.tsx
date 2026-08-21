@@ -58,9 +58,7 @@ const ResultRow = ({ customer, onSelect }: { customer: Customer; onSelect: () =>
             "&:hover": { bgcolor: appColors.canvas },
         }}
     >
-        {customer.tag && (
-            <Typography sx={{ fontSize: 15, fontWeight: 700, fontStyle: "italic", mb: 0.25 }}>{customer.tag}</Typography>
-        )}
+        {customer.tag && <Typography sx={{ fontSize: 15, fontWeight: 700, fontStyle: "italic", mb: 0.25 }}>{customer.tag}</Typography>}
         <Typography sx={{ fontSize: 19 }}>{customer.displayName}</Typography>
         <Stack direction="row" sx={{ alignItems: "center", gap: 1, mt: 0.5 }}>
             <EmailIcon sx={{ fontSize: 18, color: appColors.greenTee }} />
@@ -124,7 +122,9 @@ export const CustomerSearchScreen = () => {
                                     No customers match “{query.trim()}”.
                                 </Typography>
                             ) : (
-                                results.map((c) => <ResultRow key={c.id} customer={c} onSelect={() => navigate(`/customersearch/${c.id}`)} />)
+                                results.map((c) => (
+                                    <ResultRow key={c.id} customer={c} onSelect={() => navigate(`/customersearch/${c.id}`)} />
+                                ))
                             )}
                         </Box>
                     )}
@@ -151,7 +151,11 @@ export const CustomerRecordScreen = () => {
 
     if (!customer) {
         return (
-            <Shell title="Customer Search" active="customersearch" actionBar={<ActionButton onClick={() => navigate("/customersearch")}>Back</ActionButton>}>
+            <Shell
+                title="Customer Search"
+                active="customersearch"
+                actionBar={<ActionButton onClick={() => navigate("/customersearch")}>Back</ActionButton>}
+            >
                 <Stack sx={{ height: "100%", alignItems: "center", justifyContent: "center" }}>
                     <Typography sx={{ fontSize: 20 }}>No such customer.</Typography>
                 </Stack>

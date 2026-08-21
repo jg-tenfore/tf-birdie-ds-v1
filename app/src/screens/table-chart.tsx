@@ -64,11 +64,31 @@ interface PaletteItem {
 
 /** The palette, in the artifact's order: five table shapes, then three items. */
 const TABLES: PaletteItem[] = [
-    { key: "circle", label: "Round table", make: () => ({ kind: "table", shape: "circle", x: 0, y: 0, w: 110, h: 110, seats: 4, lockAR: true, status: "empty" }) },
-    { key: "square", label: "Square table", make: () => ({ kind: "table", shape: "square", x: 0, y: 0, w: 100, h: 100, seats: 4, status: "empty" }) },
-    { key: "rectangle", label: "Long table", make: () => ({ kind: "table", shape: "rectangle", x: 0, y: 0, w: 160, h: 100, seats: 6, status: "empty" }) },
-    { key: "oval", label: "Oval table", make: () => ({ kind: "table", shape: "oval", x: 0, y: 0, w: 130, h: 100, seats: 4, status: "empty" }) },
-    { key: "diamond", label: "Diamond table", make: () => ({ kind: "table", shape: "diamond", x: 0, y: 0, w: 100, h: 100, seats: 4, lockAR: true, status: "empty" }) },
+    {
+        key: "circle",
+        label: "Round table",
+        make: () => ({ kind: "table", shape: "circle", x: 0, y: 0, w: 110, h: 110, seats: 4, lockAR: true, status: "empty" }),
+    },
+    {
+        key: "square",
+        label: "Square table",
+        make: () => ({ kind: "table", shape: "square", x: 0, y: 0, w: 100, h: 100, seats: 4, status: "empty" }),
+    },
+    {
+        key: "rectangle",
+        label: "Long table",
+        make: () => ({ kind: "table", shape: "rectangle", x: 0, y: 0, w: 160, h: 100, seats: 6, status: "empty" }),
+    },
+    {
+        key: "oval",
+        label: "Oval table",
+        make: () => ({ kind: "table", shape: "oval", x: 0, y: 0, w: 130, h: 100, seats: 4, status: "empty" }),
+    },
+    {
+        key: "diamond",
+        label: "Diamond table",
+        make: () => ({ kind: "table", shape: "diamond", x: 0, y: 0, w: 100, h: 100, seats: 4, lockAR: true, status: "empty" }),
+    },
 ];
 
 const ITEMS: PaletteItem[] = [
@@ -89,7 +109,9 @@ const ITEMS: PaletteItem[] = [
 const SEAT = 5;
 
 const seatMarks = (points: [number, number][]) =>
-    points.map(([x, y]) => <rect key={`${x}-${y}`} x={x - SEAT / 2} y={y - SEAT / 2} width={SEAT} height={SEAT} rx={1} fill="currentColor" />);
+    points.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x - SEAT / 2} y={y - SEAT / 2} width={SEAT} height={SEAT} rx={1} fill="currentColor" />
+    ));
 
 const glyphBox = { width: 44, height: 44, viewBox: "0 0 44 44" } as const;
 const glyphStroke = { fill: "none", stroke: "currentColor", strokeWidth: 2 } as const;
@@ -167,9 +189,7 @@ const PaletteGlyph = ({ kind }: { kind: string }) => {
         case "box":
             return <Box sx={{ width: 32, height: 18, border: `2px solid ${floorColors.idle}`, borderRadius: "2px" }} />;
         default:
-            return (
-                <Box sx={{ px: 1, py: 0.25, border: "1px dashed rgba(0,0,0,0.45)", borderRadius: "2px", fontSize: 11 }}>Label</Box>
-            );
+            return <Box sx={{ px: 1, py: 0.25, border: "1px dashed rgba(0,0,0,0.45)", borderRadius: "2px", fontSize: 11 }}>Label</Box>;
     }
 };
 
@@ -318,16 +338,13 @@ export const TableChartScreen = () => {
     const dirty = useMemo(() => JSON.stringify(elements) !== JSON.stringify(saved), [elements, saved]);
     const selected = elements.find((e) => e.id === selectedId) ?? null;
 
-    const commit = useCallback(
-        (next: FloorElement[] | ((prev: FloorElement[]) => FloorElement[])) => {
-            setElements((prev) => {
-                past.current = [...past.current.slice(-40), prev];
-                future.current = [];
-                return typeof next === "function" ? next(prev) : next;
-            });
-        },
-        [],
-    );
+    const commit = useCallback((next: FloorElement[] | ((prev: FloorElement[]) => FloorElement[])) => {
+        setElements((prev) => {
+            past.current = [...past.current.slice(-40), prev];
+            future.current = [];
+            return typeof next === "function" ? next(prev) : next;
+        });
+    }, []);
 
     /** Live drag updates bypass the undo stack; only the gesture's start is pushed. */
     const nudge = (next: FloorElement[] | ((prev: FloorElement[]) => FloorElement[])) => setElements(next);
@@ -670,7 +687,9 @@ export const TableChartScreen = () => {
                                 >
                                     {selected.kind === "table" ? (
                                         <>
-                                            <Typography sx={{ fontSize: 15, flexShrink: 0, color: appColors.textSecondary }}>Table</Typography>
+                                            <Typography sx={{ fontSize: 15, flexShrink: 0, color: appColors.textSecondary }}>
+                                                Table
+                                            </Typography>
                                             <InputBase
                                                 value={selected.num ?? ""}
                                                 onChange={(e) => patch(selected.id, { num: e.target.value })}
@@ -678,7 +697,9 @@ export const TableChartScreen = () => {
                                                 sx={{ width: 54, flexShrink: 0, "& input": { fontSize: 16, fontWeight: 600, p: 0 } }}
                                             />
 
-                                            <PeopleOutlineIcon sx={{ fontSize: 20, flexShrink: 0, color: appColors.textSecondary, ml: 0.5 }} />
+                                            <PeopleOutlineIcon
+                                                sx={{ fontSize: 20, flexShrink: 0, color: appColors.textSecondary, ml: 0.5 }}
+                                            />
                                             <ButtonBase
                                                 aria-label="Fewer seats"
                                                 onClick={() => patch(selected.id, { seats: clampSeats((selected.seats ?? 4) - 1) })}
@@ -725,7 +746,13 @@ export const TableChartScreen = () => {
                                             {selected.shape !== "circle" && selected.shape !== "oval" && (
                                                 <>
                                                     <Box
-                                                        sx={{ width: "1px", height: 26, flexShrink: 0, bgcolor: appColors.divider, mx: 0.75 }}
+                                                        sx={{
+                                                            width: "1px",
+                                                            height: 26,
+                                                            flexShrink: 0,
+                                                            bgcolor: appColors.divider,
+                                                            mx: 0.75,
+                                                        }}
                                                     />
                                                     {(["horizontal", "vertical"] as const).map((axis) => (
                                                         <ToolbarButton
@@ -804,7 +831,6 @@ export const TableChartScreen = () => {
                             <AddIcon />
                         </IconButton>
                     </Stack>
-
                 </Box>
             </Stack>
 

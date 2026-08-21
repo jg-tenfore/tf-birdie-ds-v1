@@ -82,11 +82,13 @@ const rules = [
     },
     {
         rule: "Seeded generators, never Math.random.",
-        because: "The smoke suite asserts against these records and screenshots get compared across commits. A world that reshuffles on reload makes both worthless.",
+        because:
+            "The smoke suite asserts against these records and screenshots get compared across commits. A world that reshuffles on reload makes both worthless.",
     },
     {
         rule: "Reproduce the shipping app's defects, and say so in a comment.",
-        because: "NAY WITH CARD, Csutomer Balance, a table that runs off the right edge. Silently correcting them makes the replica disagree with the device it exists to represent, and these are exactly what a redesign should be arguing about.",
+        because:
+            "NAY WITH CARD, Csutomer Balance, a table that runs off the right edge. Silently correcting them makes the replica disagree with the device it exists to represent, and these are exactly what a redesign should be arguing about.",
     },
 ];
 
@@ -179,9 +181,9 @@ export const toGridCards = (times: TeeTimeBooking[]): GridCard[] => ...
                     <Card>
                         <Typography variant="subtitle1">Prototype → system</Typography>
                         <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-                            Something learned by operating the thing — a flow with a dead end, a state nobody had drawn, a screen that
-                            needs a control it does not have. That belongs back in <Token>src/</Token> as a component and a story, so the
-                            next conversation about it starts from a drawing rather than from memory.
+                            Something learned by operating the thing — a flow with a dead end, a state nobody had drawn, a screen that needs
+                            a control it does not have. That belongs back in <Token>src/</Token> as a component and a story, so the next
+                            conversation about it starts from a drawing rather than from memory.
                         </Typography>
                     </Card>
                 </Stack>

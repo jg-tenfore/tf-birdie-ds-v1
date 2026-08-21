@@ -66,7 +66,7 @@ export const TablesScreen = () => {
      */
     const open = (el: { num?: string; seats?: number; party?: { server: string } }) => {
         const label = `Detached ${27600 + Number(el.num?.replace(/\D/g, "") ?? 0) + 99}`;
-        const server = el.party?.server ? SERVERS[el.party.server] ?? el.party.server : "Kyler Brooksby";
+        const server = el.party?.server ? (SERVERS[el.party.server] ?? el.party.server) : "Kyler Brooksby";
         openTable(label, el.seats ?? 4, server);
         // /tabs/active resolves to whatever the reducer just opened, so this does
         // not have to guess the new ticket's id.
@@ -195,7 +195,16 @@ export const TablesScreen = () => {
 
                 <Stack
                     direction="row"
-                    sx={{ position: "absolute", right: 16, bottom: 16, alignItems: "center", bgcolor: "#fff", boxShadow: 2, borderRadius: 999, px: 1 }}
+                    sx={{
+                        position: "absolute",
+                        right: 16,
+                        bottom: 16,
+                        alignItems: "center",
+                        bgcolor: "#fff",
+                        boxShadow: 2,
+                        borderRadius: 999,
+                        px: 1,
+                    }}
                 >
                     <IconButton aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(2)))}>
                         <RemoveIcon />

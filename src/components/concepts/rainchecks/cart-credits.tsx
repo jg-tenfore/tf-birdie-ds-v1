@@ -67,7 +67,17 @@ const RedemptionLines = ({ credit }: { credit: Raincheck }) => {
     );
 };
 
-const CreditCard = ({ credit, selected, onSelect, owed }: { credit: Raincheck; selected: boolean; onSelect?: () => void; owed: number }) => {
+const CreditCard = ({
+    credit,
+    selected,
+    onSelect,
+    owed,
+}: {
+    credit: Raincheck;
+    selected: boolean;
+    onSelect?: () => void;
+    owed: number;
+}) => {
     const voided = isVoided(credit);
     const used = !voided && isSpentOut(credit);
     const expired = !voided && !used && isExpired(credit);
@@ -338,9 +348,7 @@ export const CartCredits = ({
 
             {credits.length === 0 ? (
                 <Box sx={{ bgcolor: appColors.surface, border: `1px solid ${appColors.divider}`, px: 2, py: 3 }}>
-                    <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>
-                        {customerName} has never had a raincheck.
-                    </Typography>
+                    <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>{customerName} has never had a raincheck.</Typography>
                 </Box>
             ) : (
                 <Stack sx={{ gap: 1 }}>
@@ -397,4 +405,3 @@ export const CartCredits = ({
         </Stack>
     );
 };
-

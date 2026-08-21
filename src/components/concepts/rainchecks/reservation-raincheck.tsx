@@ -129,7 +129,9 @@ const PositionRow = ({
     if (done) {
         const issued = position.issued!;
         return (
-            <Box sx={{ px: 2, py: 1.5, borderLeft: "4px solid transparent", borderBottom: `1px solid ${appColors.divider}`, opacity: 0.75 }}>
+            <Box
+                sx={{ px: 2, py: 1.5, borderLeft: "4px solid transparent", borderBottom: `1px solid ${appColors.divider}`, opacity: 0.75 }}
+            >
                 {body}
                 <Stack direction="row" sx={{ alignItems: "flex-start", gap: 1, mt: 0.75 }}>
                     <Stack sx={{ flex: 1, gap: 0.25 }}>
@@ -139,7 +141,9 @@ const PositionRow = ({
                                 Raincheck {issued.raincheckId} · {usd(issued.amount)} to {issued.to} · {issued.at}
                             </Typography>
                         </Stack>
-                        {issued.since && <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>{issued.since}</Typography>}
+                        {issued.since && (
+                            <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>{issued.since}</Typography>
+                        )}
                         {spent > 0 && (
                             <Typography sx={{ fontSize: 13, color: appColors.textSecondary, pl: 3.25 }}>
                                 {usd(spent)} already spent — this can no longer be voided
@@ -213,7 +217,13 @@ const VoidDialog = ({
     const issued = position?.issued;
 
     return (
-        <Dialog open={Boolean(position)} onClose={onCancel} maxWidth="sm" fullWidth slotProps={{ transition: { onExited: () => setReason(null) } }}>
+        <Dialog
+            open={Boolean(position)}
+            onClose={onCancel}
+            maxWidth="sm"
+            fullWidth
+            slotProps={{ transition: { onExited: () => setReason(null) } }}
+        >
             {issued && position && (
                 <Box sx={{ p: 3 }}>
                     <Typography sx={{ fontSize: 22, mb: 0.5 }}>Void raincheck {issued.raincheckId}?</Typography>
@@ -460,7 +470,10 @@ export const ReservationRaincheck = ({
 
                         {/* Below the control that produces it, not above — the one
                             layout change that needs no explanation. */}
-                        <Stack direction="row" sx={{ alignItems: "baseline", gap: 1.5, mt: 2, pt: 1.5, borderTop: `1px solid ${appColors.divider}` }}>
+                        <Stack
+                            direction="row"
+                            sx={{ alignItems: "baseline", gap: 1.5, mt: 2, pt: 1.5, borderTop: `1px solid ${appColors.divider}` }}
+                        >
                             <Typography sx={{ fontSize: 15, color: appColors.textSecondary, flex: 1 }}>
                                 {selected.holes - holesPlayed} of {selected.holes} holes unplayed, on {usd(price)}
                             </Typography>
@@ -475,7 +488,12 @@ export const ReservationRaincheck = ({
                         <Typography sx={{ fontSize: 15, color: appColors.textSecondary, mb: 1 }}>Whose account should hold it?</Typography>
                         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
                             {positions.map((p) => (
-                                <RecipientChip key={p.id} label={p.name} selected={p.id === recipient.id} onClick={() => onRecipient?.(p.id)} />
+                                <RecipientChip
+                                    key={p.id}
+                                    label={p.name}
+                                    selected={p.id === recipient.id}
+                                    onClick={() => onRecipient?.(p.id)}
+                                />
                             ))}
                         </Stack>
                         {onBehalf && (

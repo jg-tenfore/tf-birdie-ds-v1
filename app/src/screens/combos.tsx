@@ -91,7 +91,8 @@ export const combos: Combo[] = [
 ];
 
 /** Components a combo rings up, falling back to the bundle itself as one line. */
-export const comboLines = (combo: Combo): ComboLine[] => (combo.lines.length ? combo.lines : [{ name: combo.name, qty: 1, price: combo.price }]);
+export const comboLines = (combo: Combo): ComboLine[] =>
+    combo.lines.length ? combo.lines : [{ name: combo.name, qty: 1, price: combo.price }];
 
 const ComboTile = ({ combo, onAdd }: { combo: Combo; onAdd: () => void }) => (
     <ButtonBase
@@ -129,7 +130,10 @@ export const CombosScreen = () => {
         for (const line of comboLines(combo)) {
             for (let n = 0; n < line.qty; n += 1) {
                 // `[c]` marks a component of a bundle in the order panel.
-                addItem({ id: `${combo.id}-${line.name}`, name: `[c] ${line.name}`, price: line.price / line.qty, image: line.image }, "Pro Shop");
+                addItem(
+                    { id: `${combo.id}-${line.name}`, name: `[c] ${line.name}`, price: line.price / line.qty, image: line.image },
+                    "Pro Shop",
+                );
             }
         }
     };
@@ -147,7 +151,11 @@ export const CombosScreen = () => {
                     <ActionButton icon={<CalendarMonthIcon />} onClick={() => navigate("/teesheet")}>
                         Tee Sheet
                     </ActionButton>
-                    <ActionButton icon={<ShoppingCartIcon />} tone={hasLines ? "primary" : "disabled"} onClick={() => hasLines && navigate("/pay")}>
+                    <ActionButton
+                        icon={<ShoppingCartIcon />}
+                        tone={hasLines ? "primary" : "disabled"}
+                        onClick={() => hasLines && navigate("/pay")}
+                    >
                         {`Pay ${money(total)}`}
                     </ActionButton>
                 </>

@@ -82,10 +82,22 @@ export const QuickOrderScreen = () => {
             // references/072926/5-quickorder/. Four order-scoped commands, one of
             // which converts the whole quick order into a tab.
             overflowItems={[
-                { label: "Quick Tab", onClick: () => { holdTicket(); navigate("/tabs"); } },
+                {
+                    label: "Quick Tab",
+                    onClick: () => {
+                        holdTicket();
+                        navigate("/tabs");
+                    },
+                },
                 { label: "Refresh Menu", onClick: () => navigate(0) },
                 { label: "Remove All Discounts", onClick: clearCart },
-                { label: "Cancel Quick Order", onClick: () => { clearCart(); navigate("/proshop"); } },
+                {
+                    label: "Cancel Quick Order",
+                    onClick: () => {
+                        clearCart();
+                        navigate("/proshop");
+                    },
+                },
             ]}
             actionBar={
                 <>

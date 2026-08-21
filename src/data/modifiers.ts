@@ -112,11 +112,7 @@ export const modifierGroups: ModifierGroup[] = [
     },
     {
         name: "Taco Time Test",
-        options: [
-            ...free("Soft Shell", "Hard Shell", "No Cilantro"),
-            { name: "Extra Salsa", price: 0.75 },
-            { name: "Queso", price: 1.5 },
-        ],
+        options: [...free("Soft Shell", "Hard Shell", "No Cilantro"), { name: "Extra Salsa", price: 0.75 }, { name: "Queso", price: 1.5 }],
     },
     {
         name: "Other",

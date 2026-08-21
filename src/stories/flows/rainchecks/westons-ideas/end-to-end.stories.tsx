@@ -118,10 +118,15 @@ export const Default: Story = {
             const id = String(nextId);
             setNextId((n) => n + 1);
             setPositions((prev) =>
-                prev.map((p) => (p.id === selected.id ? { ...p, issued: { raincheckId: id, amount, at: "3:14 PM", to: recipient.name } } : p)),
+                prev.map((p) =>
+                    p.id === selected.id ? { ...p, issued: { raincheckId: id, amount, at: "3:14 PM", to: recipient.name } } : p,
+                ),
             );
             setLog((prev) => [
-                { at: "8/19/2026 3:14 PM", what: `${selected.name}'s round credited to ${recipient.name} — raincheck ${id} for ${usd(amount)}` },
+                {
+                    at: "8/19/2026 3:14 PM",
+                    what: `${selected.name}'s round credited to ${recipient.name} — raincheck ${id} for ${usd(amount)}`,
+                },
                 ...prev,
             ]);
             // The credit as the rest of the system will see it. Same reservation,
@@ -177,7 +182,15 @@ export const Default: Story = {
                             )}   ID:${p.id}${p.issued ? `   Raincheck ${p.issued.raincheckId} : ${usd(p.issued.amount)} to ${p.issued.to}` : ""}`,
                             actions: p.issued
                                 ? (["History", "Edit", "Cart Signout", "Print Starter", "Print Receipt", "Cart Key"] as PlayerAction[])
-                                : (["Raincheck", "History", "Edit", "Cart Signout", "Print Starter", "Print Receipt", "Cart Key"] as PlayerAction[]),
+                                : ([
+                                      "Raincheck",
+                                      "History",
+                                      "Edit",
+                                      "Cart Signout",
+                                      "Print Starter",
+                                      "Print Receipt",
+                                      "Cart Key",
+                                  ] as PlayerAction[]),
                         })),
                     }}
                     onAction={(action, player) => {

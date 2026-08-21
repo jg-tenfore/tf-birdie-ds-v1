@@ -34,7 +34,6 @@ import { SheetBody } from "./tee-sheet-views";
  * they are assigned by position index, as the app appears to do.
  */
 
-
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOW = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
@@ -51,7 +50,17 @@ const longDate = (iso: string) => {
  * "Selected date", and a pencil that would switch to keyboard entry. OK stays
  * disabled until a day is chosen, which is why it renders grey on open.
  */
-const DatePickerDialog = ({ value, open, onClose, onPick }: { value: string; open: boolean; onClose: () => void; onPick: (iso: string) => void }) => {
+const DatePickerDialog = ({
+    value,
+    open,
+    onClose,
+    onPick,
+}: {
+    value: string;
+    open: boolean;
+    onClose: () => void;
+    onPick: (iso: string) => void;
+}) => {
     const [cursor, setCursor] = useState(parseDate(value));
     const [picked, setPicked] = useState<number | null>(null);
 
@@ -67,7 +76,9 @@ const DatePickerDialog = ({ value, open, onClose, onPick }: { value: string; ope
                 <Stack sx={{ width: 268, bgcolor: "#4A5560", color: "#fff", p: 3, justifyContent: "space-between" }}>
                     <Stack>
                         <Typography sx={{ fontSize: 13, letterSpacing: "0.09em" }}>END DATE</Typography>
-                        <Typography sx={{ fontSize: 30, mt: 2 }}>{picked ? `${MONTHS[month].slice(0, 3)} ${picked}` : "Selected date"}</Typography>
+                        <Typography sx={{ fontSize: 30, mt: 2 }}>
+                            {picked ? `${MONTHS[month].slice(0, 3)} ${picked}` : "Selected date"}
+                        </Typography>
                     </Stack>
                     <Typography sx={{ fontSize: 22 }}>✎</Typography>
                 </Stack>
@@ -122,7 +133,13 @@ const DatePickerDialog = ({ value, open, onClose, onPick }: { value: string; ope
                                 onPick(`${year}-${String(month + 1).padStart(2, "0")}-${String(picked).padStart(2, "0")}`);
                                 onClose();
                             }}
-                            sx={{ px: 2, py: 1, fontSize: 16, letterSpacing: "0.06em", color: picked === null ? appColors.textDisabled : appColors.textPrimary }}
+                            sx={{
+                                px: 2,
+                                py: 1,
+                                fontSize: 16,
+                                letterSpacing: "0.06em",
+                                color: picked === null ? appColors.textDisabled : appColors.textPrimary,
+                            }}
                         >
                             OK
                         </ButtonBase>
@@ -203,7 +220,17 @@ const SubBar = () => {
             {/* Facility list opens downward, left-aligned under its button. */}
             {facilityOpen && (
                 <ClickAwayListener onClickAway={() => setFacilityOpen(false)}>
-                    <Box sx={{ position: "absolute", top: "100%", left: 128, zIndex: 20, width: 434, bgcolor: appColors.slate, boxShadow: 6 }}>
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 128,
+                            zIndex: 20,
+                            width: 434,
+                            bgcolor: appColors.slate,
+                            boxShadow: 6,
+                        }}
+                    >
                         {[state.facility].map((f) => (
                             <ButtonBase
                                 key={f}
@@ -298,7 +325,18 @@ export const TeeSheetScreen = () => {
     const courseMenu = courseOpen ? (
         <ClickAwayListener onClickAway={() => setCourseOpen(false)}>
             {/* Opens upward from the bottom bar, as the device does. */}
-            <Box sx={{ position: "fixed", bottom: 78, left: 340, zIndex: 1300, width: 310, bgcolor: appColors.sheetFill, boxShadow: 8, py: 1 }}>
+            <Box
+                sx={{
+                    position: "fixed",
+                    bottom: 78,
+                    left: 340,
+                    zIndex: 1300,
+                    width: 310,
+                    bgcolor: appColors.sheetFill,
+                    boxShadow: 8,
+                    py: 1,
+                }}
+            >
                 {["North Course", "East Course", "West Course"].map((c) => (
                     <ButtonBase
                         key={c}
@@ -364,9 +402,7 @@ export const TeeSheetScreen = () => {
                                                 }}
                                             >
                                                 <Typography sx={{ fontSize: 17 }}>{t.time}</Typography>
-                                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                                                    {room} open
-                                                </Typography>
+                                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{room} open</Typography>
                                             </ButtonBase>
                                         );
                                     })}

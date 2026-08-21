@@ -211,7 +211,17 @@ export const CreateGiftCardScreen = () => {
                             <ArrowDropDownIcon />
                         </ButtonBase>
                         {typeOpen && (
-                            <Box sx={{ position: "absolute", top: "100%", left: 120, zIndex: 30, bgcolor: "#fff", boxShadow: 6, minWidth: 260 }}>
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    left: 120,
+                                    zIndex: 30,
+                                    bgcolor: "#fff",
+                                    boxShadow: 6,
+                                    minWidth: 260,
+                                }}
+                            >
                                 {GIFT_CARD_TYPES.map((t) => (
                                     <ButtonBase
                                         key={t}
@@ -294,7 +304,11 @@ export const CreateGiftCardScreen = () => {
                 </Stack>
             </Box>
 
-            <Dialog open={confirmUpc} onClose={() => setConfirmUpc(false)} slotProps={{ paper: { sx: { width: 560, borderRadius: 1, p: 3 } } }}>
+            <Dialog
+                open={confirmUpc}
+                onClose={() => setConfirmUpc(false)}
+                slotProps={{ paper: { sx: { width: 560, borderRadius: 1, p: 3 } } }}
+            >
                 <Typography sx={{ fontSize: 22, mb: 1.5 }}>UPC was not provided</Typography>
                 <Typography sx={{ fontSize: 17, color: appColors.textSecondary, lineHeight: 1.45 }}>
                     UPC was not provided, if you continue the server will assign a unique generated UPC code that will be printed on the

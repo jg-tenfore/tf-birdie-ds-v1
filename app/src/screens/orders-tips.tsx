@@ -46,12 +46,44 @@ const COLUMNS = ["Payment ID", "Order ID", "Time", "Customer", "Payment", "Amoun
 
 /** A morning's card sales. Not from the device — its capture had none. */
 const SEEDED: TipRow[] = [
-    { paymentId: "8841207", orderId: "43991", time: "7:42 AM", customer: "Weston Farnsworth", payment: "Visa 4242", amount: 168.4, tip: 25.0 },
-    { paymentId: "8841211", orderId: "43994", time: "8:05 AM", customer: "Tony Finau", payment: "Mastercard 5104", amount: 84.2, tip: 12.0 },
+    {
+        paymentId: "8841207",
+        orderId: "43991",
+        time: "7:42 AM",
+        customer: "Weston Farnsworth",
+        payment: "Visa 4242",
+        amount: 168.4,
+        tip: 25.0,
+    },
+    {
+        paymentId: "8841211",
+        orderId: "43994",
+        time: "8:05 AM",
+        customer: "Tony Finau",
+        payment: "Mastercard 5104",
+        amount: 84.2,
+        tip: 12.0,
+    },
     { paymentId: "8841218", orderId: "44001", time: "8:31 AM", customer: "Randy Orton", payment: "Visa 1881", amount: 246.9, tip: 40.0 },
     { paymentId: "8841224", orderId: "44008", time: "9:14 AM", customer: "Marissa Chen", payment: "Amex 3007", amount: 62.0, tip: 0 },
-    { paymentId: "8841233", orderId: "44016", time: "10:02 AM", customer: "Delgado Men's League", payment: "Visa 9920", amount: 1240.0, tip: 186.0 },
-    { paymentId: "8841240", orderId: "44022", time: "11:19 AM", customer: "Tom Watson", payment: "Mastercard 7741", amount: 96.5, tip: 15.0 },
+    {
+        paymentId: "8841233",
+        orderId: "44016",
+        time: "10:02 AM",
+        customer: "Delgado Men's League",
+        payment: "Visa 9920",
+        amount: 1240.0,
+        tip: 186.0,
+    },
+    {
+        paymentId: "8841240",
+        orderId: "44022",
+        time: "11:19 AM",
+        customer: "Tom Watson",
+        payment: "Mastercard 7741",
+        amount: 96.5,
+        tip: 15.0,
+    },
     { paymentId: "8841248", orderId: "44031", time: "12:07 PM", customer: "Priya Raman", payment: "Visa 4242", amount: 133.75, tip: 20.0 },
     { paymentId: "8841255", orderId: "44039", time: "1:36 PM", customer: "Oda Brennevin", payment: "Discover 6011", amount: 58.3, tip: 0 },
 ];

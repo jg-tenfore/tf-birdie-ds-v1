@@ -292,12 +292,8 @@ const SeatLine = ({ line, onMenu }: { line: Line; onMenu: (e: React.MouseEvent<H
 
             {line.note && <Typography sx={{ fontSize: 13, color: appColors.textPrimary }}>{line.note}</Typography>}
 
-            {line.fired && (
-                <Typography sx={{ fontSize: 12, color: appColors.greenTee, letterSpacing: "0.06em" }}>FIRED</Typography>
-            )}
-            {line.discountPct ? (
-                <Typography sx={{ fontSize: 12, color: appColors.orange }}>{line.discountPct}% off</Typography>
-            ) : null}
+            {line.fired && <Typography sx={{ fontSize: 12, color: appColors.greenTee, letterSpacing: "0.06em" }}>FIRED</Typography>}
+            {line.discountPct ? <Typography sx={{ fontSize: 12, color: appColors.orange }}>{line.discountPct}% off</Typography> : null}
         </Stack>
 
         <Typography sx={{ fontSize: 15, mt: 0.5 }}>{money(lineTotal(line))}</Typography>
@@ -350,11 +346,7 @@ export const TabDetailScreen = () => {
                 <Box sx={{ flex: 1, overflowY: "auto" }}>
                     {Array.from({ length: seats }, (_, i) => i + 1).map((seat) => (
                         <Box key={seat}>
-                            <SeatBandRow
-                                seat={seat}
-                                active={activeSeat === seat}
-                                onSelect={() => setActiveSeat(seat)}
-                            />
+                            <SeatBandRow seat={seat} active={activeSeat === seat} onSelect={() => setActiveSeat(seat)} />
                             {/* Always rendered. An empty seat simply shows nothing
                                 under its band, which is information too. */}
                             <Stack divider={<Divider />}>
@@ -581,7 +573,11 @@ export const TabDetailScreen = () => {
             </Dialog>
 
             {/* Discounts are fixed percentages, not free entry. */}
-            <Dialog open={Boolean(discountFor)} onClose={() => setDiscountFor(null)} slotProps={{ paper: { sx: { width: 420, borderRadius: 1 } } }}>
+            <Dialog
+                open={Boolean(discountFor)}
+                onClose={() => setDiscountFor(null)}
+                slotProps={{ paper: { sx: { width: 420, borderRadius: 1 } } }}
+            >
                 <Typography sx={{ fontSize: 21, px: 3, pt: 3, pb: 1 }}>Discount {discountFor?.name}</Typography>
                 {[10, 20, 25, 50, 100, 0].map((pct) => (
                     <ButtonBase
@@ -590,7 +586,14 @@ export const TabDetailScreen = () => {
                             discountLine(discountFor!.id, pct, discountFor!.seat);
                             setDiscountFor(null);
                         }}
-                        sx={{ display: "block", width: "100%", textAlign: "left", px: 3, py: 2, borderTop: `1px solid ${appColors.divider}` }}
+                        sx={{
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            px: 3,
+                            py: 2,
+                            borderTop: `1px solid ${appColors.divider}`,
+                        }}
                     >
                         <Typography sx={{ fontSize: 18 }}>{pct ? `${pct}% off` : "Remove discount"}</Typography>
                     </ButtonBase>

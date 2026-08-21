@@ -306,7 +306,12 @@ const initial: State = {
 type Action =
     | { type: "signIn"; operator: Operator }
     | { type: "signOut" }
-    | { type: "addItem"; item: { id: string; name: string; price: number; image?: string; taxable?: boolean }; seat?: number; source: Ticket["source"] }
+    | {
+          type: "addItem";
+          item: { id: string; name: string; price: number; image?: string; taxable?: boolean };
+          seat?: number;
+          source: Ticket["source"];
+      }
     | { type: "changeQty"; lineId: string; delta: number; seat?: number }
     | { type: "setLineModifiers"; lineId: string; seat?: number; modifiers: string[] }
     | { type: "setLineNote"; lineId: string; seat?: number; note: string }
@@ -356,7 +361,7 @@ type Action =
 export function minutesOf(time: string): number {
     const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(time.trim());
     if (!m) return 0;
-    const h = Number(m[1]) % 12 + (m[3].toUpperCase() === "PM" ? 12 : 0);
+    const h = (Number(m[1]) % 12) + (m[3].toUpperCase() === "PM" ? 12 : 0);
     return h * 60 + Number(m[2]);
 }
 
@@ -853,7 +858,11 @@ function reducer(state: State, action: Action): State {
                           ),
                       };
 
-            const next = [...sheet.slice(0, action.side === "before" ? at : at + 1), inserted, ...sheet.slice(action.side === "before" ? at : at + 1)];
+            const next = [
+                ...sheet.slice(0, action.side === "before" ? at : at + 1),
+                inserted,
+                ...sheet.slice(action.side === "before" ? at : at + 1),
+            ];
             return {
                 ...state,
                 teeSheets: { ...state.teeSheets, [state.sheetDate]: next },
@@ -975,7 +984,12 @@ function reducer(state: State, action: Action): State {
          */
         case "openTable": {
             const existing = state.tickets.find((t) => t.name === action.label && t.status !== "paid" && t.status !== "voided");
-            if (existing) return { ...state, activeTicketId: existing.id, tickets: state.tickets.map((t) => (t.id === existing.id ? { ...t, status: "open" } : t)) };
+            if (existing)
+                return {
+                    ...state,
+                    activeTicketId: existing.id,
+                    tickets: state.tickets.map((t) => (t.id === existing.id ? { ...t, status: "open" } : t)),
+                };
 
             const id = `t-${state.nextNumber}`;
             return {

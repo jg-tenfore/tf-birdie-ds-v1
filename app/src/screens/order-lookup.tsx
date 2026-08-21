@@ -100,7 +100,13 @@ export const OrderLookupScreen = () => {
                                 <Stack
                                     key={t.id}
                                     direction="row"
-                                    sx={{ px: 2, py: 2, minHeight: 72, alignItems: "center", borderBottom: `1px solid ${appColors.divider}` }}
+                                    sx={{
+                                        px: 2,
+                                        py: 2,
+                                        minHeight: 72,
+                                        alignItems: "center",
+                                        borderBottom: `1px solid ${appColors.divider}`,
+                                    }}
                                 >
                                     <Stack sx={{ flex: 1 }}>
                                         <Typography sx={{ fontSize: 17 }}>

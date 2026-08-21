@@ -187,7 +187,10 @@ await step("tee time detail prints the reservation's whole commercial line", asy
 });
 
 await step("History opens the reservation audit log", async () => {
-    await page.getByRole("button", { name: /History/ }).first().click();
+    await page
+        .getByRole("button", { name: /History/ })
+        .first()
+        .click();
     await page.waitForSelector("text=/Reservation History \\d+/", { timeout: 5000 });
     await page.getByRole("button", { name: "OK" }).click();
     await page.waitForTimeout(300);
@@ -217,7 +220,10 @@ await step("Edit rewrites the reservation's fees", async () => {
 });
 
 await step("cart signout will not complete without a cart number and the waiver", async () => {
-    await page.getByRole("button", { name: /Cart signout/ }).first().click();
+    await page
+        .getByRole("button", { name: /Cart signout/ })
+        .first()
+        .click();
     await page.waitForSelector("text=Sign Here", { timeout: 5000 });
     const btn = page.getByRole("button", { name: /Sign out cart/ });
     const locked = await btn.evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -503,7 +509,16 @@ await step("POP opens the cash drawer and touches nothing else", async () => {
 await step("every configured room has a layout", async () => {
     await page.goto(`${BASE}#/tables`, { waitUntil: "networkidle" });
     await page.waitForTimeout(500);
-    for (const room of ["[Detached Tables]", "smallroom", "banquet", "Lounge", "Trivia Pub/Bar", "Big Bar", "Open Tabs", "New Table Designer Room"]) {
+    for (const room of [
+        "[Detached Tables]",
+        "smallroom",
+        "banquet",
+        "Lounge",
+        "Trivia Pub/Bar",
+        "Big Bar",
+        "Open Tabs",
+        "New Table Designer Room",
+    ]) {
         await page.getByRole("button", { name: "FLOOR PLAN" }).click();
         await page.getByText(room, { exact: true }).click();
         await page.waitForTimeout(350);
@@ -547,20 +562,29 @@ await step("the line kebab fires, discounts and splits", async () => {
     await page.getByRole("button", { name: "Back" }).click();
     await page.waitForTimeout(300);
 
-    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page
+        .getByRole("button", { name: /^Options for / })
+        .first()
+        .click();
     for (const i of ["Fire", "Move", "Split", "Edit", "Discount", "Delete"])
         if (!(await page.getByText(i, { exact: true }).count())) throw new Error(`${i} missing`);
 
     await page.getByText("Fire", { exact: true }).click();
     await page.waitForSelector("text=FIRED", { timeout: 4000 });
 
-    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page
+        .getByRole("button", { name: /^Options for / })
+        .first()
+        .click();
     await page.getByText("Discount", { exact: true }).click();
     await page.getByText("25% off", { exact: true }).click();
     await page.waitForSelector("text=25% off", { timeout: 4000 });
 
     // Split needs a destination, so it opens a second step rather than guessing.
-    await page.getByRole("button", { name: /^Options for / }).first().click();
+    await page
+        .getByRole("button", { name: /^Options for / })
+        .first()
+        .click();
     await page.getByText("Split", { exact: true }).click();
     await page.waitForSelector("text=Split one to…", { timeout: 4000 });
     await page.locator('[role="dialog"]').getByText("Seat 3", { exact: true }).click();
@@ -682,10 +706,7 @@ await step("a credit too small for the ticket is refused, with the shortfall", a
 
 await step("a booking's name opens the customer record behind it", async () => {
     await page.goto(`${BASE}#/teesheet/${encodeURIComponent("7:10 AM")}`, { waitUntil: "networkidle" });
-    await page
-        .getByRole("button", { name: "Randy Orton", exact: true })
-        .first()
-        .click();
+    await page.getByRole("button", { name: "Randy Orton", exact: true }).first().click();
     await page.waitForSelector("text=General Info", { timeout: 6000 });
     const body = await page.locator("body").innerText();
     if (!/Randy/.test(body) || !/Orton/.test(body)) throw new Error("opened the wrong record");

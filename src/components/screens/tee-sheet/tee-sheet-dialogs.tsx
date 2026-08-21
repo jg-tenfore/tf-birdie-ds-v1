@@ -34,7 +34,12 @@ export const ReservationHistoryDialog = ({
     entries?: { when: string; who: string; what: string }[];
     onClose?: () => void;
 }) => (
-    <Dialog open={open} onClose={onClose} maxWidth={false} slotProps={{ paper: { sx: { width: 700, borderRadius: `${appRadius.card}px` } } }}>
+    <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth={false}
+        slotProps={{ paper: { sx: { width: 700, borderRadius: `${appRadius.card}px` } } }}
+    >
         <Box sx={{ bgcolor: appColors.navy, color: "#fff", textAlign: "center", py: 2 }}>
             <Typography sx={{ fontSize: 24 }}>Reservation History {id}</Typography>
         </Box>
@@ -59,7 +64,11 @@ export const ReservationHistoryDialog = ({
         </Box>
 
         <Box sx={{ p: 1 }}>
-            <Button onClick={onClose} fullWidth sx={{ minHeight: 60, bgcolor: appColors.green, "&:hover": { bgcolor: appColors.greenDark } }}>
+            <Button
+                onClick={onClose}
+                fullWidth
+                sx={{ minHeight: 60, bgcolor: appColors.green, "&:hover": { bgcolor: appColors.greenDark } }}
+            >
                 OK
             </Button>
         </Box>
@@ -87,7 +96,12 @@ export const NotesDialog = ({
     onCancel?: () => void;
     onSave?: () => void;
 }) => (
-    <Dialog open={open} onClose={onCancel} maxWidth={false} slotProps={{ paper: { sx: { width: 740, borderRadius: `${appRadius.card}px`, p: 2 } } }}>
+    <Dialog
+        open={open}
+        onClose={onCancel}
+        maxWidth={false}
+        slotProps={{ paper: { sx: { width: 740, borderRadius: `${appRadius.card}px`, p: 2 } } }}
+    >
         <Typography sx={{ fontSize: 20, color: appColors.textPrimary, pb: 1.5 }}>{title}</Typography>
 
         <Box sx={{ bgcolor: "#E0E0E0", borderBottom: `1px solid ${appColors.textSecondary}`, px: 2, py: 3, minHeight: 130 }}>
@@ -134,7 +148,12 @@ export const TeeTimeNotesDialog = ({
     onChange?: (next: string) => void;
     onSave?: () => void;
 }) => (
-    <Dialog open={open} onClose={onSave} maxWidth={false} slotProps={{ paper: { sx: { width: 550, borderRadius: `${appRadius.card}px`, p: 2.5 } } }}>
+    <Dialog
+        open={open}
+        onClose={onSave}
+        maxWidth={false}
+        slotProps={{ paper: { sx: { width: 550, borderRadius: `${appRadius.card}px`, p: 2.5 } } }}
+    >
         <Typography sx={{ fontSize: 20, color: appColors.textPrimary, pb: 3 }}>Tee Time Notes</Typography>
 
         <Box sx={{ borderBottom: `1px solid ${appColors.textSecondary}`, pb: 1, mb: 4 }}>
