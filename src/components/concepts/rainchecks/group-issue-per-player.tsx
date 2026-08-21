@@ -87,7 +87,7 @@ export const GroupIssuePerPlayer = ({ heading, positions, drafts, onDraft, onTog
                             { label: "Player" },
                             { label: "Holes played", width: 190, align: "center" },
                             { label: "Raincheck", width: 130, align: "right" },
-                            { label: "Issue it to", width: 190 },
+                            { label: "Issue it to", width: 210 },
                         ]}
                     />
 
@@ -161,9 +161,9 @@ export const GroupIssuePerPlayer = ({ heading, positions, drafts, onDraft, onTog
                                     )}
                                 </Stack>
 
-                                <Box sx={{ width: 190 }}>
+                                <Box sx={{ width: 210, minWidth: 210 }}>
                                     {done ? (
-                                        <Typography sx={{ fontSize: 14, color: appColors.textDisabled }}>—</Typography>
+                                        <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>—</Typography>
                                     ) : (
                                         <RecipientSelect
                                             positions={positions}

@@ -39,8 +39,9 @@ import {
  *
  * **What it costs:** the split group. Two quit at the turn and two played on, so
  * somebody has to be taken off the group number. That is one extra tap on the
- * rows that differ — **Set separately** — and those rows then say `SET BY HAND`
- * so a group number changed afterwards does not silently drag them back.
+ * rows that differ — the hole count on each row is a button, and tapping it
+ * turns that row into a stepper — and those rows then say `SET BY HAND`, so a
+ * group number changed afterwards does not silently drag them back.
  *
  * **The case that makes this concrete** is Tom Watson's nine-hole booking in a
  * foursome that otherwise played eighteen. A group stop of 13 cannot mean 13 for
@@ -169,8 +170,9 @@ export const GroupIssueOneStop = ({
                         columns={[
                             { label: "", width: 48 },
                             { label: "Player" },
+                            { label: "Holes played", width: 190, align: "center" },
                             { label: "Raincheck", width: 170, align: "right" },
-                            { label: "Issue it to", width: 190 },
+                            { label: "Issue it to", width: 210 },
                         ]}
                     />
 
@@ -230,9 +232,63 @@ export const GroupIssueOneStop = ({
                                         )}
                                     </Box>
 
-                                    <Stack sx={{ width: 170, alignItems: "flex-end" }}>
+                                    {/* Same column, same width as Option A's — so
+                                        the two screens differ in what this column
+                                        *is* rather than in where anything sits.
+                                        Here it reads the group's number back and
+                                        is a way out of it; there it is the only
+                                        place the number exists. */}
+                                    <Box sx={{ width: 190, minWidth: 190, display: "flex", justifyContent: "center" }}>
                                         {done ? (
                                             <Typography sx={{ fontSize: 14, color: appColors.textDisabled }}>—</Typography>
+                                        ) : draft.custom ? (
+                                            <Stack sx={{ alignItems: "center" }}>
+                                                <HoleStepper
+                                                    value={effective}
+                                                    max={Math.max(0, position.holes - 1)}
+                                                    disabled={!draft.include}
+                                                    label={position.name}
+                                                    onChange={(h) => onDraft?.(position.id, { holesPlayed: h, custom: true })}
+                                                />
+                                                <ButtonBase
+                                                    onClick={() => onDraft?.(position.id, { custom: false, holesPlayed: groupHoles })}
+                                                    sx={{ fontSize: 13, color: appColors.greenTee, mt: 0.25 }}
+                                                >
+                                                    Back to the group
+                                                </ButtonBase>
+                                            </Stack>
+                                        ) : (
+                                            // Reads the group number back, and is
+                                            // the way off it. A row that follows
+                                            // the group still has to say what it
+                                            // is following — a number you cannot
+                                            // see on the row is a number nobody
+                                            // checks.
+                                            <ButtonBase
+                                                onClick={() => onDraft?.(position.id, { custom: true, holesPlayed: effective })}
+                                                disabled={!draft.include}
+                                                sx={{
+                                                    flexDirection: "column",
+                                                    px: 2,
+                                                    py: 0.75,
+                                                    minHeight: 48,
+                                                    borderRadius: 0.5,
+                                                    border: `1px solid ${clamped ? appColors.orange : appColors.divider}`,
+                                                    bgcolor: clamped ? "#FFF4E6" : appColors.surface,
+                                                    opacity: draft.include ? 1 : 0.4,
+                                                }}
+                                            >
+                                                <Typography sx={{ fontSize: 22, lineHeight: 1.1 }}>{effective}</Typography>
+                                                <Typography sx={{ fontSize: 12, color: clamped ? appColors.orange : appColors.textSecondary }}>
+                                                    {clamped ? `capped — booked ${position.holes}` : "same as the group"}
+                                                </Typography>
+                                            </ButtonBase>
+                                        )}
+                                    </Box>
+
+                                    <Stack sx={{ width: 170, alignItems: "flex-end" }}>
+                                        {done ? (
+                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>—</Typography>
                                         ) : (
                                             <>
                                                 <Typography
@@ -241,15 +297,15 @@ export const GroupIssueOneStop = ({
                                                     {usd(draftValue(position, shown))}
                                                 </Typography>
                                                 <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
-                                                    {effective} of {position.holes} played · {draftPercent(position, shown)} back
+                                                    {draftPercent(position, shown)} back
                                                 </Typography>
                                             </>
                                         )}
                                     </Stack>
 
-                                    <Box sx={{ width: 190 }}>
+                                    <Box sx={{ width: 210, minWidth: 210 }}>
                                         {done ? (
-                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled }}>—</Typography>
+                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>—</Typography>
                                         ) : (
                                             <RecipientSelect
                                                 positions={positions}
@@ -261,47 +317,6 @@ export const GroupIssueOneStop = ({
                                         )}
                                     </Box>
                                 </Stack>
-
-                                {/* The exception, one tap down and out of the way
-                                    until it is needed. Rows that follow the group
-                                    stay a single line. */}
-                                {!done && draft.include && (
-                                    <Stack direction="row" sx={{ alignItems: "center", gap: 2, pl: 6, mt: 0.5 }}>
-                                        {draft.custom ? (
-                                            <>
-                                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                                                    Played to hole
-                                                </Typography>
-                                                <HoleStepper
-                                                    value={effective}
-                                                    max={Math.max(0, position.holes - 1)}
-                                                    label={position.name}
-                                                    onChange={(h) => onDraft?.(position.id, { holesPlayed: h, custom: true })}
-                                                />
-                                                <ButtonBase
-                                                    onClick={() => onDraft?.(position.id, { custom: false, holesPlayed: groupHoles })}
-                                                    sx={{ px: 1.5, py: 1, fontSize: 14, color: appColors.greenTee, minHeight: 44 }}
-                                                >
-                                                    Back to the group
-                                                </ButtonBase>
-                                            </>
-                                        ) : (
-                                            <>
-                                                {clamped && (
-                                                    <Typography sx={{ fontSize: 14, color: appColors.orange }}>
-                                                        Booked {position.holes} holes — credited from hole {effective}
-                                                    </Typography>
-                                                )}
-                                                <ButtonBase
-                                                    onClick={() => onDraft?.(position.id, { custom: true, holesPlayed: effective })}
-                                                    sx={{ px: 1.5, py: 1, fontSize: 14, color: appColors.textSecondary, minHeight: 44 }}
-                                                >
-                                                    They stopped somewhere else
-                                                </ButtonBase>
-                                            </>
-                                        )}
-                                    </Stack>
-                                )}
                             </Stack>
                         );
                     })}

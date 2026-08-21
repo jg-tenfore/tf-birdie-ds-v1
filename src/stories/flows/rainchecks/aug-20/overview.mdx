@@ -52,7 +52,7 @@ One question, and only one: **the hole count**.
 | :-- | :-- | :-- |
 | Hole count | On every row | Once, at the top |
 | Group walks off together | Four identical adjustments | One |
-| Group splits up | Nothing special — it is already per row | One extra tap per exception, and the row marks itself `SET BY HAND` |
+| Group splits up | Nothing special — it is already per row | Tap that row's hole count to turn it into a stepper; the row marks itself `SET BY HAND` |
 | Nine-hole booking in an eighteen-hole group | Needs no explanation | Needs a banner and a per-row sentence |
 | Row height | Taller — stepper on every row | Shorter — rows carry only what differs |
 | Bets that | Groups stop at **different** holes | Groups stop at the **same** hole |
@@ -85,9 +85,32 @@ has said, and it decides this. One call to a pro shop settles it:
 | **B → Rained-out foursome** | Drag the group slider and watch four different prices move together off one number |
 | **A → Two of them finished** | Requirement 2, on its own |
 | **A → One credit to somebody else** | Requirement 3, on its own — Weston's visiting-buddy case as one dropdown instead of a second trip through the flow |
-| **B → One of them played on** | The exception path, and the `SET BY HAND` mark that stops a later group change dragging it back |
+| **B → One of them played on** | The exception path — tap a row's hole count — and the `SET BY HAND` mark that stops a later group change dragging it back |
 | **A / B → A nine among the eighteens** | The same fixture in both. A needs no explanation; B needs a banner. This is the clearest single argument between them |
 | **A / B → One round already credited** | A round cannot be rainchecked twice, and neither the shipping screen nor the earlier concept can show that state |
+| **End to end → Option A / Option B** | The same trip through each: tee sheet → the group screen → where the credits land. The only place the batch's claim — one visit, not four — can actually be checked |
+
+## The trip, not just the screen
+
+**End to end** runs each option from the tee sheet. Both use the same harness and
+differ only in the middle step, so anything that feels different between them is
+the hole-count question and nothing else.
+
+Three things live there that neither option story can show:
+
+- **The entry point has not moved.** Step one is the shipping detail screen
+  itself — the same component **Flows → Rainchecks → 1 — Booking with a
+  raincheck** renders — with its buttons made live. Weston asked for the red
+  RAINCHECK button to stay exactly where it is. What changes is where it *goes*:
+  tapping it on one player now opens the whole group, which is his own *"anytime
+  you hit rain check, it just takes you there"* extended from one round to four.
+- **Coming back.** After the batch, every credited player carries a bolt and no
+  longer offers RAINCHECK. The single-issue flow reaches that state after four
+  round trips.
+- **What the dropdown is actually for.** The landing groups new credits by the
+  **account** holding them rather than by round, so a foursome that put two
+  credits on one name shows up as one account with two. That is the only thing
+  reassignment produces, and it is invisible on the issue screen itself.
 
 ## Same ground rule as before
 

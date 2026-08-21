@@ -154,10 +154,32 @@ export const RecipientSelect = ({
             disabled={disabled}
             onChange={(e) => onChange?.(String(e.target.value))}
             aria-label="Issue this raincheck to"
+            // Closed, it shows the name and nothing else. The "(themselves)"
+            // marker belongs in the open list, where it is the thing being
+            // chosen between — on the row it is the longest string in the
+            // narrowest column, and the amber tint already says it.
+            renderValue={(id) => positions.find((p) => p.id === id)?.name ?? ""}
             sx={{
-                minWidth: 190,
+                // Fills its column rather than sizing to content. `minWidth`
+                // let a long name push the control past the column and off the
+                // right edge of the tablet, which is not width a 1280 screen has
+                // spare.
+                width: "100%",
+                minWidth: 0,
                 // 48dp touch floor, standing up, on glass.
-                "& .MuiSelect-select": { py: 1.25, fontSize: 15, minHeight: "48px !important", display: "flex", alignItems: "center" },
+                "& .MuiSelect-select": {
+                    py: 1.25,
+                    fontSize: 15,
+                    minHeight: "48px !important",
+                    display: "flex",
+                    alignItems: "center",
+                    // A name too long for the column truncates. The full one is a
+                    // tap away in the list, and a wrapping control would drag the
+                    // rows underneath it out of alignment.
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                },
                 bgcolor: moved ? "#FFF4E6" : appColors.surface,
                 "& .MuiOutlinedInput-notchedOutline": { borderColor: moved ? appColors.orange : appColors.divider },
                 borderRadius: 0.5,

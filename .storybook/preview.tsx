@@ -228,6 +228,12 @@ const preview: Preview = {
                                     "One round already credited",
                                     "Two players",
                                 ],
+                                // Last, and holding both options, because it is
+                                // the trip rather than the screen — and running
+                                // A then B back to back is the comparison the
+                                // whole folder exists to make.
+                                "End to end",
+                                ["Option A — row per player", "Option B — one stop for the group"],
                             ],
                         ],
                     ],

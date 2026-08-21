@@ -171,7 +171,7 @@ export const Default: Story = {
  * The split group — the case Option B has to earn.
  *
  * Oda Brennevin kept going after the rest came in, so her row is off the group
- * number: **They stopped somewhere else** reveals a stepper, and the row picks
+ * number: **tapping her hole count** turns it into a stepper, and the row picks
  * up a `SET BY HAND` mark. Move the group slider afterwards and hers stays put —
  * that is the whole reason the flag is stored rather than inferred.
  *
