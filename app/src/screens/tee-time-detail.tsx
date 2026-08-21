@@ -215,13 +215,25 @@ export const TeeTimeDetailScreen = () => {
                                         a note nobody writes. */}
                                     <ButtonBase
                                         onClick={() => openNotes(i, "customerNotes")}
-                                        sx={{ px: 1.5, py: 0.75, fontSize: 13, bgcolor: p.customerNotes ? appColors.green : "#C9CFD5", color: "#fff" }}
+                                        sx={{
+                                            px: 1.5,
+                                            py: 0.75,
+                                            fontSize: 13,
+                                            bgcolor: p.customerNotes ? appColors.green : "#C9CFD5",
+                                            color: "#fff",
+                                        }}
                                     >
                                         CUSTOMER NOTES
                                     </ButtonBase>
                                     <ButtonBase
                                         onClick={() => openNotes(i, "groupNotes")}
-                                        sx={{ px: 1.5, py: 0.75, fontSize: 13, bgcolor: p.groupNotes ? appColors.green : "#C9CFD5", color: "#fff" }}
+                                        sx={{
+                                            px: 1.5,
+                                            py: 0.75,
+                                            fontSize: 13,
+                                            bgcolor: p.groupNotes ? appColors.green : "#C9CFD5",
+                                            color: "#fff",
+                                        }}
                                     >
                                         GROUP NOTES
                                     </ButtonBase>

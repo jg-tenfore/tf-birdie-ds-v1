@@ -91,8 +91,7 @@ export const RaincheckForm = ({
                 <Stack sx={{ flex: 1, minWidth: 0, alignItems: "center" }}>
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>Raincheck Total</Typography>
                     <Typography sx={{ fontSize: 30, mb: 3 }}>
-                        ${raincheckValue(roundPrice, totalHoles, holesPlayed).toFixed(2)} (
-                        {raincheckPercentLabel(totalHoles, holesPlayed)})
+                        ${raincheckValue(roundPrice, totalHoles, holesPlayed).toFixed(2)} ({raincheckPercentLabel(totalHoles, holesPlayed)})
                     </Typography>
 
                     <Typography sx={{ fontSize: 17, mb: 1 }}>Holes Played</Typography>

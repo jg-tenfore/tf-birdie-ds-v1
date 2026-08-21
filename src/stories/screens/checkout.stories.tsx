@@ -55,11 +55,7 @@ const Bar = ({ commit, enabled = true }: { commit: string; enabled?: boolean }) 
         <ActionButton icon={<StorefrontIcon />}>Pro Shop</ActionButton>
         <ActionButton icon={<PersonIcon />}>{checkoutCustomer}</ActionButton>
         <ActionButton icon={<NotesIcon />}>Order Notes</ActionButton>
-        <ActionButton
-            icon={commit === "Apply Raincheck" ? <BoltIcon /> : <CheckIcon />}
-            tone={enabled ? "primary" : "disabled"}
-            grow={1.6}
-        >
+        <ActionButton icon={commit === "Apply Raincheck" ? <BoltIcon /> : <CheckIcon />} tone={enabled ? "primary" : "disabled"} grow={1.6}>
             {commit}
         </ActionButton>
     </>

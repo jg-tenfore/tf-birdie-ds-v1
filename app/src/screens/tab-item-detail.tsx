@@ -41,8 +41,7 @@ export const TabItemDetail = ({
     const selected = line.modifiers ?? [];
     const active = modifierGroups.find((g) => g.name === group) ?? modifierGroups[0];
 
-    const toggle = (name: string) =>
-        onModifiers(selected.includes(name) ? selected.filter((n) => n !== name) : [...selected, name]);
+    const toggle = (name: string) => onModifiers(selected.includes(name) ? selected.filter((n) => n !== name) : [...selected, name]);
 
     const lineTotal = line.qty * (line.unitPrice + modifierSurcharge(selected));
 
@@ -105,10 +104,7 @@ export const TabItemDetail = ({
              * the last few are off-screen, so a modifier nobody scrolls to is a
              * modifier nobody applies.
              */}
-            <Stack
-                direction="row"
-                sx={{ gap: 3, px: 2, mt: 2, overflowX: "auto", borderBottom: `1px solid ${appColors.divider}` }}
-            >
+            <Stack direction="row" sx={{ gap: 3, px: 2, mt: 2, overflowX: "auto", borderBottom: `1px solid ${appColors.divider}` }}>
                 {modifierGroups.map((g) => {
                     const isActive = g.name === group;
                     const count = g.options.filter((o) => selected.includes(o.name)).length;

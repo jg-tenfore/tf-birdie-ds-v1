@@ -58,7 +58,15 @@ type Story = StoryObj<typeof meta>;
  *
  * State lives in the story. Nothing here touches the prototype.
  */
-const Concept = ({ seed, startHoles = 5, tweak }: { seed: RaincheckPosition[]; startHoles?: number; tweak?: (d: GroupDraft[]) => GroupDraft[] }) => {
+const Concept = ({
+    seed,
+    startHoles = 5,
+    tweak,
+}: {
+    seed: RaincheckPosition[];
+    startHoles?: number;
+    tweak?: (d: GroupDraft[]) => GroupDraft[];
+}) => {
     const [positions, setPositions] = useState(seed);
     const [drafts, setDrafts] = useState<GroupDraft[]>(() => {
         const base = makeDrafts(seed, startHoles);
@@ -93,7 +101,9 @@ const Concept = ({ seed, startHoles = 5, tweak }: { seed: RaincheckPosition[]; s
 
         setPositions(next);
         setNextId(id);
-        setFlash(`${totals.count} ${totals.count === 1 ? "raincheck" : "rainchecks"} issued, ${usd(totals.amount)} in total — ${done.join(", ")}.`);
+        setFlash(
+            `${totals.count} ${totals.count === 1 ? "raincheck" : "rainchecks"} issued, ${usd(totals.amount)} in total — ${done.join(", ")}.`,
+        );
     };
 
     return (
@@ -202,23 +212,11 @@ export const SomeExcluded: Story = {
 export const Reassigned: Story = {
     name: "One credit to somebody else",
     render: () => (
-        <Concept seed={rainedOutFoursome} tweak={(d) => d.map((x) => (x.positionId === "10314913" ? { ...x, recipientId: "10314910" } : x))} />
+        <Concept
+            seed={rainedOutFoursome}
+            tweak={(d) => d.map((x) => (x.positionId === "10314913" ? { ...x, recipientId: "10314910" } : x))}
+        />
     ),
-};
-
-/**
- * A round already credited earlier in the day.
- *
- * Justin Girard was rainchecked at 2:30 and the credit has since been spent. His
- * row cannot be ticked, has no controls, and says what happened instead — a
- * round cannot be rainchecked twice. The count reads three, not four.
- *
- * This is the state the shipping screen has nowhere to show: it would happily
- * issue a second credit against the same round.
- */
-export const OneAlreadyIssued: Story = {
-    name: "One round already credited",
-    render: () => <Concept seed={partlyDoneFoursome} />,
 };
 
 /**
@@ -234,6 +232,21 @@ export const OneAlreadyIssued: Story = {
 export const MixedHoles: Story = {
     name: "A nine among the eighteens",
     render: () => <Concept seed={mixedHoleFoursome} />,
+};
+
+/**
+ * A round already credited earlier in the day.
+ *
+ * Justin Girard was rainchecked at 2:30 and the credit has since been spent. His
+ * row cannot be ticked, has no controls, and says what happened instead — a
+ * round cannot be rainchecked twice. The count reads three, not four.
+ *
+ * This is the state the shipping screen has nowhere to show: it would happily
+ * issue a second credit against the same round.
+ */
+export const OneAlreadyIssued: Story = {
+    name: "One round already credited",
+    render: () => <Concept seed={partlyDoneFoursome} />,
 };
 
 /**

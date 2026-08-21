@@ -82,7 +82,7 @@ export const ResourceReservationScreen = () => {
     const [query, setQuery] = useState("");
     const [picked, setPicked] = useState<Customer | null>(() => {
         const id = params.get("customer");
-        return id ? state.customers.find((c) => c.id === id) ?? null : null;
+        return id ? (state.customers.find((c) => c.id === id) ?? null) : null;
     });
 
     const results = useMemo(() => searchCustomers(query, RESULT_LIMIT, state.customers), [query, state.customers]);
@@ -127,9 +127,7 @@ export const ResourceReservationScreen = () => {
 
                     {/* Results hang off the field, over the bands below. */}
                     {query.trim().length >= 2 && (
-                        <Box
-                            sx={{ position: "absolute", top: "100%", left: 0, width: "69%", zIndex: 20 }}
-                        >
+                        <Box sx={{ position: "absolute", top: "100%", left: 0, width: "69%", zIndex: 20 }}>
                             <CustomerLookupResults
                                 results={results}
                                 query={query.trim()}
@@ -161,17 +159,13 @@ export const ResourceReservationScreen = () => {
                     {holder && (
                         <Stack sx={{ mb: 2, gap: 0.25 }}>
                             <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{holder.displayName}</Typography>
-                            {holder.email && (
-                                <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{holder.email}</Typography>
-                            )}
+                            {holder.email && <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{holder.email}</Typography>}
                             {holder.phone && (
                                 <Typography sx={{ fontSize: 21, color: appColors.textSecondary }}>{formatPhone(holder.phone)}</Typography>
                             )}
                         </Stack>
                     )}
-                    {booked && !holder && (
-                        <Typography sx={{ fontSize: 21, color: appColors.textSecondary, mb: 2 }}>{booked}</Typography>
-                    )}
+                    {booked && !holder && <Typography sx={{ fontSize: 21, color: appColors.textSecondary, mb: 2 }}>{booked}</Typography>}
 
                     <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
                         <ButtonBase

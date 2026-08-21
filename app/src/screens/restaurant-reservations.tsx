@@ -38,12 +38,33 @@ const COLUMNS = ["Time", "Party", "First Name", "Last Name", "Email", "Phone"];
 
 /** A plausible Wednesday service. Not from the device — the capture was empty. */
 const RESERVATIONS: Reservation[] = [
-    { time: "11:30 AM", party: 2, firstName: "Weston", lastName: "Farnsworth", email: "weston.farnsworth@tenfore.golf", phone: "8017084153" },
+    {
+        time: "11:30 AM",
+        party: 2,
+        firstName: "Weston",
+        lastName: "Farnsworth",
+        email: "weston.farnsworth@tenfore.golf",
+        phone: "8017084153",
+    },
     { time: "12:00 PM", party: 4, firstName: "Tony", lastName: "Finau", email: "weston+tony@tenfore.golf", phone: "8017084153" },
     { time: "12:15 PM", party: 6, firstName: "Marissa", lastName: "Chen", email: "m.chen@example.com", phone: "3015540199" },
-    { time: "1:00 PM", party: 2, firstName: "Randy", lastName: "Orton", email: "weston.farnsworth+randy@tenfore.golf", phone: "8015962658" },
+    {
+        time: "1:00 PM",
+        party: 2,
+        firstName: "Randy",
+        lastName: "Orton",
+        email: "weston.farnsworth+randy@tenfore.golf",
+        phone: "8015962658",
+    },
     { time: "1:45 PM", party: 8, firstName: "Delgado", lastName: "Men's League", email: "league@dunesofdelgado.golf", phone: "3015540100" },
-    { time: "5:30 PM", party: 2, firstName: "Tom", lastName: "Watson", email: "weston.farnsworth+tomwatson@tenfore.golf", phone: "8015962658" },
+    {
+        time: "5:30 PM",
+        party: 2,
+        firstName: "Tom",
+        lastName: "Watson",
+        email: "weston.farnsworth+tomwatson@tenfore.golf",
+        phone: "8015962658",
+    },
     { time: "6:00 PM", party: 4, firstName: "Priya", lastName: "Raman", email: "p.raman@example.com", phone: "2404410872" },
     { time: "6:30 PM", party: 3, firstName: "Oda", lastName: "Brennevin", email: "oda.b@example.com", phone: "3015547781" },
     { time: "7:15 PM", party: 10, firstName: "Sandhill", lastName: "Outing", email: "events@sandhill.golf", phone: "3015540144" },

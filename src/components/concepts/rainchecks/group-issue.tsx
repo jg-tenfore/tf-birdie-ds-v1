@@ -308,9 +308,7 @@ export const ReviewBand = ({ totals }: { totals: GroupTotals }) => {
             {totals.reassigned > 0 && (
                 <Stack direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
                     <SouthEastIcon sx={{ fontSize: 18, color: appColors.orange }} />
-                    <Typography sx={{ fontSize: 15, color: appColors.orange }}>
-                        {totals.reassigned} going to a different account
-                    </Typography>
+                    <Typography sx={{ fontSize: 15, color: appColors.orange }}>{totals.reassigned} going to a different account</Typography>
                 </Stack>
             )}
         </Stack>
@@ -385,9 +383,7 @@ export const rainedOutFoursome: RaincheckPosition[] = [
 export const rainedOutHeading = "The Dunes of Delgado PROD — North Course — Monday, July 20 2026 7:00 PM — 9024770 — FRONT";
 
 /** The same group, except Tom booked the nine. The case a single group-wide hole count has to survive. */
-export const mixedHoleFoursome: RaincheckPosition[] = rainedOutFoursome.map((p) =>
-    p.id === "10314913" ? { ...p, holes: 9 } : p,
-);
+export const mixedHoleFoursome: RaincheckPosition[] = rainedOutFoursome.map((p) => (p.id === "10314913" ? { ...p, holes: 9 } : p));
 
 /** One round already credited earlier in the day, and spent since. */
 export const partlyDoneFoursome: RaincheckPosition[] = rainedOutFoursome.map((p) =>

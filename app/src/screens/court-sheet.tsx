@@ -57,48 +57,48 @@ const DateBar = () => {
     const isToday = state.courtDate === TODAY;
 
     return (
-    <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.canvas }}>
-        <ButtonBase
-            aria-label="Previous day"
-            onClick={() => shiftCourtDate(-1)}
-            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1, py: 1.75 }}
-        >
-            ‹
-        </ButtonBase>
-        <Box
-            sx={{
-                flex: 3,
-                bgcolor: isToday ? appColors.slate : appColors.orange,
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 14,
-                letterSpacing: "0.08em",
-            }}
-        >
-            {longDate(state.courtDate)}
-        </Box>
-        <ButtonBase
-            disabled={isToday}
-            onClick={() => setCourtDate(TODAY)}
-            sx={{
-                flex: 2,
-                bgcolor: isToday ? appColors.grey : appColors.slate,
-                color: "#fff",
-                fontSize: 14,
-                letterSpacing: "0.08em",
-            }}
-        >
-            GO TO TODAY
-        </ButtonBase>
-        <ButtonBase
-            aria-label="Next day"
-            onClick={() => shiftCourtDate(1)}
-            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1 }}
-        >
-            ›
-        </ButtonBase>
-    </Stack>
+        <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.canvas }}>
+            <ButtonBase
+                aria-label="Previous day"
+                onClick={() => shiftCourtDate(-1)}
+                sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1, py: 1.75 }}
+            >
+                ‹
+            </ButtonBase>
+            <Box
+                sx={{
+                    flex: 3,
+                    bgcolor: isToday ? appColors.slate : appColors.orange,
+                    color: "#fff",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: 14,
+                    letterSpacing: "0.08em",
+                }}
+            >
+                {longDate(state.courtDate)}
+            </Box>
+            <ButtonBase
+                disabled={isToday}
+                onClick={() => setCourtDate(TODAY)}
+                sx={{
+                    flex: 2,
+                    bgcolor: isToday ? appColors.grey : appColors.slate,
+                    color: "#fff",
+                    fontSize: 14,
+                    letterSpacing: "0.08em",
+                }}
+            >
+                GO TO TODAY
+            </ButtonBase>
+            <ButtonBase
+                aria-label="Next day"
+                onClick={() => shiftCourtDate(1)}
+                sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1 }}
+            >
+                ›
+            </ButtonBase>
+        </Stack>
     );
 };
 
@@ -150,9 +150,7 @@ export const CourtSheetScreen = () => {
                                 <ButtonBase
                                     key={slot}
                                     aria-label={`${court} ${slot}`}
-                                    onClick={() =>
-                                        navigate(`/coursheet/${encodeURIComponent(court)}/${encodeURIComponent(slot)}`)
-                                    }
+                                    onClick={() => navigate(`/coursheet/${encodeURIComponent(court)}/${encodeURIComponent(slot)}`)}
                                     sx={{
                                         display: "block",
                                         textAlign: "left",

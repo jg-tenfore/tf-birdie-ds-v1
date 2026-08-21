@@ -168,7 +168,11 @@ export const OrderComplete = ({ sale = raincheckSale, email: initialEmail = "", 
                         icon={<CheckIcon sx={{ fontSize: 22, color: "#fff" }} />}
                         onClick={() => onExit?.("teesheet")}
                     />
-                    <ExitButton label="PRO SHOP" icon={<CheckIcon sx={{ fontSize: 22, color: "#fff" }} />} onClick={() => onExit?.("proshop")} />
+                    <ExitButton
+                        label="PRO SHOP"
+                        icon={<CheckIcon sx={{ fontSize: 22, color: "#fff" }} />}
+                        onClick={() => onExit?.("proshop")}
+                    />
                     <ExitButton
                         label="CUSTOMER SEARCH"
                         icon={<CheckIcon sx={{ fontSize: 22, color: "#fff" }} />}

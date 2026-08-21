@@ -31,16 +31,31 @@ const rng = (seed) => () => {
 
 const pad = (n, len = 2) => String(n).padStart(len, "0");
 
-const dateString = (rand, from, to) => `${pad(1 + Math.floor(rand() * 12))}/${pad(1 + Math.floor(rand() * 28))}/${from + Math.floor(rand() * (to - from + 1))}`;
+const dateString = (rand, from, to) =>
+    `${pad(1 + Math.floor(rand() * 12))}/${pad(1 + Math.floor(rand() * 28))}/${from + Math.floor(rand() * (to - from + 1))}`;
 
 /**
  * Every type the course has configured, in the order the new-customer form lays
  * them out: four columns, filled left to right.
  */
 const CUSTOMER_TYPES = [
-    "Senior", "Military", "Resident", "Private Cart", "Diamond", "New Deal", "Guest of Members", "Hero",
-    "premium single", "Resident 22 Test", "Austin Test", "Test percent off", "Simp", "Employee",
-    "Campaign Testers", "Wonderful Person", "Average Person",
+    "Senior",
+    "Military",
+    "Resident",
+    "Private Cart",
+    "Diamond",
+    "New Deal",
+    "Guest of Members",
+    "Hero",
+    "premium single",
+    "Resident 22 Test",
+    "Austin Test",
+    "Test percent off",
+    "Simp",
+    "Employee",
+    "Campaign Testers",
+    "Wonderful Person",
+    "Average Person",
 ];
 
 const MEMBERSHIPS = ["30 Day booking window", "Full Golf", "Weekday Golf", "Social", "Junior", "Corporate — 4 seat", "Trial Month"];
@@ -57,10 +72,32 @@ const PINNED = [
     { first: "Oda", last: "Brennevin", membership: "Full Golf", phone: "8017084153", notes: "has a standing Saturday foursome" },
     { first: "Ivar", last: "Brennevin", membership: "Full Golf", phone: "8017084153", types: ["Senior"] },
     { first: "Rufus", last: "Brennevin", phone: "8017084153", types: ["Junior"], notes: "left-handed rental clubs" },
-    { first: "Oda", last: "Brennevin", sheet: "G-Oda Brennevin", display: "G-Oda Brennevin - Guest of Members", types: ["Guest of Members"], phone: "8017084153" },
+    {
+        first: "Oda",
+        last: "Brennevin",
+        sheet: "G-Oda Brennevin",
+        display: "G-Oda Brennevin - Guest of Members",
+        types: ["Guest of Members"],
+        phone: "8017084153",
+    },
     { first: "Igor", last: "Kuznetsov", membership: "Weekday Golf", phone: "8015540982" },
-    { first: "Igor", last: "Kuznetsov", sheet: "G-Igor Kuznetsov", display: "G-Igor Kuznetsov - Guest of Members", types: ["Guest of Members"], phone: "8015540982" },
-    { first: "Weston", last: "Farnsworth", membership: "30 Day booking window", tag: "(tr456)", phone: "8017084153", email: "weston.farnsworth@tenfore.golf", notes: "free golf for life" },
+    {
+        first: "Igor",
+        last: "Kuznetsov",
+        sheet: "G-Igor Kuznetsov",
+        display: "G-Igor Kuznetsov - Guest of Members",
+        types: ["Guest of Members"],
+        phone: "8015540982",
+    },
+    {
+        first: "Weston",
+        last: "Farnsworth",
+        membership: "30 Day booking window",
+        tag: "(tr456)",
+        phone: "8017084153",
+        email: "weston.farnsworth@tenfore.golf",
+        notes: "free golf for life",
+    },
     { first: "Tony", last: "Finau", types: ["Diamond"], phone: "8013758144" },
     { first: "Randy", last: "Orton", membership: "Social", phone: "8019457787", notes: "prefers the 7:40 time" },
     { first: "Tom", last: "Watson", types: ["Senior", "Hero"], phone: "8012630392" },
@@ -68,25 +105,83 @@ const PINNED = [
     { first: "Priya", last: "Raman", types: ["Resident"], phone: "8018871046" },
     { first: "Chris", last: "Moreno", types: ["Employee"], phone: "8013320765", notes: "always pays on account" },
     { first: "Kelsey", last: "Sutton", sheet: "Sutton, K.", membership: "Corporate — 4 seat", phone: "8016604417" },
-    { first: "Fiona", last: "Doyle", sheet: "Doyle, F.", types: ["Resident", "Military"], phone: "8012248830", notes: "walks — never wants a cart" },
+    {
+        first: "Fiona",
+        last: "Doyle",
+        sheet: "Doyle, F.",
+        types: ["Resident", "Military"],
+        phone: "8012248830",
+        notes: "walks — never wants a cart",
+    },
     { first: "Jonah", last: "Hamlet", sheet: "Hamlet, J.", membership: "Trial Month", phone: "8017719305" },
     // The account every reference screenshot runs through. A plus-addressed test
     // record rather than a person, which is why the name is a rate.
     {
-        first: "Weston", last: "Senior", display: "Weston Senior", membership: "Full Golf", types: ["Senior"],
-        email: "weston.farnsworth+senior@tenfore.golf", phone: "8015550142", notes: "prefers the 7:40 time",
+        first: "Weston",
+        last: "Senior",
+        display: "Weston Senior",
+        membership: "Full Golf",
+        types: ["Senior"],
+        email: "weston.farnsworth+senior@tenfore.golf",
+        phone: "8015550142",
+        notes: "prefers the 7:40 time",
     },
 ];
 
 const FIRST = [
-    "Amara", "Bao", "Callum", "Dermot", "Dov", "Elena", "Fionn", "Grete", "Hugh", "Ines",
-    "Jonas", "Kelsey", "Lars", "Milo", "Nadia", "Owen", "Petra", "Quinn", "Rosa", "Simone",
-    "Teo", "Ursula", "Viggo", "Wren", "Xiomara", "Yusuf", "Zara", "Anders", "Beatriz", "Caleb",
+    "Amara",
+    "Bao",
+    "Callum",
+    "Dermot",
+    "Dov",
+    "Elena",
+    "Fionn",
+    "Grete",
+    "Hugh",
+    "Ines",
+    "Jonas",
+    "Kelsey",
+    "Lars",
+    "Milo",
+    "Nadia",
+    "Owen",
+    "Petra",
+    "Quinn",
+    "Rosa",
+    "Simone",
+    "Teo",
+    "Ursula",
+    "Viggo",
+    "Wren",
+    "Xiomara",
+    "Yusuf",
+    "Zara",
+    "Anders",
+    "Beatriz",
+    "Caleb",
 ];
 
 const LAST = [
-    "Achebe", "Baptiste", "Bergstrom", "Delgado", "Ferreira", "Halloran", "Ito", "Kaur", "Lindqvist", "Marchetti",
-    "Mbeki", "Nakamura", "Nguyen", "Okafor", "Osei", "Petrov", "Salvatore", "Vasquez", "Whitfield", "Zeller",
+    "Achebe",
+    "Baptiste",
+    "Bergstrom",
+    "Delgado",
+    "Ferreira",
+    "Halloran",
+    "Ito",
+    "Kaur",
+    "Lindqvist",
+    "Marchetti",
+    "Mbeki",
+    "Nakamura",
+    "Nguyen",
+    "Okafor",
+    "Osei",
+    "Petrov",
+    "Salvatore",
+    "Vasquez",
+    "Whitfield",
+    "Zeller",
 ];
 
 const CITIES = [
@@ -101,9 +196,18 @@ const CITIES = [
 const STREETS = ["18 Fairway Ln", "402 Bunker Rd", "77 Greenside Ct", "1201 Tee Box Way", "9 Dogleg Dr", "N/A"];
 
 const NOTES = [
-    "free golf for life", "prefers the 7:40 time", "walks — never wants a cart", "left-handed rental clubs",
-    "always pays on account", "do not seat near the bar", "wife's birthday in June — comp dessert",
-    "has a standing Saturday foursome", "", "", "", "",
+    "free golf for life",
+    "prefers the 7:40 time",
+    "walks — never wants a cart",
+    "left-handed rental clubs",
+    "always pays on account",
+    "do not seat near the bar",
+    "wife's birthday in June — comp dessert",
+    "has a standing Saturday foursome",
+    "",
+    "",
+    "",
+    "",
 ];
 
 const DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "aol.com", "sbcglobal.net", "att.net"];
@@ -155,7 +259,12 @@ const build = (spec, index) => {
 
     const punchCards = Array.from({ length: rand() > 0.78 ? 1 : 0 }, () => {
         const total = [5, 10, 20][Math.floor(rand() * 3)];
-        return { name: `${total}-Round Punch Card`, remaining: Math.floor(rand() * (total + 1)), total, expires: dateString(rand, 2026, 2027) };
+        return {
+            name: `${total}-Round Punch Card`,
+            remaining: Math.floor(rand() * (total + 1)),
+            total,
+            expires: dateString(rand, 2026, 2027),
+        };
     });
 
     const hasCard = rand() > 0.35;
@@ -174,7 +283,7 @@ const build = (spec, index) => {
             (testAccount
                 ? `${first.toLowerCase()}.${last.toLowerCase()}+${index}@tenfore.golf`
                 : `${first.toLowerCase()}.${last.toLowerCase()}@${DOMAINS[Math.floor(rand() * DOMAINS.length)]}`),
-        ...(spec.phone ?? (rand() > 0.1 ? `801${pad(Math.floor(rand() * 10000000), 7)}` : null)
+        ...((spec.phone ?? (rand() > 0.1 ? `801${pad(Math.floor(rand() * 10000000), 7)}` : null))
             ? { phone: spec.phone ?? `801${pad(Math.floor(rand() * 10000000), 7)}` }
             : {}),
         birthday: dateString(rand, 1948, 2006),
@@ -190,7 +299,12 @@ const build = (spec, index) => {
         punchCards,
         rewardsBalance: Math.floor(rand() * 3000),
         balance: rand() > 0.78 ? +(rand() * 2500).toFixed(2) : 0,
-        ...(hasCard ? { cardOnFile: String(Math.floor(rand() * 9000 + 1000)), cardExpires: `${pad(1 + Math.floor(rand() * 12))}/${2027 + Math.floor(rand() * 15)}` } : {}),
+        ...(hasCard
+            ? {
+                  cardOnFile: String(Math.floor(rand() * 9000 + 1000)),
+                  cardExpires: `${pad(1 + Math.floor(rand() * 12))}/${2027 + Math.floor(rand() * 15)}`,
+              }
+            : {}),
     };
 };
 

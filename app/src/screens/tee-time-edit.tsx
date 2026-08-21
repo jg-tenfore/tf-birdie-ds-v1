@@ -83,7 +83,10 @@ export const TeeTimeEditScreen = () => {
         const cartLabel = feeLabel(transport, transportAmount);
         const price = +(greenAmount + transportAmount).toFixed(2);
         const targets = toAll
-            ? (teeTimes.find((t) => t.time === decoded)?.positions.map((p, i) => (p ? i : null)).filter((i): i is number => i !== null) ?? [])
+            ? (teeTimes
+                  .find((t) => t.time === decoded)
+                  ?.positions.map((p, i) => (p ? i : null))
+                  .filter((i): i is number => i !== null) ?? [])
             : [slot];
         for (const i of targets) editPositionFees(decoded, i, rateName, cartLabel, price);
         back();

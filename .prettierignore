@@ -12,3 +12,10 @@ references
 src/data/store-catalog.ts
 
 package-lock.json
+
+# Prose is authored, not generated. Prettier rewrites `*emphasis*` to
+# `_emphasis_` and reflows tables across every doc — pure churn on text that was
+# written deliberately, and it buries real changes in a formatting diff.
+# Code below `src/` is a different matter and is formatted.
+*.md
+*.mdx

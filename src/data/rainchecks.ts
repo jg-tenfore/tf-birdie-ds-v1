@@ -357,5 +357,4 @@ export function searchRainchecks(query: string, list: Raincheck[] = rainchecks, 
 export const raincheckById = (id: string, list: Raincheck[] = rainchecks) => list.find((r) => r.id === id) ?? null;
 
 /** Next id in sequence, so a raincheck created in the prototype gets a plausible one. */
-export const nextRaincheckId = (list: Raincheck[]) =>
-    String(list.reduce((max, r) => Math.max(max, Number(r.id) || 0), 51400) + 1);
+export const nextRaincheckId = (list: Raincheck[]) => String(list.reduce((max, r) => Math.max(max, Number(r.id) || 0), 51400) + 1);

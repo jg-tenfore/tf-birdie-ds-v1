@@ -96,7 +96,12 @@ const Frame = ({
                 <ActionButton icon={<StorefrontIcon />}>Pro Shop</ActionButton>
                 <ActionButton icon={<PersonIcon />}>{checkoutCustomer}</ActionButton>
                 <ActionButton icon={<NotesIcon />}>Order Notes</ActionButton>
-                <ActionButton icon={<BoltIcon />} tone={enabled ? "primary" : "disabled"} grow={1.6} onClick={enabled ? onApply : undefined}>
+                <ActionButton
+                    icon={<BoltIcon />}
+                    tone={enabled ? "primary" : "disabled"}
+                    grow={1.6}
+                    onClick={enabled ? onApply : undefined}
+                >
                     {commit}
                 </ActionButton>
             </>
@@ -243,11 +248,7 @@ export const PartlySpent: Story = {
     name: "Partly spent",
     render: () => (
         <Frame>
-            <CartCredits
-                customerName="Weston Senior"
-                credits={weston.filter((r) => r.id === "38204")}
-                owed={checkoutTotals.total}
-            />
+            <CartCredits customerName="Weston Senior" credits={weston.filter((r) => r.id === "38204")} owed={checkoutTotals.total} />
         </Frame>
     ),
 };

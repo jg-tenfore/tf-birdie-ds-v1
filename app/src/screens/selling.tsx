@@ -119,7 +119,12 @@ export const proShopCategories: { label: string; items: Sellable[] }[] = [
     },
     {
         label: "Shoes",
-        items: pick(golfShoes, 6).map((p, i) => ({ id: `shoe-${i}`, name: p.title, price: [145, 129, 189][i % 3], image: storeImage(p.path) })),
+        items: pick(golfShoes, 6).map((p, i) => ({
+            id: `shoe-${i}`,
+            name: p.title,
+            price: [145, 129, 189][i % 3],
+            image: storeImage(p.path),
+        })),
     },
     {
         label: "Gloves",
@@ -292,7 +297,10 @@ export const Catalog = ({
     const navigate = useNavigate();
     const [scanMode, setScanMode] = useState(false);
 
-    const categories = source === "Quick Order" ? proShopCategories.filter((c) => ["Sandwiches", "Hamburgers", "Beverages", "Snacks", "Beer", "Appetizers"].includes(c.label)) : proShopCategories;
+    const categories =
+        source === "Quick Order"
+            ? proShopCategories.filter((c) => ["Sandwiches", "Hamburgers", "Beverages", "Snacks", "Beer", "Appetizers"].includes(c.label))
+            : proShopCategories;
     const items = drilled ? (categories.find((c) => c.label === drilled)?.items ?? []) : [];
 
     if (drilled) {
@@ -351,7 +359,13 @@ export const Catalog = ({
                                             src={hero.image}
                                             alt=""
                                             loading="lazy"
-                                            sx={{ position: "absolute", inset: 4, width: "calc(100% - 8px)", height: "calc(100% - 8px)", objectFit: "contain" }}
+                                            sx={{
+                                                position: "absolute",
+                                                inset: 4,
+                                                width: "calc(100% - 8px)",
+                                                height: "calc(100% - 8px)",
+                                                objectFit: "contain",
+                                            }}
                                         />
                                     )}
                                 </Box>
@@ -434,7 +448,13 @@ export const ProShopScreen = () => {
             overflowItems={[
                 { label: "Refresh", onClick: () => navigate(0) },
                 { label: "Add Cash Payout", onClick: () => navigate("/pay") },
-                { label: "Quick Tab", onClick: () => { holdTicket(); navigate("/tabs"); } },
+                {
+                    label: "Quick Tab",
+                    onClick: () => {
+                        holdTicket();
+                        navigate("/tabs");
+                    },
+                },
             ]}
         >
             <Catalog source="Pro Shop" drilled={drilled} onDrill={setDrilled} />

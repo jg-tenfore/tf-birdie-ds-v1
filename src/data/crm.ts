@@ -169,8 +169,7 @@ export function searchCustomers(query: string, limit = 8, list: Customer[] = cus
 export const customerById = (id: string, list: Customer[] = customers) => list.find((c) => c.id === id) ?? null;
 
 /** The record a booking belongs to, or null for a league or an outing. */
-export const customerByBookingName = (name: string, list: Customer[] = customers) =>
-    list.find((c) => bookingName(c) === name) ?? null;
+export const customerByBookingName = (name: string, list: Customer[] = customers) => list.find((c) => bookingName(c) === name) ?? null;
 
 /**
  * Builds a record from what the new-customer form collects.

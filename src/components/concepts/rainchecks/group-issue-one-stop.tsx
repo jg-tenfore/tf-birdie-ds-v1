@@ -279,7 +279,9 @@ export const GroupIssueOneStop = ({
                                                 }}
                                             >
                                                 <Typography sx={{ fontSize: 22, lineHeight: 1.1 }}>{effective}</Typography>
-                                                <Typography sx={{ fontSize: 12, color: clamped ? appColors.orange : appColors.textSecondary }}>
+                                                <Typography
+                                                    sx={{ fontSize: 12, color: clamped ? appColors.orange : appColors.textSecondary }}
+                                                >
                                                     {clamped ? `capped — booked ${position.holes}` : "same as the group"}
                                                 </Typography>
                                             </ButtonBase>
@@ -288,11 +290,16 @@ export const GroupIssueOneStop = ({
 
                                     <Stack sx={{ width: 170, alignItems: "flex-end" }}>
                                         {done ? (
-                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>—</Typography>
+                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>
+                                                —
+                                            </Typography>
                                         ) : (
                                             <>
                                                 <Typography
-                                                    sx={{ fontSize: 24, color: draft.include ? appColors.greenTee : appColors.textDisabled }}
+                                                    sx={{
+                                                        fontSize: 24,
+                                                        color: draft.include ? appColors.greenTee : appColors.textDisabled,
+                                                    }}
                                                 >
                                                     {usd(draftValue(position, shown))}
                                                 </Typography>
@@ -305,7 +312,9 @@ export const GroupIssueOneStop = ({
 
                                     <Box sx={{ width: 210, minWidth: 210 }}>
                                         {done ? (
-                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>—</Typography>
+                                            <Typography sx={{ fontSize: 14, color: appColors.textDisabled, textAlign: "center" }}>
+                                                —
+                                            </Typography>
                                         ) : (
                                             <RecipientSelect
                                                 positions={positions}

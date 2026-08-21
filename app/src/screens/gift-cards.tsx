@@ -42,7 +42,9 @@ export const GiftCardsScreen = () => {
         // "weston" is the reference query and returns the device's own test data,
         // which is why it matches cards belonging to two other names.
         if (!q) return setRows([]);
-        setRows(q === "weston" ? westonGiftCards : westonGiftCards.filter((r) => r.customerName.toLowerCase().includes(q) || r.upc.includes(q)));
+        setRows(
+            q === "weston" ? westonGiftCards : westonGiftCards.filter((r) => r.customerName.toLowerCase().includes(q) || r.upc.includes(q)),
+        );
     };
 
     return (

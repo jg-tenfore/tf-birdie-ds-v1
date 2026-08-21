@@ -221,6 +221,31 @@ export const OnBehalf: Story = {
 };
 
 /**
+ * A credit that can still be taken back.
+ *
+ * Oda Brennevin's round was rainchecked twenty minutes ago and none of it has
+ * been spent, so the row carries a live **VOID**. Pressing it asks why — the
+ * reason is required, because the correction worth counting is *issued to the
+ * wrong player*, and a blank text field would lose it.
+ *
+ * Voiding releases the round: it becomes selectable again, gets picked up as the
+ * next thing to issue, and the history keeps both the issue and the void.
+ * Nothing is deleted. Compare Justin Girard's row, where the money has already
+ * gone and the control is dead.
+ */
+export const Voidable: Story = {
+    name: "Voiding a credit",
+    render: () => (
+        <Concept
+            seed={foursome.map((p) =>
+                p.id === "10314912" ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } } : p,
+            )}
+            startAt="10314910"
+        />
+    ),
+};
+
+/**
  * A reservation where every round has already been credited.
  *
  * Nothing is selectable, the log holds four lines, and the screen's job is
@@ -255,33 +280,6 @@ export const AllIssued: Story = {
             </Frame>
         );
     },
-};
-
-/**
- * A credit that can still be taken back.
- *
- * Oda Brennevin's round was rainchecked twenty minutes ago and none of it has
- * been spent, so the row carries a live **VOID**. Pressing it asks why — the
- * reason is required, because the correction worth counting is *issued to the
- * wrong player*, and a blank text field would lose it.
- *
- * Voiding releases the round: it becomes selectable again, gets picked up as the
- * next thing to issue, and the history keeps both the issue and the void.
- * Nothing is deleted. Compare Justin Girard's row, where the money has already
- * gone and the control is dead.
- */
-export const Voidable: Story = {
-    name: "Voiding a credit",
-    render: () => (
-        <Concept
-            seed={foursome.map((p) =>
-                p.id === "10314912"
-                    ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } }
-                    : p,
-            )}
-            startAt="10314910"
-        />
-    ),
 };
 
 /**

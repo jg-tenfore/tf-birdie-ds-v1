@@ -176,78 +176,81 @@ export const CheckoutTicketPane = ({
     const taken = applied?.reduce((sum, p) => sum + p.amount, 0) ?? payments ?? checkoutTotals.payments;
     const owed = Math.max(0, +(total - taken).toFixed(2));
     return (
-    <Stack sx={{ width: "42%", minWidth: 0, bgcolor: "#fff", borderRight: `1px solid ${appColors.divider}` }}>
-        <Stack sx={{ flex: 1, overflowY: "auto" }} divider={<Divider />}>
-            {lines.map((l) => (
-                <Stack key={`${l.id}-${l.seat ?? "x"}`} direction="row" spacing={2} sx={{ px: 2, py: 1.75, alignItems: "center" }}>
-                    {(l.image ?? fallbackImage) && (
-                        <Box
-                            component="img"
-                            src={l.image ?? fallbackImage}
-                            alt=""
-                            sx={{ width: 62, height: 62, objectFit: "contain", flexShrink: 0 }}
-                        />
-                    )}
-                    <Stack sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{ fontSize: 19, fontWeight: 500 }} noWrap>
-                            {l.name}
-                        </Typography>
-                        {l.stock ? (
-                            // Two bare numbers, the second orange. Nothing on the
-                            // device labels them; read as on-hand / available.
-                            <Stack direction="row" spacing={1.5}>
-                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{l.stock[0]}</Typography>
-                                <Typography sx={{ fontSize: 14, color: appColors.orange }}>{l.stock[1]}</Typography>
-                            </Stack>
-                        ) : (
-                            <Typography sx={{ fontSize: 14, color: appColors.textSecondary }} noWrap>
-                                {l.note ?? `Qty ${l.qty} · ${usd(l.unitPrice)} each`}
+        <Stack sx={{ width: "42%", minWidth: 0, bgcolor: "#fff", borderRight: `1px solid ${appColors.divider}` }}>
+            <Stack sx={{ flex: 1, overflowY: "auto" }} divider={<Divider />}>
+                {lines.map((l) => (
+                    <Stack key={`${l.id}-${l.seat ?? "x"}`} direction="row" spacing={2} sx={{ px: 2, py: 1.75, alignItems: "center" }}>
+                        {(l.image ?? fallbackImage) && (
+                            <Box
+                                component="img"
+                                src={l.image ?? fallbackImage}
+                                alt=""
+                                sx={{ width: 62, height: 62, objectFit: "contain", flexShrink: 0 }}
+                            />
+                        )}
+                        <Stack sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ fontSize: 19, fontWeight: 500 }} noWrap>
+                                {l.name}
                             </Typography>
+                            {l.stock ? (
+                                // Two bare numbers, the second orange. Nothing on the
+                                // device labels them; read as on-hand / available.
+                                <Stack direction="row" spacing={1.5}>
+                                    <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{l.stock[0]}</Typography>
+                                    <Typography sx={{ fontSize: 14, color: appColors.orange }}>{l.stock[1]}</Typography>
+                                </Stack>
+                            ) : (
+                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }} noWrap>
+                                    {l.note ?? `Qty ${l.qty} · ${usd(l.unitPrice)} each`}
+                                </Typography>
+                            )}
+                        </Stack>
+                        <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{usd(l.qty * l.unitPrice)}</Typography>
+                    </Stack>
+                ))}
+            </Stack>
+
+            {/* A heavy rule, not a hairline — it separates ticket from money. */}
+            <Box sx={{ borderTop: `2px solid ${appColors.textPrimary}`, px: 2, pt: 2 }}>
+                <Stack direction="row" spacing={1.5} sx={{ mb: 2, alignItems: "center" }}>
+                    <Typography sx={{ fontSize: 17 }}>{customer}</Typography>
+                    <BusinessCenterOutlinedIcon sx={{ fontSize: 18, color: appColors.textSecondary }} />
+                    <Typography sx={{ fontSize: 17 }}>{points}</Typography>
+                </Stack>
+                <TotalRow label="SubTotal" value={usd(subtotal)} />
+                <TotalRow label="Taxes" value={usd(tax)} />
+                <TotalRow label="Grand Total" value={usd(total)} />
+                <TotalRow label="Total Payments" value={usd(taken)} green />
+
+                {/* Each payment on its own line, under the total it contributes to,
+                with the way to take it back off. */}
+                {applied?.map((p) => (
+                    <Stack key={p.id} direction="row" sx={{ alignItems: "center", gap: 1, py: 0.5, pl: 1.5 }}>
+                        <Stack sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ fontSize: 16, color: appColors.greenTee }}>{p.label}</Typography>
+                            {p.note && <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{p.note}</Typography>}
+                        </Stack>
+                        <Typography sx={{ fontSize: 16, color: appColors.greenTee }}>−{usd(p.amount)}</Typography>
+                        {onRemovePayment && (
+                            <IconButton
+                                aria-label={`Remove ${p.label}`}
+                                onClick={() => onRemovePayment(p.id)}
+                                sx={{ width: 40, height: 40, color: appColors.textSecondary }}
+                            >
+                                <CloseIcon sx={{ fontSize: 20 }} />
+                            </IconButton>
                         )}
                     </Stack>
-                    <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{usd(l.qty * l.unitPrice)}</Typography>
-                </Stack>
-            ))}
-        </Stack>
-
-        {/* A heavy rule, not a hairline — it separates ticket from money. */}
-        <Box sx={{ borderTop: `2px solid ${appColors.textPrimary}`, px: 2, pt: 2 }}>
-            <Stack direction="row" spacing={1.5} sx={{ mb: 2, alignItems: "center" }}>
-                <Typography sx={{ fontSize: 17 }}>{customer}</Typography>
-                <BusinessCenterOutlinedIcon sx={{ fontSize: 18, color: appColors.textSecondary }} />
-                <Typography sx={{ fontSize: 17 }}>{points}</Typography>
+                ))}
+            </Box>
+            <Stack
+                direction="row"
+                sx={{ justifyContent: "space-between", bgcolor: appColors.greenTee, color: "#fff", px: 2, py: 2, mt: 1.5 }}
+            >
+                <Typography sx={{ fontSize: 22 }}>{owed === 0 && taken > 0 ? "Paid in full" : "Total Owed"}</Typography>
+                <Typography sx={{ fontSize: 22 }}>{usd(owed)}</Typography>
             </Stack>
-            <TotalRow label="SubTotal" value={usd(subtotal)} />
-            <TotalRow label="Taxes" value={usd(tax)} />
-            <TotalRow label="Grand Total" value={usd(total)} />
-            <TotalRow label="Total Payments" value={usd(taken)} green />
-
-            {/* Each payment on its own line, under the total it contributes to,
-                with the way to take it back off. */}
-            {applied?.map((p) => (
-                <Stack key={p.id} direction="row" sx={{ alignItems: "center", gap: 1, py: 0.5, pl: 1.5 }}>
-                    <Stack sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{ fontSize: 16, color: appColors.greenTee }}>{p.label}</Typography>
-                        {p.note && <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{p.note}</Typography>}
-                    </Stack>
-                    <Typography sx={{ fontSize: 16, color: appColors.greenTee }}>−{usd(p.amount)}</Typography>
-                    {onRemovePayment && (
-                        <IconButton
-                            aria-label={`Remove ${p.label}`}
-                            onClick={() => onRemovePayment(p.id)}
-                            sx={{ width: 40, height: 40, color: appColors.textSecondary }}
-                        >
-                            <CloseIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                    )}
-                </Stack>
-            ))}
-        </Box>
-        <Stack direction="row" sx={{ justifyContent: "space-between", bgcolor: appColors.greenTee, color: "#fff", px: 2, py: 2, mt: 1.5 }}>
-            <Typography sx={{ fontSize: 22 }}>{owed === 0 && taken > 0 ? "Paid in full" : "Total Owed"}</Typography>
-            <Typography sx={{ fontSize: 22 }}>{usd(owed)}</Typography>
         </Stack>
-    </Stack>
     );
 };
 
@@ -340,15 +343,7 @@ export interface RaincheckLookupProps {
     onSelect?: (id: string) => void;
 }
 
-const RaincheckPanel = ({
-    amount,
-    onAmount,
-    lookup,
-}: {
-    amount: string;
-    onAmount?: (v: string) => void;
-    lookup: RaincheckLookupProps;
-}) => {
+const RaincheckPanel = ({ amount, onAmount, lookup }: { amount: string; onAmount?: (v: string) => void; lookup: RaincheckLookupProps }) => {
     const selected = lookup.results.find((r) => r.id === lookup.selectedId);
     return (
         <>

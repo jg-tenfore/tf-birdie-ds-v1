@@ -70,42 +70,42 @@ const DateBar = () => {
     const isToday = state.courtDate === TODAY;
 
     return (
-    <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.canvas }}>
-        <ButtonBase
-            aria-label="Previous day"
-            onClick={() => shiftCourtDate(-1)}
-            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1, py: 1.75 }}
-        >
-            ‹
-        </ButtonBase>
-        <Box
-            sx={{
-                flex: 3,
-                bgcolor: isToday ? appColors.slate : appColors.orange,
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontSize: 14,
-                letterSpacing: "0.08em",
-            }}
-        >
-            {longDate(state.courtDate)}
-        </Box>
-        <ButtonBase
-            disabled={isToday}
-            onClick={() => setCourtDate(TODAY)}
-            sx={{ flex: 2, bgcolor: isToday ? appColors.grey : appColors.slate, color: "#fff", fontSize: 14, letterSpacing: "0.08em" }}
-        >
-            GO TO TODAY
-        </ButtonBase>
-        <ButtonBase
-            aria-label="Next day"
-            onClick={() => shiftCourtDate(1)}
-            sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1 }}
-        >
-            ›
-        </ButtonBase>
-    </Stack>
+        <Stack direction="row" sx={{ gap: "6px", p: "6px", bgcolor: appColors.canvas }}>
+            <ButtonBase
+                aria-label="Previous day"
+                onClick={() => shiftCourtDate(-1)}
+                sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1, py: 1.75 }}
+            >
+                ‹
+            </ButtonBase>
+            <Box
+                sx={{
+                    flex: 3,
+                    bgcolor: isToday ? appColors.slate : appColors.orange,
+                    color: "#fff",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: 14,
+                    letterSpacing: "0.08em",
+                }}
+            >
+                {longDate(state.courtDate)}
+            </Box>
+            <ButtonBase
+                disabled={isToday}
+                onClick={() => setCourtDate(TODAY)}
+                sx={{ flex: 2, bgcolor: isToday ? appColors.grey : appColors.slate, color: "#fff", fontSize: 14, letterSpacing: "0.08em" }}
+            >
+                GO TO TODAY
+            </ButtonBase>
+            <ButtonBase
+                aria-label="Next day"
+                onClick={() => shiftCourtDate(1)}
+                sx={{ bgcolor: appColors.green, width: 190, color: "#fff", fontSize: 26, lineHeight: 1 }}
+            >
+                ›
+            </ButtonBase>
+        </Stack>
     );
 };
 
@@ -168,10 +168,7 @@ const NewReservationDialog = ({ open, onClose }: { open: boolean; onClose: () =>
     const emailHits = useMemo(() => searchCustomers(emailQuery, 5, customers), [emailQuery, customers]);
 
     // Either field searches — a member is as likely to be found by surname.
-    const lookup = useMemo(
-        () => searchCustomers(`${first} ${last}`.trim() || first || last, 5, customers),
-        [first, last, customers],
-    );
+    const lookup = useMemo(() => searchCustomers(`${first} ${last}`.trim() || first || last, 5, customers), [first, last, customers]);
 
     return (
         <Dialog

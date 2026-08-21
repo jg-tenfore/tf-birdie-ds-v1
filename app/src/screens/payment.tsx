@@ -71,7 +71,11 @@ export const PaymentScreen = () => {
 
     if (!ticket) {
         return (
-            <Shell title="Payments" active="proshop" actionBar={<ActionButton onClick={() => navigate("/proshop")}>Back to register</ActionButton>}>
+            <Shell
+                title="Payments"
+                active="proshop"
+                actionBar={<ActionButton onClick={() => navigate("/proshop")}>Back to register</ActionButton>}
+            >
                 <Stack sx={{ height: "100%", alignItems: "center", justifyContent: "center", gap: 1 }}>
                     <Typography sx={{ fontSize: 22 }}>No open ticket</Typography>
                     <Typography sx={{ color: appColors.textSecondary }}>Ring something up first.</Typography>
@@ -93,7 +97,10 @@ export const PaymentScreen = () => {
         // Cash carries the tendered figure so the receipt can print Change Due;
         // every other tender is exact by definition.
         const keyed = Number(amount.replace(/[^0-9.]/g, "")) || 0;
-        pay(tab === "CASH" ? "Cash" : tab === "GIFT CARD" ? "Gift card" : "Member account", tab === "CASH" ? Math.max(keyed, total) : undefined);
+        pay(
+            tab === "CASH" ? "Cash" : tab === "GIFT CARD" ? "Gift card" : "Member account",
+            tab === "CASH" ? Math.max(keyed, total) : undefined,
+        );
     };
 
     const customer = ticket.customer ?? ticket.name;

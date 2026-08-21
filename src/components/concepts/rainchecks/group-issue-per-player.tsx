@@ -151,7 +151,9 @@ export const GroupIssuePerPlayer = ({ heading, positions, drafts, onDraft, onTog
                                         <Typography sx={{ fontSize: 14, color: appColors.textDisabled }}>—</Typography>
                                     ) : (
                                         <>
-                                            <Typography sx={{ fontSize: 24, color: draft.include ? appColors.greenTee : appColors.textDisabled }}>
+                                            <Typography
+                                                sx={{ fontSize: 24, color: draft.include ? appColors.greenTee : appColors.textDisabled }}
+                                            >
                                                 {usd(draftValue(position, draft))}
                                             </Typography>
                                             <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>

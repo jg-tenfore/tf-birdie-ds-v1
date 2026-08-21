@@ -124,7 +124,9 @@ export const ShiftScreen = () => {
                 {/* Closing pane. Everything is centred in the column, not left-aligned. */}
                 <Stack sx={{ width: "44%", flexShrink: 0, px: 5, pt: 7 }}>
                     <Typography sx={{ fontSize: 16, color: appColors.textSecondary, textAlign: "center" }}>User Name</Typography>
-                    <Typography sx={{ fontSize: 22, textAlign: "center", mt: 1.5 }}>{state.operator?.name ?? "Test Test Account"}</Typography>
+                    <Typography sx={{ fontSize: 22, textAlign: "center", mt: 1.5 }}>
+                        {state.operator?.name ?? "Test Test Account"}
+                    </Typography>
 
                     <Typography sx={{ fontSize: 16, color: appColors.textSecondary, textAlign: "center", mt: 5 }}>Shift Date</Typography>
                     <Typography sx={{ fontSize: 22, textAlign: "center", mt: 1.5 }}>{SHIFT_STARTED}</Typography>

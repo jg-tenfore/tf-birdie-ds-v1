@@ -157,10 +157,7 @@ export const InventoryNewCountScreen = () => {
                 {/* The value is centred across the full width while its label is
                     left-aligned above it, which is why the two look unrelated. */}
                 <Box sx={{ position: "relative", mt: 1 }}>
-                    <ButtonBase
-                        onClick={() => setPickerOpen((o) => !o)}
-                        sx={{ width: "100%", justifyContent: "center", minHeight: 56 }}
-                    >
+                    <ButtonBase onClick={() => setPickerOpen((o) => !o)} sx={{ width: "100%", justifyContent: "center", minHeight: 56 }}>
                         <Typography sx={{ fontSize: 28 }}>{category}</Typography>
                         <ArrowDropDownIcon sx={{ position: "absolute", right: 0, fontSize: 28, color: appColors.textSecondary }} />
                     </ButtonBase>
