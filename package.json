@@ -20,7 +20,9 @@
         "smoke": "node scripts/smoke-test.mjs",
         "generate:food": "node scripts/generate-food-catalog.mjs",
         "smoke:serve": "node scripts/serve-dist.mjs",
-        "smoke:ci": "npm run build && node scripts/serve-dist.mjs --smoke"
+        "smoke:ci": "npm run build && node scripts/serve-dist.mjs --smoke",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
@@ -34,6 +36,7 @@
         "react-router-dom": "^7.18.2"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@storybook/addon-a11y": "^10.5.5",
         "@storybook/addon-docs": "^10.5.5",
         "@storybook/addon-themes": "^10.5.5",
@@ -41,11 +44,16 @@
         "@types/react": "^19.2.0",
         "@types/react-dom": "^19.2.0",
         "@vitejs/plugin-react": "^6.0.4",
+        "eslint": "^10.9.0",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "eslint-plugin-storybook": "^10.5.10",
+        "globals": "^17.11.0",
         "playwright": "^1.62.0",
         "prettier": "^3.8.1",
         "remark-gfm": "^4.0.1",
         "storybook": "^10.5.5",
         "typescript": "^5.9.3",
+        "typescript-eslint": "^8.67.0",
         "vite": "^8.1.5"
     }
 }
