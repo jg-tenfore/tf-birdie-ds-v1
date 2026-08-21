@@ -48,6 +48,23 @@ const preview: Preview = {
         viewport: { options: viewportOptions },
 
         options: {
+            /**
+             * Only **title segments** belong in `order` — folders and component
+             * names. Story names do nothing here.
+             *
+             * `storySort` ignores story names unless `includeNames: true`, and
+             * turning that on is not an option: with `method: "alphabetical"`
+             * it would alphabetise the stories of the 40 components that have
+             * no array of their own, breaking deliberate sequences like Forgot
+             * password's Request → Check email → Set new password → Password
+             * reset.
+             *
+             * **Story order within a component comes from export order in the
+             * file.** To reorder stories, move the exports. Arrays of story
+             * names here are inert and only mislead the next person, so they
+             * were removed rather than left as documentation of an intent the
+             * sidebar does not honour.
+             */
             storySort: {
                 method: "alphabetical",
                 order: [
@@ -67,7 +84,7 @@ const preview: Preview = {
                         "Prototype Seam",
                     ],
                     "Components",
-                    ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Charts & Data", "Media & Visuals", "Navigation"],
+                    ["Actions", "Forms", "Feedback & Status", "Layout & Structure", "Media & Visuals", "Navigation"],
                     // The shipping app's flyout drawer.
                     "App Chrome",
                     ["Navigation Drawer"],
@@ -141,13 +158,11 @@ const preview: Preview = {
                         "14-giftcards",
                         "15-events",
                         "16-inventory",
-                        ["Count list", "Category picker open", "New count", "Count detail"],
                         "17-shift",
                         // Unnumbered because the reference folder is. Ordered by
                         // the tab strip left to right, so the sidebar reads the
                         // way the screen does.
                         "checkoutScreens",
-                        ["Credit", "Cash", "Gift card", "Rain check", "Check", "Member"],
                     ],
                     // A second axis through the same components. App Screens is
                     // organised by screen, mirroring the reference folders; this
@@ -177,25 +192,8 @@ const preview: Preview = {
                                 // receipt is unchanged.
                                 "Overview",
                                 "2 — Create raincheck",
-                                [
-                                    "Foursome, one already issued",
-                                    "Issuing to somebody else's account",
-                                    "Voiding a credit",
-                                    "Nothing left to issue",
-                                    "One player",
-                                ],
                                 "3 — The credit on the record",
-                                ["Credits you can open", "Collapsed", "Details only, no void"],
                                 "4 — Redeem at the register",
-                                [
-                                    "Opens on the cart's customer",
-                                    "Partly spent",
-                                    "Every credit already used",
-                                    "Search field tapped",
-                                    "Searching another account",
-                                    "Neither credit covers it",
-                                    "This customer has none",
-                                ],
                                 // Spans all four, so it sits outside the numbering.
                                 "Create one, end to end",
                             ],
@@ -211,29 +209,12 @@ const preview: Preview = {
                                 // same situation, so the comparison is a
                                 // sideways move rather than a hunt.
                                 "Option A — Row per player",
-                                [
-                                    "Rained-out foursome",
-                                    "Two of them finished",
-                                    "One credit to somebody else",
-                                    "A nine among the eighteens",
-                                    "One round already credited",
-                                    "Two players",
-                                ],
                                 "Option B — One stop for the group",
-                                [
-                                    "Rained-out foursome",
-                                    "One of them played on",
-                                    "Two of them finished",
-                                    "A nine among the eighteens",
-                                    "One round already credited",
-                                    "Two players",
-                                ],
                                 // Last, and holding both options, because it is
                                 // the trip rather than the screen — and running
                                 // A then B back to back is the comparison the
                                 // whole folder exists to make.
                                 "End to end",
-                                ["Option A — row per player", "Option B — one stop for the group"],
                             ],
                         ],
                     ],

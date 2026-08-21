@@ -207,6 +207,21 @@ export const Reassigned: Story = {
 };
 
 /**
+ * A group where one player booked the nine and the rest booked eighteen.
+ *
+ * Under Option A this needs no special handling at all — Tom Watson's stepper
+ * stops at 8 because that is his round, and nobody else's number is involved.
+ * That is the strongest thing this option has going for it, and it is worth
+ * looking at **Option B's** version of the same fixture, where one group-wide
+ * number has to be reconciled against a shorter round and the screen has to say
+ * so out loud.
+ */
+export const MixedHoles: Story = {
+    name: "A nine among the eighteens",
+    render: () => <Concept seed={mixedHoleFoursome} />,
+};
+
+/**
  * A round already credited earlier in the day.
  *
  * Justin Girard was rainchecked at 2:30 and the credit has since been spent. His
@@ -221,20 +236,6 @@ export const OneAlreadyIssued: Story = {
     render: () => <Concept seed={partlyDoneFoursome} />,
 };
 
-/**
- * A group where one player booked the nine and the rest booked eighteen.
- *
- * Under Option A this needs no special handling at all — Tom Watson's stepper
- * stops at 8 because that is his round, and nobody else's number is involved.
- * That is the strongest thing this option has going for it, and it is worth
- * looking at **Option B's** version of the same fixture, where one group-wide
- * number has to be reconciled against a shorter round and the screen has to say
- * so out loud.
- */
-export const MixedHoles: Story = {
-    name: "A nine among the eighteens",
-    render: () => <Concept seed={mixedHoleFoursome} />,
-};
 
 /**
  * Two players, for scale.

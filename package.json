@@ -1,6 +1,9 @@
 {
     "name": "tf-birdie-ds-v1",
     "version": "0.0.0",
+    "engines": {
+        "node": ">=22"
+    },
     "private": true,
     "type": "module",
     "scripts": {
@@ -15,7 +18,9 @@
         "dev:app": "vite",
         "build-app": "vite build",
         "smoke": "node scripts/smoke-test.mjs",
-        "generate:food": "node scripts/generate-food-catalog.mjs"
+        "generate:food": "node scripts/generate-food-catalog.mjs",
+        "smoke:serve": "node scripts/serve-dist.mjs",
+        "smoke:ci": "npm run build && node scripts/serve-dist.mjs --smoke"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
