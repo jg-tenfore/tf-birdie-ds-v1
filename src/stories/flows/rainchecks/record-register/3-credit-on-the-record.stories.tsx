@@ -35,7 +35,7 @@ import { bookingsForCustomer, may12Sheet, todaySheet } from "@/data/tee-sheet";
  * round instead of from the person.
  */
 const meta = {
-    title: "Flows/Rainchecks/Weston's ideas/3 — The credit on the record",
+    title: "Flows/Rainchecks/Record & register/3 — The credit on the record",
     parameters: { layout: "fullscreen" },
 } satisfies Meta;
 

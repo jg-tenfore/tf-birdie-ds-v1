@@ -248,6 +248,23 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
         setStep("done");
     };
 
+    /**
+     * Cancels a credit and frees its round. Reachable after a batch by going
+     * back to the tee time and re-entering — which is exactly when a wrong
+     * hole count gets noticed.
+     */
+    const voidCredit = (positionId: string) => {
+        const target = positions.find((p) => p.id === positionId);
+        if (!target?.issued) return;
+        const { raincheckId } = target.issued;
+        // The reason is collected and required by the dialog. This harness has
+        // no ledger to write it to — on the real screen it lands in the
+        // reservation's history alongside the issue line.
+        setPositions((prev) => prev.map((p) => (p.id === positionId ? { ...p, issued: undefined } : p)));
+        setDrafts((prev) => prev.map((d) => (d.positionId === positionId ? { ...d, include: true } : d)));
+        setCredits((prev) => prev.filter((c) => c.id !== raincheckId));
+    };
+
     const restart = () => {
         setPositions(seed);
         setDrafts(makeDrafts(seed, startHoles));
@@ -324,6 +341,7 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
                         drafts={drafts}
                         onDraft={patch}
                         onToggleAll={(include) => setDrafts((prev) => prev.map((d) => ({ ...d, include })))}
+                        onVoid={voidCredit}
                     />
                 ) : (
                     <GroupIssuePerPlayer
@@ -332,6 +350,7 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
                         drafts={drafts}
                         onDraft={patch}
                         onToggleAll={(include) => setDrafts((prev) => prev.map((d) => ({ ...d, include })))}
+                        onVoid={voidCredit}
                     />
                 ))}
 

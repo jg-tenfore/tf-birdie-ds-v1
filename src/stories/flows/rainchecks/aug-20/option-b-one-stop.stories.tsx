@@ -83,6 +83,19 @@ const Concept = ({
         setFlash(null);
     };
 
+    // Voiding cancels the credit and frees the round, so a correct one can be
+    // cut. Nothing is deleted — on a real ledger the credit stays, marked
+    // voided; here the row simply becomes issuable again, which is the part
+    // that matters on this screen.
+    const voidCredit = (positionId: string, reason: string) => {
+        const target = positions.find((p) => p.id === positionId);
+        if (!target?.issued) return;
+        const { raincheckId, amount, to } = target.issued;
+        setPositions((prev) => prev.map((p) => (p.id === positionId ? { ...p, issued: undefined } : p)));
+        setDrafts((prev) => prev.map((d) => (d.positionId === positionId ? { ...d, include: true } : d)));
+        setFlash(`Raincheck ${raincheckId} (${usd(amount)} to ${to}) voided — ${reason}. ${target.name}'s round can be rainchecked again.`);
+    };
+
     const issue = () => {
         if (totals.count === 0) return;
         let id = nextId;
@@ -140,6 +153,7 @@ const Concept = ({
                         }}
                         drafts={drafts}
                         onDraft={patch}
+                        onVoid={voidCredit}
                         onToggleAll={(include) => {
                             setDrafts((prev) => prev.map((d) => ({ ...d, include })));
                             setFlash(null);
@@ -206,6 +220,37 @@ export const SomeExcluded: Story = {
         <Concept
             seed={rainedOutFoursome}
             tweak={(d) => d.map((x) => (x.positionId === "10314912" || x.positionId === "10314913" ? { ...x, include: false } : x))}
+        />
+    ),
+};
+
+/**
+ * Taking a credit back.
+ *
+ * Justin Girard's round was credited earlier and **$72.22 of it has already been
+ * spent**, so his VOID is dead and the row says why — at that point the money
+ * has left and it is a refund question, not a correction.
+ *
+ * Oda Brennevin's was cut twenty minutes ago and untouched, so hers is live.
+ * Pressing it asks **why**, from a fixed list: the correction worth counting is
+ * *issued to the wrong player*, and that is the number that would justify
+ * redesigning this screen. A free-text box would be left blank.
+ *
+ * Voiding releases the round. It becomes tickable again and rejoins the count,
+ * which is the whole point — a round can only be rainchecked once, so without a
+ * void a credit cut for the wrong player leaves the round locked as well as the
+ * money misplaced.
+ *
+ * The dialog is the same component the single-issue concept used, imported
+ * rather than reimplemented, so there is one void dialog and one reason list.
+ */
+export const Voidable: Story = {
+    name: "Voiding a credit",
+    render: () => (
+        <Concept
+            seed={partlyDoneFoursome.map((p) =>
+                p.id === "10314912" ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } } : p,
+            )}
         />
     ),
 };

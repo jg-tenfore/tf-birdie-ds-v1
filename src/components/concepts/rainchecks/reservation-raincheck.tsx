@@ -16,6 +16,21 @@ import { VOID_REASONS, raincheckPercentLabel, raincheckValue } from "@/data/rain
 import { appColors } from "@/theme/app-replica-tokens";
 
 /**
+ * **Superseded as a screen, still load-bearing as a module.**
+ *
+ * The single-issue screen this file draws was replaced by the Aug 20 group
+ * screen — see `Flows → Rainchecks → Aug 20` — and its stories are gone. The
+ * file stays because three things in it did not go anywhere: the
+ * `RaincheckPosition` model every Aug 20 component reads, `positionTotal`, and
+ * `VoidDialog`, which the group rows now use so that there is one void dialog
+ * and one reason list rather than two that drift apart.
+ *
+ * `ReservationRaincheck` itself is no longer rendered anywhere. It is kept as
+ * the readable record of what the single-issue screen was, which is what the
+ * Aug 20 overview argues against.
+ *
+ * ---
+ *
  * **Concept.** Not the shipping screen — see `screens/tee-sheet/raincheck-form`
  * for that.
  *
@@ -204,7 +219,7 @@ const PositionRow = ({
  * correction, and the corrections worth counting — how often a credit goes to
  * the wrong player — are exactly what a blank text field would lose.
  */
-const VoidDialog = ({
+export const VoidDialog = ({
     position,
     onCancel,
     onConfirm,

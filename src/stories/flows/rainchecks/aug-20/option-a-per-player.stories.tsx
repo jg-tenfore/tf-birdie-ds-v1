@@ -37,8 +37,9 @@ import { appColors } from "@/theme/app-replica-tokens";
  * costs four identical adjustments where **Option B** costs one, which is a
  * smaller version of the repetition the note is complaining about.
  *
- * Compare **Option B — One stop for the group**, and **Weston's ideas → 2 —
- * Create raincheck**, which is the one-at-a-time screen both of these replace.
+ * Compare **Option B — One stop for the group**. The one-at-a-time screen both of
+ * these replace has been retired; the Overview explains what it did and why it
+ * did not survive.
  */
 const meta = {
     title: "Flows/Rainchecks/Aug 20/Option A — Row per player",
@@ -80,6 +81,19 @@ const Concept = ({
     const patch = (positionId: string, next: Partial<GroupDraft>) => {
         setDrafts((prev) => prev.map((d) => (d.positionId === positionId ? { ...d, ...next } : d)));
         setFlash(null);
+    };
+
+    // Voiding cancels the credit and frees the round, so a correct one can be
+    // cut. Nothing is deleted — on a real ledger the credit stays, marked
+    // voided; here the row simply becomes issuable again, which is the part
+    // that matters on this screen.
+    const voidCredit = (positionId: string, reason: string) => {
+        const target = positions.find((p) => p.id === positionId);
+        if (!target?.issued) return;
+        const { raincheckId, amount, to } = target.issued;
+        setPositions((prev) => prev.map((p) => (p.id === positionId ? { ...p, issued: undefined } : p)));
+        setDrafts((prev) => prev.map((d) => (d.positionId === positionId ? { ...d, include: true } : d)));
+        setFlash(`Raincheck ${raincheckId} (${usd(amount)} to ${to}) voided — ${reason}. ${target.name}'s round can be rainchecked again.`);
     };
 
     const issue = () => {
@@ -139,6 +153,7 @@ const Concept = ({
                         positions={positions}
                         drafts={drafts}
                         onDraft={patch}
+                        onVoid={voidCredit}
                         onToggleAll={(include) => {
                             setDrafts((prev) => prev.map((d) => ({ ...d, include })));
                             setFlash(null);
@@ -215,6 +230,37 @@ export const Reassigned: Story = {
         <Concept
             seed={rainedOutFoursome}
             tweak={(d) => d.map((x) => (x.positionId === "10314913" ? { ...x, recipientId: "10314910" } : x))}
+        />
+    ),
+};
+
+/**
+ * Taking a credit back.
+ *
+ * Justin Girard's round was credited earlier and **$72.22 of it has already been
+ * spent**, so his VOID is dead and the row says why — at that point the money
+ * has left and it is a refund question, not a correction.
+ *
+ * Oda Brennevin's was cut twenty minutes ago and untouched, so hers is live.
+ * Pressing it asks **why**, from a fixed list: the correction worth counting is
+ * *issued to the wrong player*, and that is the number that would justify
+ * redesigning this screen. A free-text box would be left blank.
+ *
+ * Voiding releases the round. It becomes tickable again and rejoins the count,
+ * which is the whole point — a round can only be rainchecked once, so without a
+ * void a credit cut for the wrong player leaves the round locked as well as the
+ * money misplaced.
+ *
+ * The dialog is the same component the single-issue concept used, imported
+ * rather than reimplemented, so there is one void dialog and one reason list.
+ */
+export const Voidable: Story = {
+    name: "Voiding a credit",
+    render: () => (
+        <Concept
+            seed={partlyDoneFoursome.map((p) =>
+                p.id === "10314912" ? { ...p, issued: { raincheckId: "51379", amount: 39.78, at: "2:41 PM", to: "Oda Brennevin" } } : p,
+            )}
         />
     ),
 };
