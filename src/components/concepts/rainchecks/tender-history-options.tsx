@@ -7,7 +7,6 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
-import SearchIcon from "@mui/icons-material/Search";
 
 import { creditState, creditsForCustomer, isRedeemable, noCreditsSummary, searchAllRainchecks, type Raincheck } from "@/data/rainchecks";
 import { appColors } from "@/theme/app-replica-tokens";
@@ -49,29 +48,30 @@ export interface TenderOptionProps {
 
 /* ------------------------------------------------------------------ shared */
 
+/**
+ * The panel body only.
+ *
+ * These render **inside** the shipping redeem screen's RAIN pane — see
+ * `RedeemScreen` — which already carries the app bar, the ticket, the tender
+ * tabs and the action bar. The concept supplies nothing but the contents of the
+ * one panel this feedback is about, so a reviewer looking at it is looking at
+ * the real screen with one region changed.
+ */
 const Pane = ({ children }: { children: React.ReactNode }) => (
-    <Stack sx={{ height: "100%", minHeight: 0, bgcolor: appColors.surface, border: `1px solid ${appColors.divider}` }}>{children}</Stack>
-);
-
-const OwedBar = ({ customerName, owed }: { customerName: string; owed: number }) => (
-    <Stack direction="row" sx={{ bgcolor: appColors.navy, color: "#fff", px: 2, py: 1.25, alignItems: "baseline", gap: 1 }}>
-        <Typography sx={{ fontSize: 15, flex: 1 }}>{customerName}</Typography>
-        <Typography sx={{ fontSize: 15 }}>{usd(owed)} owed</Typography>
-    </Stack>
+    <Stack sx={{ height: "100%", minHeight: 0, bgcolor: appColors.surface }}>{children}</Stack>
 );
 
 const SearchBar = ({ query, onQuery }: { query: string; onQuery?: (q: string) => void }) => (
-    <Stack direction="row" sx={{ alignItems: "center", gap: 1, px: 2, py: 1.25, borderBottom: `1px solid ${appColors.divider}` }}>
-        <SearchIcon sx={{ fontSize: 20, color: appColors.textSecondary }} />
+    <Box sx={{ mx: 3, mt: 3, bgcolor: "#E4E6E8", px: 2, pt: 1.25, pb: 1, borderBottom: `1px solid ${appColors.textSecondary}` }}>
+        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>Enter Raincheck id, customer name, or email</Typography>
         <Box
             component="input"
             value={query}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onQuery?.(e.target.value)}
-            placeholder="Raincheck id, customer name, or email"
-            aria-label="Search rainchecks"
-            sx={{ flex: 1, minHeight: 44, border: "none", outline: "none", fontSize: 16, bgcolor: "transparent", fontFamily: "inherit" }}
+            aria-label="Enter Raincheck id, customer name, or email"
+            sx={{ width: "100%", border: "none", outline: "none", bgcolor: "transparent", fontSize: 16, fontFamily: "inherit", p: 0 }}
         />
-    </Stack>
+    </Box>
 );
 
 /** The default every option shares: this customer's credits, no search needed. */
@@ -148,7 +148,6 @@ export const OptionAInline = (props: TenderOptionProps) => {
 
     return (
         <Pane>
-            <OwedBar customerName={props.customerName} owed={owed} />
             <SearchBar query={query} onQuery={onQuery} />
             {results === null ? (
                 <CartCustomerList {...props} />
@@ -191,14 +190,13 @@ export const OptionAInline = (props: TenderOptionProps) => {
  */
 export const OptionBTabs = (props: TenderOptionProps) => {
     const [tab, setTab] = useState<"available" | "history">("available");
-    const { customerId, credits, owed, query = "", onQuery } = props;
+    const { customerId, credits, query = "", onQuery } = props;
     const all = credits ?? creditsForCustomer(customerId);
     const dead = all.filter((c) => !isRedeemable(c));
     const results = query.trim().length >= 2 ? searchAllRainchecks(query) : null;
 
     return (
         <Pane>
-            <OwedBar customerName={props.customerName} owed={owed} />
             <Stack direction="row" sx={{ borderBottom: `1px solid ${appColors.divider}` }}>
                 {(["available", "history"] as const).map((t) => (
                     <ButtonBase
@@ -284,7 +282,6 @@ export const OptionCOverlay = (props: TenderOptionProps) => {
 
     return (
         <Pane>
-            <OwedBar customerName={customerName} owed={owed} />
             <CartCustomerList {...props} hideUnusable />
 
             <Box sx={{ mt: "auto", p: 2, borderTop: `1px solid ${appColors.divider}` }}>

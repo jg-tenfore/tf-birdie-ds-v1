@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import Box from "@mui/material/Box";
 
 import {
     OptionAInline,
@@ -9,6 +8,8 @@ import {
     OptionCOverlay,
     type TenderOptionProps,
 } from "@/components/concepts/rainchecks/tender-history-options";
+import { RedeemScreen, TICKET_OWED } from "@/components/concepts/rainchecks/redeem-screen";
+import { checkoutCustomer } from "@/components/screens/checkout/checkout-fixtures";
 import { creditsForCustomer, rainchecks } from "@/data/rainchecks";
 
 /**
@@ -26,36 +27,46 @@ import { creditsForCustomer, rainchecks } from "@/data/rainchecks";
  *
  * **Start with "Nothing spendable".** That story is the fix for the incident as
  * described, and it involves no search at all.
+ *
+ * Every story here is the **shipping redeem screen** — `Flows → Rainchecks →
+ * 4 — Redeem at the register` — with the RAIN panel's contents replaced and
+ * nothing else touched. Same app bar, same ticket, same tender tabs, same action
+ * bar. Open the two side by side.
  */
 const meta = {
     title: "Flows/Rainchecks/Aug 24/1 — The counter moment",
-    parameters: { layout: "centered" },
+    parameters: { layout: "fullscreen" },
 } satisfies Meta;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The tender pane at its real width in the checkout strip. */
-const Pane = ({ children }: { children: React.ReactNode }) => <Box sx={{ width: 560, height: 660, display: "flex" }}>{children}</Box>;
-
 const WESTON = rainchecks.find((r) => r.customerName.includes("Senior"))?.customerId ?? rainchecks[0].customerId;
 
+/**
+ * Every story here is the **shipping redeem screen** with one region replaced.
+ *
+ * Same app bar, same ticket pane, same tender tabs, same action bar as
+ * `4 — Redeem at the register`. Only the contents of the RAIN panel change,
+ * because that is the only thing this feedback is about — and a proposal that
+ * redraws the whole screen cannot be compared against the one it replaces.
+ */
 const Live = ({ Component, ...rest }: { Component: (p: TenderOptionProps) => React.ReactElement } & Partial<TenderOptionProps>) => {
     const [query, setQuery] = useState(rest.query ?? "");
     const [selectedId, setSelectedId] = useState<string | undefined>();
     return (
-        <Pane>
+        <RedeemScreen canApply={Boolean(selectedId)} applyLabel={selectedId ? "Apply Raincheck" : "Pick a raincheck"}>
             <Component
-                customerName={rest.customerName ?? "Weston Senior"}
+                customerName={rest.customerName ?? checkoutCustomer}
                 customerId={rest.customerId ?? WESTON}
-                owed={rest.owed ?? 53.48}
+                owed={rest.owed ?? TICKET_OWED}
                 credits={rest.credits}
                 query={query}
                 onQuery={setQuery}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
             />
-        </Pane>
+        </RedeemScreen>
     );
 };
 

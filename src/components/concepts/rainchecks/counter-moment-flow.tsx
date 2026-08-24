@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -9,6 +8,8 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
+import { checkoutTotals } from "@/components/screens/checkout/checkout-fixtures";
+import { RedeemBody } from "./redeem-screen";
 import { creditsForCustomer, isRedeemable, noCreditsSummary, rainchecks, type Raincheck } from "@/data/rainchecks";
 import { appColors } from "@/theme/app-replica-tokens";
 import { CreditRow, NothingSpendable, NotUsableDivider } from "./credit-history";
@@ -28,7 +29,10 @@ import { OrderCompleteCredit } from "./order-complete-credit";
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
 const CUSTOMER = "Weston Senior";
-const OWED = 100.0;
+// The redeem screen's own ticket. Weston's telling says "$100"; the figure is
+// not the point, and using the screen's real numbers keeps this a comparison
+// with the shipping screen rather than a redrawing of it.
+const OWED = checkoutTotals.total;
 
 type Step = "ticket" | "lookup" | "deadend" | "answer" | "complete";
 
@@ -64,61 +68,18 @@ const Narration = ({ lines, tone }: { lines: { who: string; said: string }[]; to
     </Stack>
 );
 
-/* ------------------------------------------------------------- the ticket */
-
-const Ticket = ({ onTender }: { onTender?: () => void }) => (
-    <Stack direction="row" sx={{ flex: 1, minHeight: 0 }}>
-        <Stack sx={{ flex: 1, bgcolor: appColors.surface, borderRight: `1px solid ${appColors.divider}` }}>
-            <Box sx={{ bgcolor: appColors.navy, px: 2, py: 1.25 }}>
-                <Typography sx={{ fontSize: 15, color: "#fff" }}>Order — {CUSTOMER}</Typography>
-            </Box>
-            {[
-                { what: "Dunes Rack Prime — green fee", amt: 73.18 },
-                { what: "Dunes Cart", amt: 26.82 },
-            ].map((l) => (
-                <Stack key={l.what} direction="row" sx={{ px: 2, py: 1.25, gap: 2, borderBottom: `1px solid ${appColors.divider}` }}>
-                    <Typography sx={{ fontSize: 16, flex: 1 }}>{l.what}</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{usd(l.amt)}</Typography>
-                </Stack>
-            ))}
-            <Stack direction="row" sx={{ px: 2, py: 1.75, gap: 2, mt: "auto", bgcolor: appColors.canvasAlt }}>
-                <Typography sx={{ fontSize: 20, flex: 1 }}>Total Owed</Typography>
-                <Typography sx={{ fontSize: 22 }}>{usd(OWED)}</Typography>
-            </Stack>
-        </Stack>
-
-        <Stack sx={{ width: 260, bgcolor: appColors.canvas, p: 2, gap: 1 }}>
-            <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mb: 0.5 }}>Tender</Typography>
-            {["CREDIT", "CASH", "GIFT CARD", "RAIN CHECK", "CHECK", "MEMBER"].map((t) => (
-                <ButtonBase
-                    key={t}
-                    onClick={t === "RAIN CHECK" ? onTender : undefined}
-                    sx={{
-                        minHeight: 48,
-                        fontSize: 15,
-                        letterSpacing: "0.06em",
-                        bgcolor: t === "RAIN CHECK" ? appColors.greenTee : appColors.slate,
-                        color: "#fff",
-                        borderRadius: 0.5,
-                    }}
-                >
-                    {t}
-                </ButtonBase>
-            ))}
-        </Stack>
-    </Stack>
-);
-
 /* ------------------------------------------------------- the lookup panes */
 
 /** What ships today: spendable credits only, so this customer gets nothing. */
 const TodayLookup = ({ query }: { query: string }) => (
-    <Stack sx={{ flex: 1, minHeight: 0, bgcolor: appColors.surface }}>
-        <Stack direction="row" sx={{ bgcolor: appColors.navy, color: "#fff", px: 2, py: 1.25 }}>
-            <Typography sx={{ fontSize: 15, flex: 1 }}>Raincheck</Typography>
-            <Typography sx={{ fontSize: 15 }}>{usd(OWED)} owed</Typography>
-        </Stack>
-        <Box sx={{ px: 2, py: 1.5, borderBottom: `1px solid ${appColors.divider}` }}>
+    <Stack sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ px: 3, py: 2 }}>
+            <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 0.75 }}>
+                RAINCHECK AMOUNT
+            </Typography>
+            <Box sx={{ bgcolor: appColors.greenTee, color: "#fff", px: 2, py: 1.25, fontSize: 24 }}>---</Box>
+        </Box>
+        <Box sx={{ px: 3, pb: 2 }}>
             <Box
                 sx={{
                     bgcolor: appColors.fieldFill,
@@ -157,11 +118,7 @@ const ProposedLookup = ({
     const usable = credits.filter((c) => isRedeemable(c));
     const dead = credits.filter((c) => !isRedeemable(c));
     return (
-        <Stack sx={{ flex: 1, minHeight: 0, bgcolor: appColors.surface }}>
-            <Stack direction="row" sx={{ bgcolor: appColors.navy, color: "#fff", px: 2, py: 1.25 }}>
-                <Typography sx={{ fontSize: 15, flex: 1 }}>{CUSTOMER}</Typography>
-                <Typography sx={{ fontSize: 15 }}>{usd(owed)} owed</Typography>
-            </Stack>
+        <Stack sx={{ flex: 1, minHeight: 0 }}>
             <Box sx={{ overflowY: "auto" }}>
                 {usable.length === 0 ? (
                     <NothingSpendable customerName={CUSTOMER} summary={noCreditsSummary(credits)} />
@@ -246,7 +203,7 @@ export const CounterMomentFlow = ({ variant, ending }: CounterMomentFlowProps) =
                 return {
                     tone: undefined,
                     lines: [
-                        { who: "Employee", said: "That'll be $100." },
+                        { who: "Employee", said: `That'll be ${usd(OWED)}.` },
                         { who: "Customer", said: "I have a raincheck that covers this." },
                     ],
                 };
@@ -299,14 +256,27 @@ export const CounterMomentFlow = ({ variant, ending }: CounterMomentFlowProps) =
             <Stack sx={{ height: "100%", minHeight: 0 }}>
                 <Narration lines={narration.lines} tone={narration.tone} />
 
-                {step === "ticket" && <Ticket onTender={() => setStep("lookup")} />}
-
-                {step === "lookup" &&
-                    (variant === "today" ? (
-                        <TodayLookup query={CUSTOMER} />
-                    ) : (
-                        <ProposedLookup credits={credits} owed={OWED} selectedId={selectedId} onSelect={setSelectedId} />
-                    ))}
+                {/* The real screen: CheckoutTicketPane on the left, the tender
+                    tabs on the right. Step one is the same screen on the CASH
+                    tab — tapping RAIN is the actual entry point, not a mock of
+                    one. */}
+                {(step === "ticket" || step === "lookup") && (
+                    <Box sx={{ flex: 1, minHeight: 0 }}>
+                        <RedeemBody tab={step === "ticket" ? "CASH" : "RAIN"} onTab={(t) => t === "RAIN" && setStep("lookup")}>
+                            {step === "ticket" ? (
+                                <Stack sx={{ flex: 1, alignItems: "center", justifyContent: "center", px: 4, textAlign: "center", gap: 1 }}>
+                                    <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>
+                                        Tap <strong>RAIN</strong> above — the customer says they have one.
+                                    </Typography>
+                                </Stack>
+                            ) : variant === "today" ? (
+                                <TodayLookup query={CUSTOMER} />
+                            ) : (
+                                <ProposedLookup credits={credits} owed={OWED} selectedId={selectedId} onSelect={setSelectedId} />
+                            )}
+                        </RedeemBody>
+                    </Box>
+                )}
 
                 {step === "deadend" && (
                     <Stack sx={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2, px: 6, textAlign: "center" }}>
