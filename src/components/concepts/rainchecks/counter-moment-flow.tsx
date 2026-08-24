@@ -3,6 +3,7 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ReplayIcon from "@mui/icons-material/Replay";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
@@ -159,42 +160,78 @@ export const CounterMomentFlow = ({ variant, ending }: CounterMomentFlowProps) =
     const credits = ending === "found" ? all : all.filter((c) => !isRedeemable(c));
     const live = credits.find((c) => isRedeemable(c));
 
+    const restart = () => {
+        setStep("ticket");
+        setSelectedId(undefined);
+    };
+
+    /**
+     * The action bar, keyed on the step rather than on the variant.
+     *
+     * Keying it on `variant` first was a bug: on the dead-end and resolution
+     * steps the "today" branch matched again, so the only button on screen set
+     * the step it was already on and there was no way out of either. Every
+     * terminal step now ends in `Start over`, and every step from `lookup`
+     * onward carries a `Back`, because a walkthrough somebody cannot reverse is
+     * one they only get to see once.
+     */
+    const back = (
+        <ActionButton icon={<ArrowBackIcon />} onClick={() => setStep(step === "lookup" ? "ticket" : "lookup")}>
+            Back
+        </ActionButton>
+    );
+
     const bar = (() => {
-        if (step === "ticket") return null;
-        if (step === "complete")
-            return (
-                <ActionButton
-                    icon={<ReplayIcon />}
-                    onClick={() => {
-                        setStep("ticket");
-                        setSelectedId(undefined);
-                    }}
-                >
-                    Run it again
-                </ActionButton>
-            );
-        if (variant === "today")
-            return (
-                <ActionButton icon={<ReportProblemIcon />} tone="danger" grow={1.6} onClick={() => setStep("deadend")}>
-                    Ask a manager
-                </ActionButton>
-            );
-        if (step === "lookup" && live)
-            return (
-                <ActionButton
-                    icon={<ArrowForwardIcon />}
-                    tone={selectedId ? "primary" : "disabled"}
-                    grow={1.6}
-                    onClick={() => selectedId && setStep("complete")}
-                >
-                    {selectedId ? `Apply ${usd(live.balance)}` : "Pick a raincheck"}
-                </ActionButton>
-            );
-        return (
-            <ActionButton icon={<ArrowForwardIcon />} grow={1.6} onClick={() => setStep("answer")}>
-                Customer accepts — take another tender
-            </ActionButton>
-        );
+        switch (step) {
+            case "ticket":
+                return null;
+
+            case "lookup":
+                if (variant === "today")
+                    return (
+                        <>
+                            {back}
+                            <ActionButton icon={<ReportProblemIcon />} tone="danger" grow={1.6} onClick={() => setStep("deadend")}>
+                                Ask a manager
+                            </ActionButton>
+                        </>
+                    );
+                if (live)
+                    return (
+                        <>
+                            {back}
+                            <ActionButton
+                                icon={<ArrowForwardIcon />}
+                                tone={selectedId ? "primary" : "disabled"}
+                                grow={1.6}
+                                onClick={() => selectedId && setStep("complete")}
+                            >
+                                {selectedId ? `Apply ${usd(live.balance)}` : "Pick a raincheck"}
+                            </ActionButton>
+                        </>
+                    );
+                return (
+                    <>
+                        {back}
+                        <ActionButton icon={<ArrowForwardIcon />} grow={1.6} onClick={() => setStep("answer")}>
+                            Customer accepts — take another tender
+                        </ActionButton>
+                    </>
+                );
+
+            // Both endings. Terminal, so both offer the way back.
+            case "deadend":
+            case "answer":
+            case "complete":
+                return (
+                    <>
+                        {back}
+                        <ActionButton icon={<ReplayIcon />} grow={1.6} onClick={restart}>
+                            Start over
+                        </ActionButton>
+                    </>
+                );
+        }
     })();
 
     const narration = (() => {
