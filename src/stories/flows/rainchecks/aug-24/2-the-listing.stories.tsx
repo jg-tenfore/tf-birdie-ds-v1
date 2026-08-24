@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { RaincheckListing } from "@/components/concepts/rainchecks/raincheck-listing";
+import { RaincheckListingScreen } from "@/components/concepts/rainchecks/raincheck-listing-screen";
 
 /**
  * **Concept — Aug 24. The searchable listing.**
@@ -18,6 +18,9 @@ import { RaincheckListing } from "@/components/concepts/rainchecks/raincheck-lis
  * This answers *"find me this raincheck"* when the name is not matching: a
  * misspelling, a spouse's booking, a company account, or a slip carrying nothing
  * but an id.
+ *
+ * **Start with "Getting there"** — it shows where the screen lives in the app's
+ * drawer before showing the screen itself.
  */
 const meta = {
     title: "Flows/Rainchecks/Aug 24/2 — The searchable listing",
@@ -26,6 +29,32 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/**
+ * **Getting there.**
+ *
+ * A screen with no way in is a screen nobody uses, so this is the step before
+ * the listing: the app's own drawer, with one row added.
+ *
+ * **Rain Checks sits directly under Gift Cards.** The drawer's third block is
+ * the app's "not a sheet, not a sale" list — Customer Search, Order Lookup, Time
+ * Clock, Gift Cards, Events, Inventory, Shift. A raincheck is the same kind of
+ * object as a gift card: **money the course is holding on a customer's behalf**,
+ * redeemable later, and needing to be found by somebody who was not there when
+ * it was issued.
+ *
+ * It is also the argument the customer record already makes — the project puts
+ * `Rain Checks` directly beneath `Gift Cards` there for exactly this reason.
+ * Anywhere else in the drawer would need an answer to "why not next to Gift
+ * Cards", and there isn't one.
+ *
+ * **Tap it** and the drawer closes onto the listing. One new nav row: no new
+ * pattern, no new component, no new level of hierarchy.
+ */
+export const GettingThere: Story = {
+    name: "Getting there — where it lives in the drawer",
+    render: () => <RaincheckListingScreen startOpen />,
+};
 
 /**
  * **Live.** Every credit across all four courses.
@@ -48,7 +77,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
     name: "Every credit, all courses",
-    render: () => <RaincheckListing />,
+    render: () => <RaincheckListingScreen />,
 };
 
 /**
@@ -61,7 +90,7 @@ export const Default: Story = {
  */
 export const Expired: Story = {
     name: "Filtered to expired",
-    render: () => <RaincheckListing state="expired" />,
+    render: () => <RaincheckListingScreen state="expired" />,
 };
 
 /**
@@ -73,7 +102,7 @@ export const Expired: Story = {
  */
 export const OneCreditOpen: Story = {
     name: "One credit, every activity",
-    render: () => <RaincheckListing query="29115" expandedId="29115" />,
+    render: () => <RaincheckListingScreen query="29115" expandedId="29115" />,
 };
 
 /**
@@ -86,7 +115,7 @@ export const OneCreditOpen: Story = {
  */
 export const OneCourse: Story = {
     name: "Filtered to one course",
-    render: () => <RaincheckListing course="Falls Road" />,
+    render: () => <RaincheckListingScreen course="Falls Road" />,
 };
 
 /**
@@ -97,5 +126,5 @@ export const OneCourse: Story = {
  */
 export const NoMatch: Story = {
     name: "Nothing matches",
-    render: () => <RaincheckListing query="zzzz" />,
+    render: () => <RaincheckListingScreen query="zzzz" />,
 };

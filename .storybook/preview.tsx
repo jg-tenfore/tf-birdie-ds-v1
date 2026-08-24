@@ -218,6 +218,8 @@ const preview: Preview = {
                                 "Overview",
                                 "1 — The counter moment",
                                 "2 — The searchable listing",
+                                // The way in comes before the screen.
+                                ["Getting there — where it lives in the drawer"],
                                 "3 — The payment result",
                                 // Last, because it spans all three and is the one
                                 // to open first when showing somebody else.
