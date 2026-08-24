@@ -1,0 +1,133 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Aug 24/Overview" />
+
+# Aug 24 — the raincheck nobody can find
+
+Concepts, not decisions. Nothing here is wired into the prototype.
+
+## The incident
+
+> *"Employee says that'll be $100. Customer says I have a raincheck that covers
+> this. Employee clicks raincheck payment type and searches customer name.
+> **Nothing comes up.** Employee says 'I don't see it here.' Customer gets mad.
+> Employee has to talk to the manager to look it up in buck and then they find
+> out **customer used it at a different course a few weeks ago**."*
+
+And the written requirement alongside it:
+
+> *"Add a searchable raincheck listing, including filters like expired. Ability
+> to see raincheck issuance date/course and any activities on that raincheck.
+> This info should also be available in the raincheck payment result."*
+
+## What actually goes wrong
+
+`searchRainchecks` filters on `isRedeemable`, which excludes spent, voided **and**
+expired credits. So a used raincheck does not rank low — **it does not exist**.
+
+The operator gets an empty list and reads it as *"this customer has no
+raincheck."* The true answer was *"they had one, they used it, here is where."*
+Two different facts, one answer. That collapse is the whole incident, and the
+manager step exists to undo it.
+
+## The fact that had nowhere to live
+
+**The model had no course.** Not on the credit, not on a redemption.
+
+*"Used it at a different course"* is the load-bearing detail of the story, and
+until Aug 24 there was nowhere to record it — so the terminal could say a credit
+was empty but never *where* it went. Everything else in this folder is
+presentation; this part is data, and it gates the rest.
+
+`Raincheck.course` and `Redemption.course` now exist, because a credit cut at one
+course and spent at another over several visits is the ordinary case in a
+multi-course operation.
+
+## The reframe
+
+Weston framed this as a search problem. **The common case is an empty-state
+problem**, and that is a better place to fix it.
+
+The tender already opens on the cart customer's credits with no search. In the
+incident the employee *searched* — which means the default view had already
+failed them. If the default instead says:
+
+> **No credits available.** Weston Senior has had 3 rainchecks. The most recent
+> activity was 5/02/2026 at Falls Road — Twilight green fee.
+
+…nobody types anything, nobody says *"I don't see it here"*, and the customer
+hears a resolution instead of a denial. See **1 — The counter moment → Nothing
+spendable**, which is the fix for the incident as described and involves no
+search at all.
+
+Search options only matter for the harder case: the credit is under another name.
+
+## Three options for the harder case
+
+The real fork is **where a credit's history lives when you are mid-sale**. Weston
+named the tension himself — *"we could just tell the employee to go to customer
+look up… but it would send them to another screen."*
+
+| | Approach | Bets that | Costs |
+| :-- | :-- | :-- | :-- |
+| **A** | One list, never empty. Spendable on top, the rest below a divider with a reason | The operator should never need a second screen or a second question | The densest results of the three |
+| **B** | *Available* / *History* as sibling tabs, with a count badge | Keep the common path pristine; make the awkward one deliberate | The badge is the only thing preventing a repeat of the incident |
+| **C** | The customer's record, opened **over** the sale | This history already exists and does not want rebuilding in a tender pane | Still a second surface; discoverability does the work |
+
+All three share the same default and the same fix for the common case. They
+differ only in the search path, so switching between them is a sideways move.
+
+## On the performance worry
+
+> *"My worry is if we include all exhausted rainchecks it will slow down the
+> search for the more common use case of actually using a raincheck when there is
+> one."*
+
+Worth pushing back on, gently.
+
+**Search is not the common case.** The tender opens on the cart customer's
+credits without a search at all, so by the time anyone types, the default has
+already failed them — and that is precisely the moment they want everything.
+
+**The cost is not query time.** It is an indexed lookup on one customer either
+way. The cost is visual noise, and noise is solved by **ranking, not omission**.
+Spendable credits stay first on screen; nothing has to be hidden to keep them
+there. Omission is what produced the empty list in the first place.
+
+## What was already built
+
+Weston's first proposal — rainchecks on Customer Lookup, current plus expired —
+**already exists**: see **Record & register → 3**, which splits money owed from
+money lapsed and opens a credit with every redemption on it. Worth knowing before
+anyone rebuilds it. His second proposal, searching exhausted credits from the
+payment screen, is the genuinely new part and is what **1 — The counter moment**
+explores.
+
+## What each screen answers
+
+| Screen | Question |
+| :-- | :-- |
+| **1 — The counter moment** | *Can this customer pay with a raincheck, and if not, why not?* |
+| **2 — The searchable listing** | *Find me this raincheck* — when the name is not matching |
+| **3 — The payment result** | *What happened to it* — so next month's question is answered by the receipt |
+| **Record & register → 3** | *What does this person have?* — when you already know who they are |
+
+The listing and the record are **not** duplicates. The record assumes you have
+identified the customer. The listing is for when you have not: a misspelling, a
+spouse's booking, a company account, or a slip carrying nothing but an id.
+
+## Still open
+
+- **Is search scoped to the current course today?** If a customer's *unspent*
+  credit from another course is also invisible, that is a worse bug than the used
+  one — a live credit failing at the wrong terminal — and it should lead this
+  work rather than follow it. **Nobody has checked the device.** This is the one
+  genuine blocker.
+- **Can an expired credit be honoured with a manager override?** The listing
+  needs to know whether `expired` means *dead* or *ask someone*. It also decides
+  whether the expired filter is a report or a worklist.
+- **Should a course see every course's credits by default,** or its own first?
+  Showing everything is what makes the cross-course case answerable; a shop may
+  reasonably want its own numbers first.
+- **Which of A, B or C** — and it is worth noting they are not exclusive. A's
+  never-empty default could ship with C's overlay for the deep case.
