@@ -209,6 +209,20 @@ const preview: Preview = {
                                 // whole folder exists to make.
                                 "End to end",
                             ],
+                            // The Aug 24 feedback: the credit nobody can find.
+                            // A different problem from Aug 20's — that one was
+                            // about issuing a group at once, this one is about a
+                            // credit that exists and cannot be seen.
+                            "Aug 24",
+                            [
+                                "Overview",
+                                "1 — The counter moment",
+                                "2 — The searchable listing",
+                                "3 — The payment result",
+                                // Last, because it spans all three and is the one
+                                // to open first when showing somebody else.
+                                "4 — Start to finish",
+                            ],
                             // Steps 3 and 4, which Aug 20 does not touch.
                             "Record & register",
                         ],

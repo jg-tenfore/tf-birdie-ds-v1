@@ -44,6 +44,16 @@ export interface Raincheck {
     /** When the credit was cut, which is not when the round was. */
     issued: string;
     expires: string;
+    /**
+     * The course that cut it.
+     *
+     * Added Aug 24, and the whole reason that day's feedback exists. A credit
+     * issued at one course can be spent at another, and until this field existed
+     * there was nowhere to record which — so the counter could say a credit was
+     * spent but not *where*, and "you used it at Falls Road three weeks ago"
+     * was a sentence the terminal could not produce.
+     */
+    course?: string;
     /** What the round cost, before any of this. */
     roundPrice: number;
     totalHoles: number;
@@ -84,6 +94,14 @@ export interface Redemption {
     order: string;
     /** What was bought, in the words the receipt used. */
     what: string;
+    /**
+     * Where it was spent, which is not necessarily where it was issued.
+     *
+     * A credit cut at the Dunes and spent at Falls Road is the ordinary case in
+     * a multi-course operation, and it is the one that ends up in front of a
+     * manager when the register cannot name it.
+     */
+    course?: string;
 }
 
 /** A credit with nothing left on it. */
@@ -158,6 +176,19 @@ export const raincheckPercentLabel = (totalHoles: number, holesPlayed: number) =
  */
 export const holesPlayedOptions = (totalHoles: number) => Array.from({ length: Math.max(1, totalHoles) }, (_, i) => i);
 
+/**
+ * The courses in the operation.
+ *
+ * A raincheck is honoured across all of them, which is what makes "I don't see
+ * it here" such an expensive sentence: the credit may be perfectly real and
+ * simply have been cut, or spent, somewhere else.
+ */
+export const COURSES = ["The Dunes of Delgado", "Falls Road", "Northwest Park", "Poolesville"] as const;
+export type Course = (typeof COURSES)[number];
+
+/** Which course this terminal is standing in. Fixtures assume the Dunes. */
+export const THIS_COURSE: Course = "The Dunes of Delgado";
+
 /** Deterministic pseudo-random. Same generator as the tee sheet and the CRM. */
 const rng = (seed: number) => () => {
     seed = (seed * 1103515245 + 12345) & 0x7fffffff;
@@ -190,6 +221,7 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         teeTime: "6/14/2026 8:20 AM",
         issued: "06/14/2026",
         expires: "06/14/2027",
+        course: "The Dunes of Delgado",
         roundPrice: 103.9,
         totalHoles: 18,
         holesPlayed: 0,
@@ -204,6 +236,7 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         teeTime: "7/20/2026 7:00 PM",
         issued: "07/20/2026",
         expires: "07/20/2027",
+        course: "The Dunes of Delgado",
         roundPrice: 100,
         totalHoles: 18,
         holesPlayed: 5,
@@ -219,13 +252,14 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         teeTime: "5/30/2026 6:40 AM",
         issued: "05/30/2026",
         expires: "05/30/2027",
+        course: "Falls Road",
         roundPrice: 88.4,
         totalHoles: 18,
         holesPlayed: 4,
         awarded: 68.76,
         spent: 54.0,
         balance: 14.76,
-        redemptions: [{ at: "6/18/2026", amount: 54.0, order: "5719044", what: "Senior Weekday, Dunes Cart" }],
+        redemptions: [{ at: "6/18/2026", amount: 54.0, order: "5719044", what: "Senior Weekday, Dunes Cart", course: "Falls Road" }],
     },
     // Expired with money still on it — the slip in the customer's hand that the
     // terminal will not honour. The pro shop's awkward moment, in data.
@@ -235,6 +269,7 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         teeTime: "8/02/2025 7:40 AM",
         issued: "08/02/2025",
         expires: "08/02/2026",
+        course: "Northwest Park",
         roundPrice: 74.5,
         totalHoles: 18,
         holesPlayed: 6,
@@ -250,6 +285,7 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         teeTime: "7/20/2026 7:00 PM",
         issued: "07/20/2026",
         expires: "07/20/2027",
+        course: "The Dunes of Delgado",
         roundPrice: 55.08,
         totalHoles: 18,
         holesPlayed: 5,
@@ -266,6 +302,7 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         teeTime: "4/11/2026 3:20 PM",
         issued: "04/11/2026",
         expires: "04/11/2027",
+        course: "The Dunes of Delgado",
         roundPrice: 62.0,
         totalHoles: 18,
         holesPlayed: 9,
@@ -273,8 +310,8 @@ const PINNED: Omit<Raincheck, "customerId" | "customerName" | "email">[] = [
         spent: 31.0,
         balance: 0,
         redemptions: [
-            { at: "4/25/2026", amount: 18.5, order: "5698210", what: "Glove, 2 sleeves Pro V1" },
-            { at: "5/02/2026", amount: 12.5, order: "5701883", what: "Twilight green fee" },
+            { at: "4/25/2026", amount: 18.5, order: "5698210", what: "Glove, 2 sleeves Pro V1", course: "Falls Road" },
+            { at: "5/02/2026", amount: 12.5, order: "5701883", what: "Twilight green fee", course: "Falls Road" },
         ],
     },
 ];
@@ -358,3 +395,112 @@ export const raincheckById = (id: string, list: Raincheck[] = rainchecks) => lis
 
 /** Next id in sequence, so a raincheck created in the prototype gets a plausible one. */
 export const nextRaincheckId = (list: Raincheck[]) => String(list.reduce((max, r) => Math.max(max, Number(r.id) || 0), 51400) + 1);
+
+/* ------------------------------------------------------ Aug 24: the history */
+
+/**
+ * The five states a credit can be in, as one word.
+ *
+ * The register infers these today from three columns of arithmetic, which is
+ * why an operator reads "balance 0" as "no raincheck" rather than "spent".
+ */
+export type CreditState = "available" | "part spent" | "used" | "expired" | "voided";
+
+export const creditState = (r: Raincheck, today: Date = RAINCHECK_TODAY): CreditState => {
+    if (isVoided(r)) return "voided";
+    if (isSpentOut(r)) return "used";
+    if (isExpired(r, today)) return "expired";
+    return r.spent > 0 ? "part spent" : "available";
+};
+
+/** The last thing that happened to a credit, whichever kind of thing it was. */
+export const lastActivity = (r: Raincheck): { at: string; what: string; course?: string } | null => {
+    if (r.voided) return { at: r.voided.at, what: `voided — ${r.voided.reason}`, course: r.course };
+    const last = r.redemptions?.[r.redemptions.length - 1];
+    if (last) return { at: last.at, what: last.what, course: last.course };
+    return null;
+};
+
+/**
+ * Why this credit cannot pay for the ticket in front of you — in one sentence,
+ * naming the course.
+ *
+ * This is the line that ends the conversation. "I don't see it here" starts a
+ * longer one, and "you used it at Falls Road on 4/25" finishes it. Returns null
+ * when the credit is perfectly spendable and there is nothing to explain.
+ */
+export const whyNotUsable = (r: Raincheck, today: Date = RAINCHECK_TODAY): string | null => {
+    switch (creditState(r, today)) {
+        case "voided":
+            return `Cancelled ${r.voided!.at.split(" ")[0]} — ${r.voided!.reason}`;
+        case "used": {
+            const last = r.redemptions?.[r.redemptions.length - 1];
+            if (!last) return "Nothing left on it";
+            return `Used up ${last.at}${last.course ? ` at ${last.course}` : ""} — ${last.what}`;
+        }
+        case "expired":
+            return `Expired ${r.expires} with ${usdAmount(r.balance)} still on it`;
+        default:
+            return null;
+    }
+};
+
+const usdAmount = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+
+/**
+ * Search that answers the question actually being asked.
+ *
+ * `searchRainchecks` filters to spendable credits, so a customer holding a
+ * used one gets an empty list — and the operator reads empty as "you never had
+ * one". That is a different fact, and collapsing the two is what sends people
+ * to a manager.
+ *
+ * This returns **everything** that matches, ranked: spendable first, then the
+ * rest in reverse date order. Nothing is hidden; the unusable ones simply sort
+ * below and carry a reason. The common case is still the first thing on screen,
+ * because ranking does that job without omission doing it.
+ */
+export function searchAllRainchecks(query: string, list: Raincheck[] = rainchecks, limit = 12): Raincheck[] {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const order: Record<CreditState, number> = { available: 0, "part spent": 1, expired: 2, used: 3, voided: 4 };
+    return list
+        .filter((r) => r.id.includes(q) || r.customerName.toLowerCase().includes(q) || (r.email ?? "").toLowerCase().includes(q))
+        .sort((a, b) => order[creditState(a)] - order[creditState(b)] || b.issued.localeCompare(a.issued))
+        .slice(0, limit);
+}
+
+/** Everything on one customer's name, whatever state it is in. */
+export const creditsForCustomer = (customerId: string, list: Raincheck[] = rainchecks) => list.filter((r) => r.customerId === customerId);
+
+/**
+ * What to say when a customer insists they have one and nothing is spendable.
+ *
+ * The sentence the register cannot currently produce, and the reason this whole
+ * folder exists.
+ */
+export const noCreditsSummary = (credits: Raincheck[]): string => {
+    if (credits.length === 0) return "No rainchecks have ever been issued to this customer.";
+    const plural = credits.length === 1 ? "1 raincheck" : `${credits.length} rainchecks`;
+
+    // Spending is what answers the customer; a void is an internal correction
+    // and reading "issued to the wrong player" across a counter helps nobody.
+    // So redemptions lead, and a void is only mentioned if there is nothing else
+    // to say — and then in words that do not accuse anybody.
+    const spends = credits
+        .flatMap((r) => (r.redemptions ?? []).map((d) => ({ ...d, id: r.id })))
+        .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+
+    if (spends.length > 0) {
+        const last = spends[0];
+        return `${plural} on file. The most recent was spent ${last.at}${last.course ? ` at ${last.course}` : ""} — ${last.what}.`;
+    }
+
+    const expired = credits.filter((r) => creditState(r) === "expired");
+    if (expired.length > 0) {
+        return `${plural} on file. ${expired.length === 1 ? "One" : `${expired.length}`} expired — ${expired[0].id} lapsed ${expired[0].expires} with ${usdAmount(expired[0].balance)} still on it.`;
+    }
+
+    if (credits.some(isVoided)) return `${plural} on file, all of them cancelled. A manager can say why.`;
+    return `${plural} on file, none of them usable right now.`;
+};
