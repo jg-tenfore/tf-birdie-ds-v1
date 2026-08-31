@@ -225,6 +225,28 @@ const preview: Preview = {
                                 // to open first when showing somebody else.
                                 "4 — Start to finish",
                             ],
+                            // Aug 31: the stakeholder picked Option B, and this
+                            // is that decision built out. Aug 24 stays above as
+                            // the record of how the choice was made; this folder
+                            // is what gets built, so it reads last among the
+                            // dated passes and carries its own component gallery.
+                            "Aug 31",
+                            [
+                                "Overview",
+                                "1 — The RAIN tender",
+                                "2 — The searchable listing",
+                                "3 — The payment result",
+                                "4 — Start to finish",
+                                // The parts, after the screens they compose —
+                                // a reviewer wants the screen, a developer wants
+                                // the part, and the screen is the better opening.
+                                "Components",
+                                ["Tabs & badge", "Credit row", "Empty state & hand-off", "Search & scope", "State, origin & activity"],
+                                // Last: the written spec, which is where a
+                                // developer lands once the screens have made
+                                // sense of it.
+                                "Build notes",
+                            ],
                             // Steps 3 and 4, which Aug 20 does not touch.
                             "Record & register",
                         ],

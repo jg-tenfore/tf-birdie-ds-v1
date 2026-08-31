@@ -406,6 +406,17 @@ export const nextRaincheckId = (list: Raincheck[]) => String(list.reduce((max, r
  */
 export type CreditState = "available" | "part spent" | "used" | "expired" | "voided";
 
+/**
+ * The five states **in the order a lookup ranks them** — spendable first, then
+ * the awkward ones by how likely they are to be the answer.
+ *
+ * Exported because three places need this sequence and were each carrying their
+ * own copy: the History tab's sort, the listing's filter chips, and the
+ * component gallery. A ranking that disagrees between two screens is worse than
+ * no ranking, since the operator learns one and gets the other.
+ */
+export const CREDIT_STATES = ["available", "part spent", "expired", "used", "voided"] as const satisfies readonly CreditState[];
+
 export const creditState = (r: Raincheck, today: Date = RAINCHECK_TODAY): CreditState => {
     if (isVoided(r)) return "voided";
     if (isSpentOut(r)) return "used";
@@ -463,7 +474,7 @@ const usdAmount = (n: number) => n.toLocaleString("en-US", { style: "currency", 
 export function searchAllRainchecks(query: string, list: Raincheck[] = rainchecks, limit = 12): Raincheck[] {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return [];
-    const order: Record<CreditState, number> = { available: 0, "part spent": 1, expired: 2, used: 3, voided: 4 };
+    const order = Object.fromEntries(CREDIT_STATES.map((s, i) => [s, i])) as Record<CreditState, number>;
     return list
         .filter((r) => r.id.includes(q) || r.customerName.toLowerCase().includes(q) || (r.email ?? "").toLowerCase().includes(q))
         .sort((a, b) => order[creditState(a)] - order[creditState(b)] || b.issued.localeCompare(a.issued))
