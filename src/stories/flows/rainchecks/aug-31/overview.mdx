@@ -1,0 +1,128 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Aug 31/Overview" />
+
+# Aug 31 — the chosen solution
+
+**Option B is the primary solution.** Aug 24 put three options on the table; the
+stakeholder has picked one, and everything in this folder is branched from it.
+A and C are no longer alternatives.
+
+> **AVAILABLE** — what ships today, and never slower.
+> **HISTORY** — everything else, one tap away, with a count badge.
+
+`Aug 24` stays where it is as the record of how the decision was made. **This
+folder is what gets built.**
+
+## What is here
+
+| | Screen | What it is |
+| :-- | :-- | :-- |
+| **1** | The RAIN tender | The chosen design. Start with *Available is empty* |
+| **2** | The searchable listing | The written half of the ask. Carried forward unchanged |
+| **3** | The payment result | Where next month's argument gets settled |
+| **4** | Start to finish | The incident, walked through B |
+| | **Components** | Every part on its own, with the spec a developer needs |
+| | **Build notes** | Data, states, edge cases, and what is still open |
+
+## Option B did not ship as drawn — two holes had to be closed
+
+A chosen solution has to have its known weaknesses fixed before anyone builds
+it. B had two, and one of them was written down on the day it was drawn.
+
+### 1. The badge was the only thing preventing a repeat of the incident
+
+Aug 24's own risk note:
+
+> *"The risk is the badge. It is the only thing standing between this and the
+> screen that caused the incident. An operator who does not notice it says 'I
+> don't see it here' exactly as before."*
+
+A 22px amber pill is not a load-bearing structure. So **the Available tab is not
+permitted to render as an empty pane.** When nothing is spendable it shows:
+
+1. **The sentence, meant to be read out loud** — *"3 rainchecks on file. The most
+   recent was spent 5/02/2026 at Falls Road — Twilight green fee."* That ends the
+   conversation; *"nothing found"* starts a longer one and a trip to a manager.
+2. **A 52dp hand-off naming the count**, which moves to History and carries any
+   typed query with it.
+
+The badge stays as the ambient signal. A blank pane is precisely the moment
+ambient stops being enough.
+
+**This closes the incident as Weston told it, and it involves no search at all.**
+The tender already opens on the cart customer.
+
+### 2. A credit found under another name could not be spent
+
+Aug 24 rendered every History row read-only, which was safe while that tab only
+ever held dead credits. But History search spans **every customer** — a
+misspelling, a spouse's booking, a company account — so it can surface a credit
+that is perfectly live. Finding it and not being able to tap it is the same dead
+end wearing different clothes.
+
+**History rows are selectable whenever the credit is spendable.**
+
+## The performance worry, answered
+
+> *"My worry is if we include all exhausted rainchecks it will slow down the
+> search for the more common use case of actually using a raincheck when there is
+> one."*
+
+Option B answers this structurally rather than by argument. **Available's query
+is byte for byte the one that ships today** — `searchRainchecks()`, spendable
+only. It cannot get slower, because nothing was added to it. The broader question
+got its own tab instead of being folded into the narrow one.
+
+That is the whole trade, and it costs no query time.
+
+## The fact that had nowhere to live
+
+**The model had no course.** Not on the credit, not on a redemption.
+
+*"Used it at a different course"* is the load-bearing detail of the incident, and
+until Aug 24 there was nowhere to record it — so the terminal could say a credit
+was empty but never *where* it went. `Raincheck.course` and `Redemption.course`
+now exist. Everything else in this folder is presentation; **this part is data,
+and it gates the rest.**
+
+## What the two search surfaces each answer
+
+The History tab and the listing are **not** duplicates, and neither replaces the
+other.
+
+| | Question | Who asks it | Where |
+| :-- | :-- | :-- | :-- |
+| **HISTORY tab** | *Can this person pay, and if not, why not?* | An operator, mid-sale, ticket open | Inside the tender |
+| **The listing** | *Find me this raincheck* | Whoever currently opens Buck | Its own screen, under Gift Cards |
+| **The record** | *What does this person have?* | Somebody who already knows who they are | Customer profile — built, see `Record & register → 3` |
+
+## The rule that governs all of it
+
+> *"We can just change that in the existing system and use this as a good
+> breeding ground — this is a new flow that we're trying with the old design
+> system, but a new flow."*
+
+**No new tokens, no new colours, no new button styles.** Same navy section bars,
+same green, same MD2 surfaces, same 48dp touch floor. What changes is the
+arrangement, the defaults, and what the screen says out loud.
+
+Nothing in this folder introduces a component. The tab bar is the only new
+control, and it is the shipping tender strip's pattern one level down.
+
+## Still open
+
+Three questions, and they are on the Linear issue rather than settled here.
+
+- **Is the register's lookup scoped to the current course today?** If a
+  customer's *unspent* credit from another course is also invisible, that is a
+  worse bug than the used one — a live credit failing at the wrong terminal — and
+  it should lead this work rather than follow it. **Nobody has checked the
+  device.** See *4 → The near miss*. This is the one genuine blocker.
+- **Should Available auto-switch to History when it is empty?** It does not
+  today, deliberately: switching hides the fact that Available *was* empty, which
+  is half of what the operator has to tell the customer. One labelled tap keeps
+  both facts. Worth putting to a pro shop rather than settling from a desk.
+- **Can an expired credit be honoured with a manager override?** History needs to
+  know whether `expired` means *dead* or *ask someone*, and it decides whether the
+  listing's expired filter is a report or a worklist.

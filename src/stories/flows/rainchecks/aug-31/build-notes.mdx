@@ -1,0 +1,277 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Aug 31/Build notes" />
+
+# Build notes — the RAIN tender, Option B
+
+Everything a front-end developer needs that the screens do not say for
+themselves. Read `Overview` first for *why*; this page is *what*.
+
+---
+
+## 1. Where the source is
+
+```
+src/components/concepts/rainchecks/
+├── aug-31/
+│   ├── raincheck-tender.tsx     ← the chosen design: tabs, search, both tabs, hand-off
+│   └── counter-flow-b.tsx       ← the walkable incident (Storybook only, not a screen to build)
+├── credit-history.tsx           ← StateChip, CreditOrigin, CreditActivity, CreditRow,
+│                                  NotUsableDivider, NothingSpendable  — SHARED
+├── raincheck-listing.tsx        ← the listing body
+├── raincheck-listing-screen.tsx ← the listing inside AppShell, plus the nav row
+├── order-complete-credit.tsx    ← the payment result block
+└── redeem-screen.tsx            ← the shipping screen the tender panel renders inside
+
+src/data/rainchecks.ts           ← model, states, pricing rule, both lookups
+```
+
+**`credit-history.tsx` is shared on purpose.** The same `CreditRow` renders on
+Available, on History, and in the listing's rows. A second row built for History
+will drift from this one inside a release — there is one row in five states, not
+one row per surface.
+
+---
+
+## 2. The data contract
+
+What the front end needs from the API. Everything below already exists in
+`src/data/rainchecks.ts` as the reference implementation.
+
+### The record
+
+```ts
+interface Raincheck {
+    id: string;              // as the register prints it
+    customerId: string;
+    customerName: string;    // denormalised — the lookup must not need a join
+    email?: string;
+    reservation: string;     // the round it was cut from
+    teeTime?: string;        // "7/20/2026 7:00 PM" — carried, not looked up
+    issued: string;
+    expires: string;
+    course?: string;         // ← added Aug 24. The whole reason this work exists
+    roundPrice: number;
+    totalHoles: number;
+    holesPlayed: number;
+    awarded: number;         // face value at issue
+    spent: number;
+    balance: number;
+    redemptions?: Redemption[];
+    voided?: { at: string; by: string; reason: string };
+}
+
+interface Redemption {
+    at: string;
+    amount: number;
+    order: string;           // so the sale can be looked up
+    what: string;            // in the words the receipt used
+    course?: string;         // ← where it was spent, which is not where it was issued
+}
+```
+
+**Three fields carry more weight than they look.**
+
+`teeTime` is denormalised deliberately: the sheet for that day will not be loaded
+when the register goes looking, and a credit whose origin cannot be named is one
+nobody can check. *"Raincheck 51381, $72.22"* settles nothing with a customer;
+*"the seven o'clock on the twentieth"* settles it.
+
+`course` on both the credit and each redemption. **A single course field on the
+credit is not enough** — the incident is a credit cut at one course and spent at
+another, so the redemption has to carry its own.
+
+`voided` rather than a delete. A raincheck is a financial record; a deleted one
+takes its audit trail with it. The reason is required — the commonest mistake it
+exists for, issuing to the wrong player, is invisible a week later without one.
+
+### The functions
+
+```ts
+creditState(r): "available" | "part spent" | "used" | "expired" | "voided"
+whyNotUsable(r): string | null      // the sentence, naming the course
+noCreditsSummary(credits): string   // what to say when nothing is spendable
+isRedeemable(r): boolean            // !spentOut && !voided && !expired
+creditsForCustomer(customerId): Raincheck[]
+searchRainchecks(q):    Raincheck[] // AVAILABLE — spendable only. Ships today
+searchAllRainchecks(q): Raincheck[] // HISTORY — everything, ranked
+CREDIT_STATES                       // the canonical ranking order
+```
+
+**`creditState` precedence is not alphabetical and matters:**
+
+```
+voided      → r.voided is set
+used        → r.balance <= 0.001
+expired     → r.expires < today
+part spent  → r.spent > 0
+available   → everything else
+```
+
+A voided credit with a zero balance is **voided**, not **used**. The two carry
+different obligations, and a screen showing the wrong one sends the operator
+down the wrong path.
+
+### One arity trap, already hit once
+
+`isRedeemable(r, today?)` takes an optional second argument. Passing it straight
+to `.filter()` hands it the **array index** as `today`:
+
+```ts
+credits.filter(isRedeemable)          // ✗ index becomes the Date
+credits.filter((c) => isRedeemable(c)) // ✓
+```
+
+Same for `creditState` and `whyNotUsable`. This shipped as a bug once already.
+
+---
+
+## 3. Component tree
+
+```
+RedeemScreen                       (existing — app bar, ticket pane, tender strip, action bar)
+└── RAIN panel
+    └── RaincheckTender
+        ├── RaincheckTabs          AVAILABLE | HISTORY + badge
+        ├── AvailableTab
+        │   ├── TenderSearch       scope: searchRainchecks()
+        │   ├── CreditRow[]        selectable, owed passed
+        │   └── ── when empty ──
+        │       ├── NothingSpendable   the sentence
+        │       └── HandoffBanner      → History, carries the query
+        └── HistoryTab
+            ├── TenderSearch       scope: searchAllRainchecks()
+            └── CreditRow[]        selectable IF isRedeemable, else read-only + showActivity
+```
+
+**Nothing outside the RAIN panel changes.** Same app bar, same ticket pane, same
+seven-tender strip, same action bar. That is what keeps the proposal comparable
+against the screen it replaces, and it is why the concept composes
+`CheckoutTicketPane` and `TenderTabs` rather than adding a slot to `CheckoutBody`.
+
+---
+
+## 4. State
+
+```
+tab            : "available" | "history"       — starts "available"
+availableQuery : string                        — its own
+historyQuery   : string                        — its own
+selectedId     : string | undefined            — shared across both tabs
+```
+
+**Each tab keeps its own query.** They ask different questions of different
+scopes; carrying one string across the boundary would silently change what it
+means. The one exception is the hand-off, which seeds History deliberately and
+visibly.
+
+**`selectedId` is shared.** A credit picked on History stays picked when you
+return to Available — it is the same sale.
+
+**The badge is not derived from search.** It counts the cart customer's
+non-spendable credits, so it must not move while somebody types. A badge that
+changes under a search reports a different fact from the one the operator read a
+second ago.
+
+---
+
+## 5. Layout
+
+The RAIN panel is **890px** on the primary device: 1280 (10" landscape tablet)
+less `appLayout.orderPanelWidth` (390) for the ticket. Every specimen under
+`Components` is framed at that width.
+
+| Element | Value |
+| :-- | :-- |
+| Tab bar height | 52px, 3px active underline |
+| Badge | 22px pill, `appColors.orange`, white 13px, hidden at 0 |
+| Search input | 48px, 16px face on `appColors.fieldFill` with a bottom rule |
+| Credit row | 16px horizontal / 12px vertical padding, 1px `divider` between |
+| Row balance | 22px |
+| State chip | 11px, `0.06em` tracking, 1px outline in the state colour |
+| Hand-off | full width, 52px, 1px `orange` border |
+| Touch floor | **48dp everywhere** — a tablet at arm's length behind a counter |
+
+**16px is the floor for the search input's font size.** Below it, mobile browsers
+zoom on focus, and the counter is a touch device.
+
+---
+
+## 6. States to build
+
+Each links the story that specifies it.
+
+**Available**
+
+- [Two credits, the ordinary day](?path=/story/flows-rainchecks-aug-31-1-the-rain-tender--available-common) — the path a course runs all day
+- [Empty — the incident](?path=/story/flows-rainchecks-aug-31-1-the-rain-tender--available-empty) — **the branch that decides whether this worked**
+- [A search that finds nothing](?path=/story/flows-rainchecks-aug-31-1-the-rain-tender--available-search-empty) — hands off, carrying the query
+- One credit that does not cover the ticket — see [Credit row → Covers it, and doesn't](?path=/story/flows-rainchecks-aug-31-components-credit-row--coverage)
+
+**History**
+
+- [Used, expired, cancelled](?path=/story/flows-rainchecks-aug-31-1-the-rain-tender--history) — the cart customer's, ranked
+- [Searched across every customer](?path=/story/flows-rainchecks-aug-31-1-the-rain-tender--history-searched) — spendable rows selectable
+- Nothing has ever been issued to this customer — the only true "nothing"
+
+**Empty-state sentences** — every variant `noCreditsSummary()` has to produce is
+in [Empty state & hand-off](?path=/story/flows-rainchecks-aug-31-components-empty-state-hand-off--summary-variants).
+
+---
+
+## 7. Edge cases, and what each one should do
+
+| Case | Behaviour |
+| :-- | :-- |
+| Ticket has **no customer** attached | Available opens on its search field with a prompt, not on a list. The badge is hidden — there is no customer to count |
+| Customer has **zero** rainchecks, ever | `NothingSpendable` says so plainly; **no hand-off** — there is nothing on the other tab |
+| A **live** credit found on History | Selectable. Applying it works exactly as from Available |
+| Credit **worth less than the ticket** | Row states the shortfall before the tap. Applying it leaves a balance for another tender |
+| Credit **voided with a balance** | Reads `VOIDED`, never selectable. The summary does **not** repeat the void reason across the counter |
+| **Expired** with money on it | Reads `EXPIRED` with the amount that lapsed. Whether an override can honour it is **still open** |
+| Query under **2 characters** | Both lookups return `[]`. Show the default list, not an empty result |
+| Two credits, **one customer** | Ordinary. Rows are told apart by the round and the course, not by id |
+| Same string, **different results per tab** | Expected — that is the two scopes doing their jobs |
+
+---
+
+## 8. Accessibility
+
+- `role="tablist"` / `role="tab"` with `aria-selected` on the bar.
+- The badge carries `aria-label="N past rainchecks"` — a bare numeral read out of
+  context tells a screen-reader user nothing.
+- The search field's `aria-label` is its placeholder text, because there is no
+  visible label above it.
+- **A row that cannot be spent must not be a button.** `CreditRow` renders a
+  `Box` rather than a `ButtonBase` when the credit is unusable. This is not only
+  semantics: discovering the fact by tapping is worse than reading it.
+- Colour is never the only signal. Every state carries a word as well as a
+  colour, and every unusable row carries a sentence.
+
+---
+
+## 9. What NOT to build
+
+- **A second credit row for History.** Use `CreditRow` with `showActivity`.
+- **A raincheck detail screen reached from the tender.** History rows expand in
+  place. Leaving the sale to read a credit is the behaviour this work removes.
+- **Auto-switching to History.** See `Overview → Still open`. It is a question,
+  not an omission.
+- **A new colour, token, or button style.** The tab bar is the only new control,
+  and it is the shipping tender strip's pattern one level down.
+- **Filtering anything out to make search faster.** Omission is what produced the
+  empty list that started this. Available's query is unchanged; History ranks.
+
+---
+
+## 10. Still open — and one of them blocks
+
+1. **Is the register's lookup scoped to the current course today?** If an
+   *unspent* credit from another course is also invisible, that is a worse bug
+   than the used one — a live credit failing at the wrong terminal — and it should
+   lead this work rather than follow it. **Nobody has checked the device.** See
+   [4 → The near miss](?path=/story/flows-rainchecks-aug-31-4-start-to-finish--found-elsewhere).
+2. **Should Available auto-switch to History when empty?** One tap versus zero,
+   against losing the fact that Available *was* empty.
+3. **Can an expired credit be honoured with an override?** Decides whether
+   `expired` means *dead* or *ask someone*.

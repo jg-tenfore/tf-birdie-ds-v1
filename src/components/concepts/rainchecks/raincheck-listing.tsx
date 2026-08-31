@@ -6,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import SearchIcon from "@mui/icons-material/Search";
 
-import { COURSES, creditState, rainchecks as allCredits, type CreditState, type Raincheck } from "@/data/rainchecks";
+import { COURSES, CREDIT_STATES, creditState, rainchecks as allCredits, type CreditState, type Raincheck } from "@/data/rainchecks";
 import { appColors } from "@/theme/app-replica-tokens";
 import { CreditActivity, CreditOrigin, StateChip } from "./credit-history";
 
@@ -29,7 +29,9 @@ import { CreditActivity, CreditOrigin, StateChip } from "./credit-history";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
-const STATES: (CreditState | "all")[] = ["all", "available", "part spent", "used", "expired", "voided"];
+// Derived, so the chips read in the same order the tender's History tab
+// ranks — a sequence the operator learns on one screen and meets on the other.
+const STATES: (CreditState | "all")[] = ["all", ...CREDIT_STATES];
 
 const FilterChip = ({
     label,
