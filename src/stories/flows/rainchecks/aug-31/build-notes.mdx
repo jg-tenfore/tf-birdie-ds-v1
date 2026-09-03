@@ -14,8 +14,13 @@ themselves. Read `Overview` first for *why*; this page is *what*.
 ```
 src/components/concepts/rainchecks/
 ├── aug-31/
-│   ├── raincheck-tender.tsx     ← the chosen design: tabs, search, both tabs, hand-off
+│   ├── raincheck-tender.tsx     ← REDEEM, chosen: tabs, search, both tabs, hand-off
+│   ├── group-issue-screen.tsx   ← ISSUE, chosen: the Option B screen in its shell
 │   └── counter-flow-b.tsx       ← the walkable incident (Storybook only, not a screen to build)
+├── group-issue.tsx              ← the batch model, and the row parts — SHARED
+├── group-issue-one-stop.tsx     ← the chosen issue screen body (Option B)
+├── group-issue-per-player.tsx   ← Option A. RETIRED — kept as the record only
+├── group-issue-flow.tsx         ← tee sheet → issue → landing, the whole trip
 ├── credit-history.tsx           ← StateChip, CreditOrigin, CreditActivity, CreditRow,
 │                                  NotUsableDivider, NothingSpendable  — SHARED
 ├── raincheck-listing.tsx        ← the listing body
@@ -250,6 +255,91 @@ in [Empty state & hand-off](?path=/story/flows-rainchecks-aug-31-components-empt
 
 ---
 
+## 8b. The issue screen (Option B — chosen)
+
+Where credits come from. Step 2 of the journey; screen **5** in this folder
+because it arrived last. See [5 — Issue the group](<?path=/story/flows-rainchecks-aug-31-5-issue-the-group--the-whole-trip>).
+
+### The batch model
+
+```ts
+interface GroupDraft {
+    positionId: string;
+    include: boolean;      // ticked. Defaults on for any round not already credited
+    holesPlayed: number;
+    recipientId: string;   // whose account the credit lands on — defaults to the player
+    custom?: boolean;      // taken off the group number by hand
+}
+```
+
+**`custom` is stored, not inferred.** Inferring it from "this row's number
+differs from the group's" breaks the moment the operator drags the group number
+onto the same value the row already had — the row would silently rejoin, and a
+later drag would move a number somebody set deliberately.
+
+### Resolution, in exactly one place
+
+```
+effective = drafts.map(d => ({
+    ...d,
+    holesPlayed: clampHoles(position, d.custom ? d.holesPlayed : groupHoles)
+}))
+```
+
+Rows, the review band, the action-bar total and the credits actually issued all
+read from `effective`. Compute it twice and they will disagree — which is the
+specific failure a shared control invites.
+
+### The cap rule — settled Sept 3
+
+`clampHoles(position, holes) = max(0, min(position.holes − 1, holes))`
+
+A short booking is **capped at its own round**. Group stops at 12, Tom Watson
+booked 9 → he is credited from hole 8, worth **$3.38** against the others'
+$33.33. He finished what he paid for; there is nothing more to give back.
+
+The screen must **say so in words**, in two places, as it does today:
+
+- a banner naming who — *"Tom Watson booked a shorter round than the group stop,
+  so their credit is worked out from the end of the round actually booked."*
+- the row's hole count, tinted amber, reading **`capped — booked 9`** instead of
+  `same as the group`
+
+An operator cannot defend $3.38 at a counter from a bare number. Unticking him automatically was considered and rejected: it hides a
+decision the operator should see.
+
+### Rules
+
+| Rule | Why |
+| :-- | :-- |
+| Any player's RAINCHECK button opens the **whole group** | *"Anytime you hit rain check, it just takes you there."* The button does not move |
+| The player whose button was tapped gets **no special treatment** | Singling one out invites the operator to treat the others as somebody else's problem |
+| Unticked rows stay **visible and greyed**, never hidden | You have to be able to see what you turned off |
+| An already-credited row has no controls and cannot be ticked | A round cannot be rainchecked twice |
+| The commit button names count and total **before** it is pressed | Four credits leaving the course is not a bare-verb action |
+| Void **frees the round** as well as cancelling the credit | Otherwise a credit cut for the wrong player leaves the round locked too |
+| Void reasons come from a **fixed list** | Free text gets left blank. *"Issued to the wrong player"* is the count that justifies this redesign |
+| Hole range is `0 … totalHoles − 1` **per row** | A completed round has nothing to give back |
+
+### What the batch produces
+
+The same `Raincheck` object screens 1–4 consume — same id, balance, course,
+`teeTime` and `reservation`. The end-to-end story's landing step renders it in
+the **real** record and tender components, which is how that claim is checked
+rather than asserted.
+
+Each credit carries the **reservation it came from**, not the account it landed
+on. That is what makes a reassigned credit checkable when the customer comes back
+with a question about it.
+
+### Still open here
+
+Whether the group control earns its space below three players. At a twosome it
+governs two rows. Either the header stays regardless, or small bookings fall back
+to a single-issue screen — a build question, on WJ-71.
+
+---
+
 ## 9. What NOT to build
 
 - **A second credit row for History.** Use `CreditRow` with `showActivity`.
@@ -259,6 +349,11 @@ in [Empty state & hand-off](?path=/story/flows-rainchecks-aug-31-components-empt
   not an omission.
 - **A new colour, token, or button style.** The tab bar is the only new control,
   and it is the shipping tender strip's pattern one level down.
+- **Option A's per-row hole steppers.** Retired with the WJ-84 decision.
+  `group-issue-per-player.tsx` stays as the record; do not build from it.
+- **A confirmation screen after the batch.** The landing step in the end-to-end
+  story is a demonstration that the batch produces the right object, not a
+  proposed screen. If one turns out to be wanted, that is a new conversation.
 - **Filtering anything out to make search faster.** Omission is what produced the
   empty list that started this. Available's query is unchanged; History ranks.
 

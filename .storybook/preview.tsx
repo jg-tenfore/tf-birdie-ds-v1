@@ -237,6 +237,12 @@ const preview: Preview = {
                                 "2 — The searchable listing",
                                 "3 — The payment result",
                                 "4 — Start to finish",
+                                // Issuance, which is step 2 of the journey and
+                                // arrived last. Numbered 5 rather than renumbered
+                                // into place because 1–4 are deployed and linked
+                                // from Linear — journey order is not worth
+                                // breaking those links for.
+                                "5 — Issue the group",
                                 // The parts, after the screens they compose —
                                 // a reviewer wants the screen, a developer wants
                                 // the part, and the screen is the better opening.
