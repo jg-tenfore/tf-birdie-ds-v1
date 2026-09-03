@@ -4,26 +4,63 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # Aug 31 — the chosen solution
 
-**Option B is the primary solution.** Aug 24 put three options on the table; the
-stakeholder has picked one, and everything in this folder is branched from it.
-A and C are no longer alternatives.
+**Two decisions have been made, and this folder is what gets built.** Both dated
+folders above stay where they are as the record of how each choice was reached.
+
+| Decision | Screen | Chosen | Was open in |
+| :-- | :-- | :-- | :-- |
+| **Redeem** | The RAIN tender | **Option B** — `AVAILABLE` / `HISTORY` as sibling tabs | Aug 24 |
+| **Issue** | The group screen | **Option B** — one stop for the group | Aug 20, WJ-84 |
+
+Aug 24's options A and C, and Aug 20's option A, are all retired. They are not
+alternatives any more.
 
 > **AVAILABLE** — what ships today, and never slower.
 > **HISTORY** — everything else, one tap away, with a count badge.
-
-`Aug 24` stays where it is as the record of how the decision was made. **This
-folder is what gets built.**
 
 ## What is here
 
 | | Screen | What it is |
 | :-- | :-- | :-- |
-| **1** | The RAIN tender | The chosen design. Start with *Available is empty* |
+| **1** | The RAIN tender | The chosen redeem design. Start with *Available is empty* |
 | **2** | The searchable listing | The written half of the ask. Carried forward unchanged |
 | **3** | The payment result | Where next month's argument gets settled |
 | **4** | Start to finish | The incident, walked through B |
+| **5** | Issue the group | Where credits come from. Aug 20's Option B, chosen |
 | | **Components** | Every part on its own, with the spec a developer needs |
 | | **Build notes** | Data, states, edge cases, and what is still open |
+
+**The numbering is arrival order, not journey order.** Issuing comes *before*
+redeeming in real life, so screen 5 is really step 2 of the trip. It is numbered
+last because screens 1–4 were already deployed and linked from Linear when it
+arrived, and journey order is not worth breaking those links for.
+
+## The issue screen — Option B, and what it bets
+
+> *"It would be nice to set up all the rainchecks on one screen. So you would not
+> need to click through that flow four separate times for a foursome."*
+
+A rained-off foursome is **one event**. The horn goes, they walk off the ninth
+together, they arrive at the counter as a group. The shipping flow treats that as
+four transactions because a raincheck is cut **per round** — true of the *record*,
+untrue of the *task*. The chosen design keeps the record per round and makes the
+task per group.
+
+Option B goes further and asks the hole count **once**, for everybody, on the bet
+that **the hole count is a fact about the weather rather than about each
+player**. Rows that genuinely differ come off the group number by hand and mark
+themselves `SET BY HAND`.
+
+**The cost, and it is real:** a nine-hole booking inside an eighteen-hole group
+has to be reconciled against a number it cannot follow. See *5 → A nine among the
+eighteens*, which is the strongest single argument against the option that was
+chosen — kept on screen rather than in a footnote.
+
+**The cap rule, settled Sept 3:** a short booking is capped at its own round. Tom
+Watson booked nine, finished nine, and gets the last hole of it — **$3.38**
+against the others' $33.33. He finished what he paid for, so there is nothing
+more to give back. Unticking him automatically was considered and rejected: it
+would hide a decision the operator should see.
 
 ## Option B did not ship as drawn — two holes had to be closed
 
@@ -110,9 +147,16 @@ arrangement, the defaults, and what the screen says out loud.
 Nothing in this folder introduces a component. The tab bar is the only new
 control, and it is the shipping tender strip's pattern one level down.
 
+## Recently settled
+
+- **Redeem: A, B or C?** → **B**, the Available / History tabs. Aug 24.
+- **Issue: A or B?** → **B**, one stop for the group. WJ-84, Sept 3.
+- **The cap rule for a short booking in a longer group** → cap at its own round.
+  $3.38 stands. Sept 3.
+
 ## Still open
 
-Three questions, and they are on the Linear issue rather than settled here.
+Four questions, and they are on the Linear issues rather than settled here.
 
 - **Is the register's lookup scoped to the current course today?** If a
   customer's *unspent* credit from another course is also invisible, that is a
@@ -126,3 +170,7 @@ Three questions, and they are on the Linear issue rather than settled here.
 - **Can an expired credit be honoured with a manager override?** History needs to
   know whether `expired` means *dead* or *ask someone*, and it decides whether the
   listing's expired filter is a report or a worklist.
+- **Does the group control earn its space below three players?** At a twosome it
+  governs two rows, which is not obviously better than two steppers. Either the
+  header stays regardless, or small bookings fall back to a single-issue screen.
+  A build question rather than a design one — see *5 → Two players*.
