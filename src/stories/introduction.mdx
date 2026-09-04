@@ -14,7 +14,55 @@ import { Meta } from "@storybook/addon-docs/blocks";
 </div>
 
 <div style={{ fontSize: 14, color: "#98a2b3", margin: "18px 0 0" }}>
-    Landscape tablet only &nbsp;·&nbsp; Material UI v9 &nbsp;·&nbsp; 48dp touch floor &nbsp;·&nbsp; WCAG AA
+    Landscape counter terminal + handheld &nbsp;·&nbsp; Material UI v9 &nbsp;·&nbsp; 48dp touch floor &nbsp;·&nbsp; WCAG AA
+</div>
+
+## Open the prototypes
+
+Two working applications over **one store** — the same reducer, the same cart, the same tee sheet.
+A sale rung up on either is the same object, which is what makes them comparable rather than merely
+similar.
+
+<div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "16px 0 8px" }}>
+    <a
+        href="https://jg-tenfore.github.io/tf-birdie-ds-v1/prototype/"
+        target="_blank"
+        rel="noreferrer"
+        style={{
+            flex: "1 1 260px",
+            display: "block",
+            padding: "16px 18px",
+            border: "1px solid #d0d5dd",
+            borderRadius: 8,
+            textDecoration: "none",
+            color: "inherit",
+        }}
+    >
+        <div style={{ fontSize: 17, fontWeight: 600 }}>Prototype — the counter terminal →</div>
+        <div style={{ fontSize: 14, color: "#667085", marginTop: 4 }}>1280×800 landscape. PIN 1234.</div>
+    </a>
+    <a
+        href="https://jg-tenfore.github.io/tf-birdie-ds-v1/prototype/mobile.html"
+        target="_blank"
+        rel="noreferrer"
+        style={{
+            flex: "1 1 260px",
+            display: "block",
+            padding: "16px 18px",
+            border: "1px solid #d0d5dd",
+            borderRadius: 8,
+            textDecoration: "none",
+            color: "inherit",
+        }}
+    >
+        <div style={{ fontSize: 17, fontWeight: 600 }}>Prototype — the handheld →</div>
+        <div style={{ fontSize: 14, color: "#667085", marginTop: 4 }}>402×797 portrait. Same PIN, same store.</div>
+    </a>
+</div>
+
+<div style={{ fontSize: 13, color: "#98a2b3" }}>
+    Running locally? The terminal is <code>localhost:5180</code> and the handheld is{" "}
+    <code>localhost:5180/mobile.html</code> — one Vite server, two entries.
 </div>
 
 ## What this is
@@ -27,11 +75,16 @@ Material UI is used as the vehicle because it implements Material Design — the
 language Android tablets already speak — so patterns proven here carry over to the device
 with their semantics intact.
 
-## The one constraint that shapes everything
+## The constraint that shapes everything
 
-**Every screen is a landscape tablet.** There is no portrait layout, no phone breakpoint, and
-no responsive collapse to a hamburger menu. The reference device is a 10" Android tablet at
-**1280×800**, operated standing, by finger, at roughly arm's length.
+**The counter terminal is a landscape tablet, and it is not responsive.** The reference device is a
+10" Android tablet at **1280×800**, operated standing, by finger, at roughly arm's length. No
+portrait layout, no breakpoint, no collapse to a hamburger.
+
+**The handheld is a second surface, not a breakpoint.** `Mobile Screens` documents the same app at
+**402×797**, and it is a genuine re-layout rather than the tablet reflowed: a 390px order panel
+beside a content pane has no responsive path to a bottom-nav phone. The two are built and read side
+by side, folder for folder.
 
 Three consequences run through the whole system:
 
@@ -48,7 +101,9 @@ Three consequences run through the whole system:
 | **Foundations** | Tokens and primitives — Colors, Typography, Spacing & Layout, Radius & Elevation, Touch Targets, Icons, Logos.        |
 | **Components**  | The MUI kit as tuned for Birdie — Actions, Forms, Feedback & Status, Layout & Structure, Media & Visuals, Navigation. |
 | **App Chrome**  | The persistent POS frame: nav rail, app bar, order panel, action bar.                                                 |
-| **App Screens** | Full-screen flows composed from the above.                                                                            |
+| **App Screens** | Full-screen flows composed from the above, at 1280×800.                                                               |
+| **Mobile Screens** | The same eighteen folders at 402×797 — the handheld re-layout. Start at its own Overview, which lists what the phone gives up. |
+| **Flows**       | A second axis through the same components, organised by journey rather than by screen — where the failures between screens live. |
 
 ## How it's built
 

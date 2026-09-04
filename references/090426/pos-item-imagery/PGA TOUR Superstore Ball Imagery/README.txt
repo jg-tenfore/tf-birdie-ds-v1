@@ -1,0 +1,1 @@
+PGA TOUR Superstore ball imagery organized in screenshot grid order, left-to-right top-to-bottom. Each numbered folder corresponds to one POS button and includes source.txt with the source page and image URLs.

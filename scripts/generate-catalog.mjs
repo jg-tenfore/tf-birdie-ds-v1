@@ -67,13 +67,30 @@ const col = Object.fromEntries(header.map((name, i) => [name, i]));
 const records = rows
     .slice(1)
     .filter((row) => row.length > 3 && row[col.local_path])
-    .map((row) => ({
-        category: row[col.category],
-        subcategory: row[col.subcategory],
-        title: row[col.title].replace(/^"+|"+$/g, "").trim(),
-        // local_path is "images/<cat>/<sub>/<file>"; served at /store-images/<cat>/<sub>/<file>
-        path: row[col.local_path].replace(/^images\//, ""),
-    }));
+    .map((row) => {
+        // Price is "$54.99" on rows that carry one and the scraper's
+        // "Not provided on source page" on the rest. Parse the first shape and
+        // drop the second, so a consumer can test `price != null` rather than
+        // string-matching a sentence.
+        const rawPrice = (row[col.price] ?? "").trim();
+        const price = /^\$?\d+(\.\d+)?$/.test(rawPrice) ? Number(rawPrice.replace("$", "")) : undefined;
+
+        // Same for description: the scraped rows say "Product image for X.",
+        // which tells a reader nothing they cannot see. Only authored copy is
+        // carried through.
+        const rawDescription = (row[col.description] ?? "").trim();
+        const description = rawDescription && !/^Product image for /.test(rawDescription) ? rawDescription : undefined;
+
+        return {
+            category: row[col.category],
+            subcategory: row[col.subcategory],
+            title: row[col.title].replace(/^"+|"+$/g, "").trim(),
+            // local_path is "images/<cat>/<sub>/<file>"; served at /store-images/<cat>/<sub>/<file>
+            path: row[col.local_path].replace(/^images\//, ""),
+            ...(price != null ? { price } : {}),
+            ...(description ? { description } : {}),
+        };
+    });
 
 const bySub = {};
 for (const record of records) (bySub[record.subcategory] ??= []).push(record);
@@ -93,6 +110,16 @@ const lines = [
     "    path: string;",
     "    category: string;",
     "    subcategory: string;",
+    "    /**",
+    "     * Retail price, where the catalogue carries one.",
+    "     *",
+    "     * Optional because the original scrape did not capture prices — only the",
+    "     * imagery ingested from `references/090426/` has them. Screens that need",
+    "     * a price on every tile should fall back rather than assume.",
+    "     */",
+    "    price?: number;",
+    "    /** One-sentence product description, where the catalogue carries one. */",
+    "    description?: string;",
     "}",
     "",
 ];
@@ -111,5 +138,11 @@ lines.push(
 
 await writeFile(resolve(root, "src/data/store-catalog.ts"), lines.join("\n"));
 
+const priced = records.filter((r) => r.price != null).length;
+const described = records.filter((r) => r.description).length;
 console.log(`Generated src/data/store-catalog.ts — ${records.length} products across ${Object.keys(bySub).length} subcategories:`);
-for (const [sub, items] of Object.entries(bySub)) console.log(`  ${sub}: ${items.length}`);
+for (const [sub, items] of Object.entries(bySub)) {
+    const p = items.filter((i) => i.price != null).length;
+    console.log(`  ${sub}: ${items.length}${p ? ` (${p} priced)` : ""}`);
+}
+console.log(`  ${priced} priced, ${described} described`);

@@ -144,6 +144,17 @@ interface State {
         tax: number;
         total: number;
         tender: string;
+        /**
+         * Gratuity added after the card was authorised.
+         *
+         * Zero on every tender that cannot carry one, and on the counter
+         * terminal, which has no tip flow — a tip is a handheld gesture. It is
+         * stored separately from `total` because the two answer different
+         * questions: `total` is what the goods cost and `tip` is what the
+         * server was given, and a report that adds them together can never
+         * separate them again.
+         */
+        tip: number;
         /** What the receipt's Payments line prints — the full amount settled. */
         paid: number;
         /**
@@ -265,6 +276,42 @@ const seedTickets: Ticket[] = [
     },
 ];
 
+/**
+ * A few court bookings, so the sheet has something to be a sheet of.
+ *
+ * This started empty, which made the six facility tabs look broken on the
+ * phone: every tab rendered the same twelve `Open` rows and the same "nothing
+ * booked elsewhere" line, so switching between them changed nothing on screen.
+ * The tabs were working — there was simply no fact that differed between them.
+ *
+ * Spread unevenly on purpose. A facility with nothing booked is a real state
+ * and the sheet should show one, but it should not show six.
+ *
+ * Keys are `date|facility|slot`, matching `courtKey` and the landscape sheet,
+ * so both prototypes read the same bookings.
+ */
+const seededResourceBookings: Record<string, string> = {
+    "2026-07-21|Tennis Court 1|6:20 AM": "Rivera, M.",
+    "2026-07-21|Tennis Court 1|7:00 AM": "Osei, D.",
+    "2026-07-21|Tennis Court 1|9:20 AM": "Chan, L.",
+    // 6:00 AM here and 6:20 AM on `Tennis 2` are left open on purpose: the
+    // landscape smoke suite books both, and a seed that fills them would be a
+    // fixture quietly deciding what the tests can reach.
+    "2026-07-21|Pickleball Court 1|6:20 AM": "Morning League",
+    "2026-07-21|Pickleball Court 1|6:40 AM": "Morning League",
+    "2026-07-21|Pickleball Court 1|7:00 AM": "Morning League",
+    "2026-07-21|Pickleball Court 1|8:00 AM": "Nakamura, K.",
+    "2026-07-21|Basketball|7:20 AM": "Youth Clinic",
+    "2026-07-21|Basketball|7:40 AM": "Youth Clinic",
+    "2026-07-21|Tennis 2|10:00 AM": "Delgado, P.",
+    "2026-07-21|Swimming Pool #1|6:00 AM": "Lap Swim",
+    "2026-07-21|Swimming Pool #1|6:20 AM": "Lap Swim",
+    "2026-07-21|Swimming Pool #1|6:40 AM": "Lap Swim",
+    "2026-07-21|Swimming Pool #1|7:00 AM": "Aqua Fitness",
+    // `Basket Ball 2` is deliberately empty — an unbooked facility is a state
+    // the sheet has to render too.
+};
+
 const initial: State = {
     operator: null,
     tickets: seedTickets,
@@ -292,7 +339,7 @@ const initial: State = {
     shiftOpen: true,
     clockedIn: false,
     punches: [],
-    resourceBookings: {},
+    resourceBookings: seededResourceBookings,
     courtDate: "2026-07-21",
     customers: seededCustomers,
     rainchecks: seededRainchecks,
@@ -326,7 +373,7 @@ type Action =
     | { type: "holdTicket" }
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
-    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number; raincheckId?: string }
+    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number; raincheckId?: string; tip?: number }
     | { type: "setSheetDate"; date: string }
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
@@ -652,7 +699,12 @@ function reducer(state: State, action: Action): State {
                 return { ...state, toast: `Raincheck ${credit.id} is ${money(total - credit.balance)} short of the total` };
             }
 
-            const cash = action.tender === "Cash" ? (action.tendered ?? total) : 0;
+            // The tip is added after the processor approved the card, so it
+            // raises what is captured without re-authorising. See the mobile
+            // payment flow — the counter terminal never sends one.
+            const tip = Math.max(0, action.tip ?? 0);
+            const settled = +(total + tip).toFixed(2);
+            const cash = action.tender === "Cash" ? (action.tendered ?? settled) : 0;
 
             return {
                 ...state,
@@ -672,9 +724,10 @@ function reducer(state: State, action: Action): State {
                     tax: taxOf(current.lines),
                     total,
                     tender: action.tender,
-                    paid: total,
+                    tip,
+                    paid: settled,
                     cash,
-                    change: Math.max(0, cash - total),
+                    change: Math.max(0, cash - settled),
                     orderNumber: String(5593000 + state.tickets.length * 7 + 62),
                 },
                 toast: null,
@@ -1154,8 +1207,8 @@ export function useActions() {
             holdTicket: () => dispatch({ type: "holdTicket" }),
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
-            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number, raincheckId?: string) =>
-                dispatch({ type: "pay", tender, tendered, raincheckId }),
+            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number, raincheckId?: string, tip?: number) =>
+                dispatch({ type: "pay", tender, tendered, raincheckId, tip }),
             setSheetDate: (date: string) => dispatch({ type: "setSheetDate", date }),
             shiftSheetDate: (days: number) => dispatch({ type: "shiftSheetDate", days }),
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),

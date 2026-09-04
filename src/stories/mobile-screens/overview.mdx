@@ -1,0 +1,113 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Mobile Screens/Overview" />
+
+# Mobile Screens
+
+The same Birdie POS, laid out for a phone. From `references/090426/`.
+
+**402 × 797**, portrait, Android — the only portrait viewport in the system, and
+deliberately scoped to this category so a landscape screen cannot be drawn
+against it by accident.
+
+## This is a re-layout, not a restyle
+
+Every colour, radius, weight and casing comes from `app-replica-tokens` exactly
+as the landscape screens use them. **Nothing here introduces a token, a colour,
+or a component the design system did not already have.** The slate app bar is
+the same slate. The green PAY is the same green. The seat bands import
+`seatBandColors` from the tablet's own order panel rather than redeclaring them.
+
+What changes is arrangement, and only where 402px forces it.
+
+## The four moves
+
+The landscape screens are built from three fixed regions — a **390px order
+panel**, a **content pane** beside it, and a **bottom action bar** of four to six
+equal buttons. At 402px all three break at once: 390 of 402 is the whole screen,
+side-by-side is impossible, and six buttons in a row gives each one 67px.
+
+| Landscape | Mobile | Why |
+| :-- | :-- | :-- |
+| Order panel **beside** content | Two **bottom-nav destinations** | Both stay one tap away; neither is cut to a sliver |
+| Product **tile grid** | A **list**, thumbnail + name + price | Six across becomes two; a tile is mostly padding |
+| 4–6 **action buttons in a row** | One full-width primary, secondaries stacked above | `PRINT COMBINED SEATS` does not fit in 67px |
+| Centred **modal dialog** | A **full screen**, or a **bottom sheet** for a short menu | A 640px dialog does not fit in 402px |
+
+Two smaller rules follow from those:
+
+- **Anchored menus become bottom sheets.** At this width a menu anchored to the
+  row it acts on covers the row it acts on. Same options, same order, same red
+  on the destructive one — it just comes up from where a thumb already is.
+- **The attached customer pins above the nav.** *Whose order this is* is the one
+  fact an operator must never navigate to check, and the item count rides on it
+  so the order stays legible from the menu side.
+
+## The system chrome is drawn on purpose
+
+`MobileFrame` renders the Android status bar (24dp) and the three-button
+navigation bar (48dp), because the references do and because together they take
+**72 of the 797**. Every screen here is built against the ~725dp that actually
+remains. A design checked against the full height is a design that ships 72dp
+too tall.
+
+## Where the references stop
+
+The screenshots in `references/090426/` cover the register: sign-in, the drawer,
+Quick Order, Tabs, Tables, Table Order, Customer Lookup, the full tender flow,
+Open Food, item edit, Order Complete — six of App Screens' eighteen folders.
+
+**All eighteen are now built.** The other twelve are extrapolated from the four
+rules above rather than transcribed from a mock, and each one names the trade it
+made in its own docs.
+
+| | App Screens | Mobile Screens |
+| :-- | :-- | :-- |
+| Folders | 18 | **18** |
+| Stories | 72 | **79** |
+
+The count is higher because narrowing sometimes splits one tablet screen into
+two — Checkout's ticket and tender, Customer Search's results and record — and
+because a few screens gained a state the tablet never needed, like Quick Order's
+empty order once the panel stopped being permanently visible.
+
+## What the phone gives up
+
+Six screens lose a real capability. They are listed here rather than left for
+someone to discover, because each is a product decision hiding inside a layout
+problem.
+
+| Screen | Lost | Why it cannot be recovered at 402px |
+| :-- | :-- | :-- |
+| **2-teesheet** — Multi & Back 9 | Comparing courses, or the front and back nine, **at a glance** | Three columns of four positions is 32px per position. The data survives behind a switcher; the side-by-side read does not, and that read is the whole reason those views exist |
+| **3-coursheet** | *"Is anything free at 7:20?"* as **one row** across six facilities | Six columns at 402px are 67px each. That question now costs up to six taps. Nothing single-column recovers it — if it turns out to be the phone's main job, the answer is **a different screen** (availability keyed by time), not a smaller grid |
+| **4-baysheet** | **Duration as shape** — a 90-minute block becomes the words "90 min" | A calendar encodes length as height. A list has one row height. Partly rescued: the `All bays` tab keeps *"6 of 6 open"* per half hour, so **how many** survives; **which** still costs a tap |
+| **7-tables** | **Choosing which table you are serving** | A floor plan is spatial. Shrink the room and every table is too small to hit; crop it and you hide half. The phone assumes you arrived with a table in hand |
+| **10-tablechart** | **Placing** tables in a room | The phone lists a room's tables and can add one. It does not position them — that is a sit-down task on a counter terminal. The screen prints this rather than hiding it |
+| **11-customerSearch** — profile | **Awarded and Spent** on a raincheck row | The credit table is 7 columns. Balance is what a counter is asked for, so it survives and the other two do not — which means **a partly-spent credit now looks like a small one**. The ledger stays a terminal job |
+
+The pattern is consistent: **spatial and multi-axis views do not narrow.** They
+survive as one-axis-at-a-time with a switcher, which keeps every fact and loses
+the comparison.
+
+Two of these are worth arguing with rather than accepting:
+
+- **3-coursheet.** If a phone's actual job on a court sheet is "what is free
+  right now", then a facility switcher is answering the wrong question well. The
+  fix is a screen this project has not drawn.
+- **11-customerSearch.** Dropping Awarded and Spent is the only place in this
+  category where **data disappears** rather than moving. Everything else here is
+  a lost *view*; this is a lost *fact*, and it deserves a second look before
+  anyone builds it.
+
+## Reading a screen against its landscape original
+
+Folder names mirror `App Screens` exactly, so the two categories can be opened
+side by side. That is the whole point of the naming, and every story here names
+the trade it made in its own docs.
+
+## Source
+
+`src/components/mobile/` — `mobile-shell.tsx` (frame, app bar, bottom nav,
+actions, sheets), `mobile-parts.tsx` (rows, chips, search, bands, totals),
+`mobile-drawer.tsx`, and `screens/` for all eighteen.

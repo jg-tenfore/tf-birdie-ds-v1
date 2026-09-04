@@ -1,0 +1,12 @@
+Button order: 13
+Button label: CALLAWAY WARBIRD BOX
+PGA product/page title: Callaway Warbird 2025 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/warbird-2025-golf-balls/2000000049485.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (995038 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049485-01_pc?fmt=png&w=1200
+- 02_product_image.png (615771 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049485-02_pc?fmt=png&w=1200
+- 03_product_image.png (475314 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049485-04_pc?fmt=png&w=1200
+- 04_product_image.png (995038 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049485-92-01_pc?fmt=png&w=1200
+- 05_product_image.png (1002174 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049485-96-01_pc?fmt=png&w=1200

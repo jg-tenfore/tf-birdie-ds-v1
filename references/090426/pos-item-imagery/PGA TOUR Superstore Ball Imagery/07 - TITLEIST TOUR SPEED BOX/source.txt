@@ -1,0 +1,8 @@
+Button order: 07
+Button label: TITLEIST TOUR SPEED BOX
+PGA product/page title: Reload Near Mint-Grade Titleist Tour Speed White Golf Balls - 24 Pack
+PGA product/page URL: https://www.pgatoursuperstore.com/near-mint-grade-titleist-tour-speed-white-golf-balls---24-pack/2000000063237.html
+Note: No current new-box Tour Speed product found; used closest live PGA-hosted Tour Speed imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (1054666 bytes): https://cdn.media.amplience.net/i/pgatss/2000000063237-01_pc?fmt=png&w=1200

@@ -40,15 +40,15 @@ import { TODAY, useActions, useStore } from "../store";
  * (the time axis is zoomable), and carries no cart or overflow.
  */
 
-const BAYS = ["Red Bay", "Orange Bay", "Green Bay", "Blue Bay", "Magenta Bay", "White Bay"];
+export const BAYS = ["Red Bay", "Orange Bay", "Green Bay", "Blue Bay", "Magenta Bay", "White Bay"];
 
-const START_HOUR = 10;
-const END_HOUR = 14;
+export const START_HOUR = 10;
+export const END_HOUR = 14;
 /** Pixels per minute. 30 minutes ≈ 99px in the reference at 1290 CSS px wide. */
 const PPM = 3.3;
 const GUTTER = 112;
 
-const fmt = (mins: number) => {
+export const fmt = (mins: number) => {
     const h24 = Math.floor(mins / 60);
     const m = mins % 60;
     const h = h24 % 12 === 0 ? 12 : h24 % 12;

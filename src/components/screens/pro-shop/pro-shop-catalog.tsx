@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 
 import { accessoriesAndTraining, golfBalls, golfShoes, mens } from "@/data/store-catalog";
 import { appColors } from "@/theme/app-replica-tokens";
+import { posImage } from "@/data/pos-inventory";
 import { storeImage } from "@/utils/asset-url";
 import { CategoryTile, tileGridSx } from "./category-tile";
 
@@ -24,14 +25,28 @@ const byTitle = (pool: { title: string; path: string }[], match: string) =>
 const photo = (path?: string) => (path ? storeImage(path) : undefined);
 
 /** Category name → catalog photo, where one genuinely fits. */
-const categoryPhotos: Record<string, string | undefined> = {
-    "Golf Balls": photo(golfBalls[0]?.path),
+/**
+ * A photograph for every tile the grid prints.
+ *
+ * This used to be six hand-picked entries — `golfBalls[0]`, `golfShoes[0]` and
+ * so on — which left eighteen of the twenty-four tiles blank. `posImage()`
+ * resolves a category label against the catalogue, so the imagery ingested from
+ * `references/090426/` reaches the grid without anyone maintaining a lookup by
+ * hand.
+ *
+ * The hand-picked entries stay as overrides for labels the catalogue has no
+ * category for: the shipping grid prints things like `simulator`, `Punch Cards`
+ * and `Memberships`, which are not physical stock and never will be
+ * photographed.
+ */
+const overrides: Record<string, string | undefined> = {
     "Range Balls": photo(golfBalls[3]?.path),
-    Shoes: photo(golfShoes[0]?.path),
-    Shirts: photo(mens[0]?.path),
-    Accessories: photo(accessoriesAndTraining[0]?.path),
     Gloves: photo(byTitle(accessoriesAndTraining, "Golf Glove")),
+    Shirts: photo(mens[0]?.path),
+    Shoes: photo(golfShoes[0]?.path),
 };
+
+const categoryPhoto = (label: string) => overrides[label] ?? posImage(label);
 
 /** Reading order from the shipping grid, left to right, top to bottom. */
 export const proShopCategories = [
@@ -87,7 +102,7 @@ export const ProShopCatalog = ({ scanMode = false }: { scanMode?: boolean }) => 
         <ScanModeRow checked={scanMode} />
         <Box sx={tileGridSx}>
             {proShopCategories.map((label) => (
-                <CategoryTile key={label} label={label} image={categoryPhotos[label]} />
+                <CategoryTile key={label} label={label} image={categoryPhoto(label)} />
             ))}
         </Box>
     </Box>

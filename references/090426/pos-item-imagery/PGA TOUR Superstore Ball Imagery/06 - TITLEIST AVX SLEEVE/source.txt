@@ -1,0 +1,9 @@
+Button order: 06
+Button label: TITLEIST AVX SLEEVE
+PGA product/page title: Titleist AVX 2026 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/avx-2026-golf-balls/2000000058253.html
+Note: No separate sleeve product page found on PGA; reused matching AVX product imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (1638295 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058253-92-01_pc?fmt=png&w=1200
+- 02_product_image.png (1410069 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058253-96-01_pc?fmt=png&w=1200

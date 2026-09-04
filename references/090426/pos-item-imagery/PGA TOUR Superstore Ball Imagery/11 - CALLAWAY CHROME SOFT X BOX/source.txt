@@ -1,0 +1,8 @@
+Button order: 11
+Button label: CALLAWAY CHROME SOFT X BOX
+PGA product/page title: Reload Good-Grade Callaway Chrome Soft X White Golf Balls - 24 Pack
+PGA product/page URL: https://www.pgatoursuperstore.com/good-grade-callaway-chrome-soft-x-white-golf-balls---24-pack/2000000063250.html
+Note: No current new-box Chrome Soft X product found; used closest live PGA-hosted Chrome Soft X imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (1164911 bytes): https://cdn.media.amplience.net/i/pgatss/2000000063250-01_pc?fmt=png&w=1200

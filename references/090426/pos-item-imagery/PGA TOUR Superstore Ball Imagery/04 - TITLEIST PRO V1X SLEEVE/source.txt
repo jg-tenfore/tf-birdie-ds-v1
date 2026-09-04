@@ -1,0 +1,16 @@
+Button order: 04
+Button label: TITLEIST PRO V1X SLEEVE
+PGA product/page title: Titleist Pro V1x 2025 Standard Play Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/pro-v1x-2025-standard-play-golf-balls/2000000050261.html
+Note: No separate sleeve product page found on PGA; reused matching Pro V1x product imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (1060049 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-01_pc?fmt=png&w=1200
+- 02_product_image.png (917864 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-02_pc?fmt=png&w=1200
+- 03_product_image.png (700753 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-03_pc?fmt=png&w=1200
+- 04_product_image.png (586210 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-04_pc?fmt=png&w=1200
+- 05_product_image.png (703277 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-05_pc?fmt=png&w=1200
+- 06_product_image.png (669590 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-06_pc?fmt=png&w=1200
+- 07_product_image.png (1187377 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-07_pc?fmt=png&w=1200
+- 08_product_image.png (1060049 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-92-01_pc?fmt=png&w=1200
+- 09_product_image.png (1072804 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050261-96-01_pc?fmt=png&w=1200

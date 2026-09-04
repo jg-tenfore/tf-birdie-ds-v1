@@ -1,0 +1,13 @@
+Button order: 25
+Button label: LOGO BALL SINGLE
+PGA product/page title: Callaway Supersoft 2025 Single Golf Ball
+PGA product/page URL: https://www.pgatoursuperstore.com/supersoft-2025-single-golf-ball/2000000053309.html
+Note: No exact generic logo-ball-single product found; used closest PGA single ball page with visible ball logo.
+
+Downloaded PNG images:
+- 01_product_image.png (889618 bytes): https://cdn.media.amplience.net/i/pgatss/2000000053309-01_pc?fmt=png&w=1200
+- 02_product_image.png (901899 bytes): https://cdn.media.amplience.net/i/pgatss/2000000053309-02_pc?fmt=png&w=1200
+- 03_product_image.png (940277 bytes): https://cdn.media.amplience.net/i/pgatss/2000000053309-236-01_pc?fmt=png&w=1200
+- 04_product_image.png (889618 bytes): https://cdn.media.amplience.net/i/pgatss/2000000053309-113-01_pc?fmt=png&w=1200
+- 05_product_image.png (760344 bytes): https://cdn.media.amplience.net/i/pgatss/2000000053309-52-01_pc?fmt=png&w=1200
+- 06_product_image.png (979435 bytes): https://cdn.media.amplience.net/i/pgatss/2000000053309-124-01_pc?fmt=png&w=1200

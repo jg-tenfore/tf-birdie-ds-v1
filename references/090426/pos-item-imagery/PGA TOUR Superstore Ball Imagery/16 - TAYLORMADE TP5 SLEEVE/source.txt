@@ -1,0 +1,12 @@
+Button order: 16
+Button label: TAYLORMADE TP5 SLEEVE
+PGA product/page title: TaylorMade TP5 2026 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/tp5-2026-golf-balls/2000000058254.html
+Note: No separate sleeve product page found on PGA; reused matching TP5 product imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (806545 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058254-01_pc?fmt=png&w=1200
+- 02_product_image.png (1037763 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058254-02_pc?fmt=png&w=1200
+- 03_product_image.png (727938 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058254-03_pc?fmt=png&w=1200
+- 04_product_image.png (806545 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058254-92-01_pc?fmt=png&w=1200
+- 05_product_image.png (888872 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058254-96-01_pc?fmt=png&w=1200

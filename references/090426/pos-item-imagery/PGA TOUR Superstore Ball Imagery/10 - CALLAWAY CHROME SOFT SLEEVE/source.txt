@@ -1,0 +1,10 @@
+Button order: 10
+Button label: CALLAWAY CHROME SOFT SLEEVE
+PGA product/page title: Callaway Chrome Soft White 2026 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/chrome-soft-white-2026-golf-balls/2000000058165.html
+Note: No separate sleeve product page found on PGA; reused matching Chrome Soft product imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (1328473 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058165-01_pc?fmt=png&w=1200
+- 02_product_image.png (763278 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058165-02_pc?fmt=png&w=1200
+- 03_product_image.png (314204 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058165-03_pc?fmt=png&w=1200

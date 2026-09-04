@@ -1,0 +1,12 @@
+Button order: 14
+Button label: TAYLORMADE TP5X BOX
+PGA product/page title: TaylorMade TP5x 2026 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/tp5x-2026-golf-balls/2000000058258.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (923878 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058258-01_pc?fmt=png&w=1200
+- 02_product_image.png (607966 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058258-02_pc?fmt=png&w=1200
+- 03_product_image.png (696453 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058258-03_pc?fmt=png&w=1200
+- 04_product_image.png (923878 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058258-92-01_pc?fmt=png&w=1200
+- 05_product_image.png (951640 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058258-96-01_pc?fmt=png&w=1200

@@ -86,12 +86,37 @@ server.listen(PORT, () => {
 
     if (!process.argv.includes("--smoke")) return;
 
-    const smoke = spawn("node", ["scripts/smoke-test.mjs"], {
-        stdio: "inherit",
-        env: { ...process.env, SMOKE_URL: `${base}prototype/` },
-    });
-    smoke.on("exit", (code) => {
-        server.close();
-        process.exit(code ?? 1);
-    });
+    /**
+     * Both prototypes, in sequence.
+     *
+     * The counter terminal and the phone are two entries over one store, so a
+     * change to the reducer can break either. Running only the terminal's suite
+     * would let the phone rot silently — and the phone is the one nobody opens
+     * by habit.
+     *
+     * Sequential rather than parallel: they share a port and interleaved output
+     * would make a failure hard to attribute.
+     */
+    const suites = [
+        ["scripts/smoke-test.mjs", `${base}prototype/`],
+        ["scripts/smoke-test-mobile.mjs", `${base}prototype/mobile.html`],
+    ];
+
+    const run = (index) => {
+        if (index >= suites.length) {
+            server.close();
+            process.exit(0);
+        }
+        const [script, url] = suites[index];
+        const smoke = spawn("node", [script], { stdio: "inherit", env: { ...process.env, SMOKE_URL: url } });
+        smoke.on("exit", (code) => {
+            if (code) {
+                server.close();
+                process.exit(code);
+            }
+            run(index + 1);
+        });
+    };
+
+    run(0);
 });

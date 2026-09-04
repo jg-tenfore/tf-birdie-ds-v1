@@ -1,0 +1,13 @@
+Button order: 20
+Button label: SRIXON Q-STAR TOUR BOX
+PGA product/page title: Srixon Q-Star Tour 6 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/q-star-tour-6-golf-balls/2000000059510.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (1715911 bytes): https://cdn.media.amplience.net/i/pgatss/2000000059510-01_pc?fmt=png&w=1200
+- 02_product_image.png (964364 bytes): https://cdn.media.amplience.net/i/pgatss/2000000059510-02_pc?fmt=png&w=1200
+- 03_product_image.png (922898 bytes): https://cdn.media.amplience.net/i/pgatss/2000000059510-03_pc?fmt=png&w=1200
+- 04_product_image.png (762410 bytes): https://cdn.media.amplience.net/i/pgatss/2000000059510-04_pc?fmt=png&w=1200
+- 05_product_image.png (1715911 bytes): https://cdn.media.amplience.net/i/pgatss/2000000059510-92-01_pc?fmt=png&w=1200
+- 06_product_image.png (1715922 bytes): https://cdn.media.amplience.net/i/pgatss/2000000059510-96-01_pc?fmt=png&w=1200
