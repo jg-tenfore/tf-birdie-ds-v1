@@ -184,7 +184,30 @@ const preview: Preview = {
                     // Same explicit ordering problem as App Screens: "11-" sorts
                     // before "5-" alphabetically.
                     "Mobile Screens",
-                    ["Overview", "1-proshop", "5-quickorder", "6-tabs", "7-tables", "11-customerSearch", "checkoutScreens"],
+                    [
+                        "Overview",
+                        // Same numeric order as App Screens above, and for the
+                        // same reason: alphabetically "10-tablechart" sorts
+                        // before "2-teesheet".
+                        "1-proshop",
+                        "2-teesheet",
+                        "3-coursheet",
+                        "4-baysheet",
+                        "5-quickorder",
+                        "6-tabs",
+                        "7-tables",
+                        "8-reservations",
+                        "9-ordersTips",
+                        "10-tablechart",
+                        "11-customerSearch",
+                        "12-orderlookup",
+                        "13-timeclock",
+                        "14-giftcards",
+                        "15-events",
+                        "16-inventory",
+                        "17-shift",
+                        "checkoutScreens",
+                    ],
                     // A second axis through the same components. App Screens is
                     // organised by screen, mirroring the reference folders; this
                     // is organised by journey, because the failures that matter
