@@ -144,6 +144,17 @@ interface State {
         tax: number;
         total: number;
         tender: string;
+        /**
+         * Gratuity added after the card was authorised.
+         *
+         * Zero on every tender that cannot carry one, and on the counter
+         * terminal, which has no tip flow — a tip is a handheld gesture. It is
+         * stored separately from `total` because the two answer different
+         * questions: `total` is what the goods cost and `tip` is what the
+         * server was given, and a report that adds them together can never
+         * separate them again.
+         */
+        tip: number;
         /** What the receipt's Payments line prints — the full amount settled. */
         paid: number;
         /**
@@ -326,7 +337,7 @@ type Action =
     | { type: "holdTicket" }
     | { type: "openTicket"; ticketId: string }
     | { type: "attachCustomer"; name: string }
-    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number; raincheckId?: string }
+    | { type: "pay"; tender: NonNullable<Ticket["tender"]>; tendered?: number; raincheckId?: string; tip?: number }
     | { type: "setSheetDate"; date: string }
     | { type: "shiftSheetDate"; days: number }
     | { type: "setCourse"; course: string }
@@ -652,7 +663,12 @@ function reducer(state: State, action: Action): State {
                 return { ...state, toast: `Raincheck ${credit.id} is ${money(total - credit.balance)} short of the total` };
             }
 
-            const cash = action.tender === "Cash" ? (action.tendered ?? total) : 0;
+            // The tip is added after the processor approved the card, so it
+            // raises what is captured without re-authorising. See the mobile
+            // payment flow — the counter terminal never sends one.
+            const tip = Math.max(0, action.tip ?? 0);
+            const settled = +(total + tip).toFixed(2);
+            const cash = action.tender === "Cash" ? (action.tendered ?? settled) : 0;
 
             return {
                 ...state,
@@ -672,9 +688,10 @@ function reducer(state: State, action: Action): State {
                     tax: taxOf(current.lines),
                     total,
                     tender: action.tender,
-                    paid: total,
+                    tip,
+                    paid: settled,
                     cash,
-                    change: Math.max(0, cash - total),
+                    change: Math.max(0, cash - settled),
                     orderNumber: String(5593000 + state.tickets.length * 7 + 62),
                 },
                 toast: null,
@@ -1154,8 +1171,8 @@ export function useActions() {
             holdTicket: () => dispatch({ type: "holdTicket" }),
             openTicket: (ticketId: string) => dispatch({ type: "openTicket", ticketId }),
             attachCustomer: (name: string) => dispatch({ type: "attachCustomer", name }),
-            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number, raincheckId?: string) =>
-                dispatch({ type: "pay", tender, tendered, raincheckId }),
+            pay: (tender: NonNullable<Ticket["tender"]>, tendered?: number, raincheckId?: string, tip?: number) =>
+                dispatch({ type: "pay", tender, tendered, raincheckId, tip }),
             setSheetDate: (date: string) => dispatch({ type: "setSheetDate", date }),
             shiftSheetDate: (days: number) => dispatch({ type: "shiftSheetDate", days }),
             goToToday: () => dispatch({ type: "setSheetDate", date: TODAY }),

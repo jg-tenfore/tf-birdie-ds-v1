@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <!--
+            The phone build. `viewport-fit=cover` and a locked scale because this
+            is a POS: a pinch-zoom on a running order is a mis-tap, not a
+            feature, and the layout is already built for 402px.
+        -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <title>Birdie POS — Mobile</title>
+        <meta name="description" content="Working prototype of the Birdie point-of-sale system, laid out for a phone." />
+        <link rel="icon" href="./logos/tf-square-color.svg" />
+        <meta name="theme-color" content="#37414A" />
+        <style>
+            html,
+            body,
+            #root {
+                height: 100%;
+                margin: 0;
+                overscroll-behavior: none;
+            }
+            body {
+                background: #eceff1;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/mobile-main.tsx"></script>
+    </body>
+</html>

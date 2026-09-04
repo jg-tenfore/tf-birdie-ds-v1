@@ -78,6 +78,24 @@ export default defineConfig({
     build: {
         outDir: "../dist/prototype",
         emptyOutDir: true,
+        rollupOptions: {
+            /**
+             * Two entries, one build.
+             *
+             * `index.html` is the counter terminal — landscape, 1280 and up.
+             * `mobile.html` is the phone, 402x797, and it is a **separate
+             * application shell over the same store**: same reducer, same
+             * cart, same tee sheet, same sales. Only the screens differ.
+             *
+             * One build rather than two because they share ~90% of their
+             * imports; splitting them would duplicate the store and the
+             * replica components into two bundles and let them drift.
+             */
+            input: {
+                index: resolve(repoRoot, "app/index.html"),
+                mobile: resolve(repoRoot, "app/mobile.html"),
+            },
+        },
     },
     // Logos and product photography are copied in by scripts/build-site.mjs
     // after this build, so there is no public dir to serve here.

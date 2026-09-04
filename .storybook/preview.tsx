@@ -207,6 +207,11 @@ const preview: Preview = {
                         "16-inventory",
                         "17-shift",
                         "checkoutScreens",
+                        // Not an App Screens folder — the handheld tip flow does
+                        // not exist on the counter terminal at all, because a
+                        // tip is a gesture that needs the device to change
+                        // hands. From the Sept 4 call.
+                        "Tipping",
                     ],
                     // A second axis through the same components. App Screens is
                     // organised by screen, mirroring the reference folders; this

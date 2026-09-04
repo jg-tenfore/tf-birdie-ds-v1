@@ -25,7 +25,7 @@ import { Shell } from "../pos-shell";
  * seating is entirely a matter of the host remembering.
  */
 
-interface Reservation {
+export interface Reservation {
     time: string;
     party: number;
     firstName: string;
@@ -37,7 +37,7 @@ interface Reservation {
 const COLUMNS = ["Time", "Party", "First Name", "Last Name", "Email", "Phone"];
 
 /** A plausible Wednesday service. Not from the device — the capture was empty. */
-const RESERVATIONS: Reservation[] = [
+export const RESERVATIONS: Reservation[] = [
     {
         time: "11:30 AM",
         party: 2,

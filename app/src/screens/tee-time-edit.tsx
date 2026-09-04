@@ -23,7 +23,8 @@ import { money, useActions, useStore } from "../store";
  */
 
 /** Green-fee rates the course sells, and what each charges for 18 holes. */
-const GREEN_FEES: Record<string, number> = {
+/** Exported so the phone build's Edit screen prices from the same table. */
+export const GREEN_FEES: Record<string, number> = {
     "Birdie (25%)": 46.5,
     Cheapos: 19,
     "Course Level Fee": 58,
@@ -34,7 +35,7 @@ const GREEN_FEES: Record<string, number> = {
     "Senior Weekday": 34,
 };
 
-const TRANSPORT_FEES: Record<string, number> = {
+export const TRANSPORT_FEES: Record<string, number> = {
     "Dune Cart Plus": 32,
     "Dunes Cart": 26.82,
     "Dunes Member Cart": 0,
@@ -43,8 +44,8 @@ const TRANSPORT_FEES: Record<string, number> = {
 };
 
 /** `Name : $0.00` — the format both the detail line and this screen use. */
-const feeLabel = (name: string, amount: number) => `${name} : ${money(amount)}`;
-const nameOf = (label: string | undefined) => (label ?? "").split(" : ")[0];
+export const feeLabel = (name: string, amount: number) => `${name} : ${money(amount)}`;
+export const nameOf = (label: string | undefined) => (label ?? "").split(" : ")[0];
 
 export const TeeTimeEditScreen = () => {
     const { time = "", index = "0" } = useParams();

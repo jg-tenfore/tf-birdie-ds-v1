@@ -25,10 +25,10 @@ import { TODAY, useActions, useStore } from "../store";
  *    because courts page horizontally when there are more than six.
  */
 
-const COURTS = ["Tennis Court 1", "Pickleball Court 1", "Basketball", "Tennis 2", "Basket Ball 2", "Swimming Pool #1"];
+export const COURTS = ["Tennis Court 1", "Pickleball Court 1", "Basketball", "Tennis 2", "Basket Ball 2", "Swimming Pool #1"];
 
 /** 20-minute intervals from 6:00 AM — the interval the reference device uses. */
-const SLOTS = Array.from({ length: 12 }, (_, i) => {
+export const SLOTS = Array.from({ length: 12 }, (_, i) => {
     const minutes = 6 * 60 + i * 20;
     const h24 = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -39,7 +39,7 @@ const SLOTS = Array.from({ length: 12 }, (_, i) => {
 const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 const DOW = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
-const longDate = (iso: string) => {
+export const longDate = (iso: string) => {
     const d = new Date(`${iso}T12:00:00`);
     return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} ${d.getFullYear()}`;
 };

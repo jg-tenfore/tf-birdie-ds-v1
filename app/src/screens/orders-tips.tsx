@@ -32,7 +32,7 @@ import { money, useActions, useStore } from "../store";
  * tender you just took shows up here.
  */
 
-interface TipRow {
+export interface TipRow {
     paymentId: string;
     orderId: string;
     time: string;
@@ -45,7 +45,7 @@ interface TipRow {
 const COLUMNS = ["Payment ID", "Order ID", "Time", "Customer", "Payment", "Amount", "Tip"];
 
 /** A morning's card sales. Not from the device — its capture had none. */
-const SEEDED: TipRow[] = [
+export const SEEDED: TipRow[] = [
     {
         paymentId: "8841207",
         orderId: "43991",
