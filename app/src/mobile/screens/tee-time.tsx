@@ -184,6 +184,17 @@ const NotesBody = ({ value, onChange, placeholder }: { value: string; onChange: 
         sx={{
             m: 1.5,
             p: 1.5,
+            // A textarea with no CSS width sizes itself from the HTML `cols`
+            // attribute, which defaults to 20 characters. That is why this drew
+            // as a small fixed square in the corner of a 402px screen instead of
+            // a note field: it was never laid out by the phone at all.
+            display: "block",
+            boxSizing: "border-box",
+            width: "calc(100% - 24px)",
+            // Fills the body rather than sitting in the top of it. Notes are the
+            // only thing on this screen, so the empty space below the box was
+            // space the note could have had.
+            height: "calc(100% - 24px)",
             minHeight: 200,
             border: `1px solid ${appColors.divider}`,
             bgcolor: appColors.surface,

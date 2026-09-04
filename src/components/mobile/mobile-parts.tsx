@@ -52,12 +52,19 @@ export const MobileFilterTabs = ({ tabs, active, onChange }: { tabs: string[]; a
                     sx={{
                         flex: "1 0 auto",
                         px: 1.5,
-                        minHeight: 44,
-                        fontSize: 13,
+                        minHeight: 48,
+                        fontSize: 14,
+                        fontWeight: isActive ? 600 : 400,
                         whiteSpace: "nowrap",
-                        color: isActive ? appColors.textPrimary : appColors.textSecondary,
-                        borderBottom: "2px solid",
-                        borderBottomColor: isActive ? appColors.textPrimary : "transparent",
+                        // A 2px rule in the text colour is not enough on a strip
+                        // that scrolls — on a six-tab sheet the selected tab can
+                        // be half off-screen, and the underline goes with it.
+                        // Weight and a tinted ground say "this one" from the
+                        // middle of the row.
+                        color: isActive ? appColors.green : appColors.textSecondary,
+                        bgcolor: isActive ? "rgba(0,0,0,0.035)" : "transparent",
+                        borderBottom: "3px solid",
+                        borderBottomColor: isActive ? appColors.green : "transparent",
                     }}
                 >
                     {t}
@@ -146,6 +153,20 @@ export interface MobileRowProps {
     /** A leading colour bar — the tee sheet and the seat lists use it. */
     accent?: string;
     dense?: boolean;
+    /**
+     * A bookable slot — taller, with a bigger target and a heavier title.
+     *
+     * The sheets had this backwards. A **taken** slot carries a name and a
+     * subtitle, so it grows to two lines; an **open** slot carries a time and
+     * the word `Open`, so it collapses to the shortest row on the screen. The
+     * result is that the row an operator is actually aiming for — the one they
+     * hit to sell something — was the hardest one to hit, and it shrank exactly
+     * as the sheet filled up and the times got harder to tell apart.
+     *
+     * 64dp, which is the same figure the register row already uses for the same
+     * reason: it is the control that gets pressed hundreds of times a shift.
+     */
+    tall?: boolean;
 }
 
 /**
@@ -171,9 +192,23 @@ export const MobileRow = ({
     onClick,
     accent,
     dense,
+    tall,
 }: MobileRowProps) => {
     const body = (
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1.5, width: "100%", px: 1.5, py: dense ? 0.75 : 1 }}>
+        <Stack
+            direction="row"
+            sx={{
+                alignItems: "center",
+                gap: 1.5,
+                width: "100%",
+                px: 1.5,
+                py: tall ? 1.5 : dense ? 0.75 : 1,
+                // A floor, not a height: a row with a subtitle still grows. 48dp
+                // is Material's minimum target and `dense` was landing under it
+                // on single-line rows.
+                minHeight: tall ? 64 : 48,
+            }}
+        >
             {accent && <Box sx={{ width: 4, alignSelf: "stretch", bgcolor: accent, flexShrink: 0, ml: -1.5 }} />}
             {image !== undefined && (
                 <Box
@@ -190,7 +225,9 @@ export const MobileRow = ({
                 />
             )}
             <Stack sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</Typography>
+                <Typography sx={{ fontSize: tall ? 18 : 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {title}
+                </Typography>
                 {subtitle && (
                     <Typography
                         sx={{
@@ -206,7 +243,9 @@ export const MobileRow = ({
                 )}
             </Stack>
             {price !== undefined && <Typography sx={{ fontSize: 15, flexShrink: 0 }}>{usd(price)}</Typography>}
-            {trailing && <Typography sx={{ fontSize: 14, color: appColors.textSecondary, flexShrink: 0 }}>{trailing}</Typography>}
+            {trailing && (
+                <Typography sx={{ fontSize: tall ? 15 : 14, color: appColors.textSecondary, flexShrink: 0 }}>{trailing}</Typography>
+            )}
             {drills && <ChevronRightIcon sx={{ fontSize: 22, color: appColors.textSecondary, flexShrink: 0 }} />}
             {overflow && (
                 <ButtonBase

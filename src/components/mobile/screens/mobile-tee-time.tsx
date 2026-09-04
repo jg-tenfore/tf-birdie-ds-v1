@@ -253,8 +253,20 @@ export const MobileNotes = ({ title }: { title: "Customer Notes" | "Group Notes"
             </MobileActionArea>
         }
     >
-        <Box sx={{ m: 1.5, p: 1.5, minHeight: 180, bgcolor: appColors.surface, border: `1px solid ${appColors.divider}` }}>
-            <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>Enter {title.toLowerCase()}…</Typography>
+        {/* Full width and full height — a note field is the whole screen here,
+            and the documentation should show the box the prototype draws. */}
+        <Box
+            sx={{
+                m: 1.5,
+                p: 1.5,
+                height: "calc(100% - 24px)",
+                minHeight: 200,
+                boxSizing: "border-box",
+                bgcolor: appColors.surface,
+                border: `1px solid ${appColors.divider}`,
+            }}
+        >
+            <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>Enter {title.toLowerCase()}…</Typography>
         </Box>
     </MobileScreen>
 );

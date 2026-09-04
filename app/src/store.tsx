@@ -276,6 +276,42 @@ const seedTickets: Ticket[] = [
     },
 ];
 
+/**
+ * A few court bookings, so the sheet has something to be a sheet of.
+ *
+ * This started empty, which made the six facility tabs look broken on the
+ * phone: every tab rendered the same twelve `Open` rows and the same "nothing
+ * booked elsewhere" line, so switching between them changed nothing on screen.
+ * The tabs were working — there was simply no fact that differed between them.
+ *
+ * Spread unevenly on purpose. A facility with nothing booked is a real state
+ * and the sheet should show one, but it should not show six.
+ *
+ * Keys are `date|facility|slot`, matching `courtKey` and the landscape sheet,
+ * so both prototypes read the same bookings.
+ */
+const seededResourceBookings: Record<string, string> = {
+    "2026-07-21|Tennis Court 1|6:20 AM": "Rivera, M.",
+    "2026-07-21|Tennis Court 1|7:00 AM": "Osei, D.",
+    "2026-07-21|Tennis Court 1|9:20 AM": "Chan, L.",
+    // 6:00 AM here and 6:20 AM on `Tennis 2` are left open on purpose: the
+    // landscape smoke suite books both, and a seed that fills them would be a
+    // fixture quietly deciding what the tests can reach.
+    "2026-07-21|Pickleball Court 1|6:20 AM": "Morning League",
+    "2026-07-21|Pickleball Court 1|6:40 AM": "Morning League",
+    "2026-07-21|Pickleball Court 1|7:00 AM": "Morning League",
+    "2026-07-21|Pickleball Court 1|8:00 AM": "Nakamura, K.",
+    "2026-07-21|Basketball|7:20 AM": "Youth Clinic",
+    "2026-07-21|Basketball|7:40 AM": "Youth Clinic",
+    "2026-07-21|Tennis 2|10:00 AM": "Delgado, P.",
+    "2026-07-21|Swimming Pool #1|6:00 AM": "Lap Swim",
+    "2026-07-21|Swimming Pool #1|6:20 AM": "Lap Swim",
+    "2026-07-21|Swimming Pool #1|6:40 AM": "Lap Swim",
+    "2026-07-21|Swimming Pool #1|7:00 AM": "Aqua Fitness",
+    // `Basket Ball 2` is deliberately empty — an unbooked facility is a state
+    // the sheet has to render too.
+};
+
 const initial: State = {
     operator: null,
     tickets: seedTickets,
@@ -303,7 +339,7 @@ const initial: State = {
     shiftOpen: true,
     clockedIn: false,
     punches: [],
-    resourceBookings: {},
+    resourceBookings: seededResourceBookings,
     courtDate: "2026-07-21",
     customers: seededCustomers,
     rainchecks: seededRainchecks,

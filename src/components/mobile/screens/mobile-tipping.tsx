@@ -113,7 +113,7 @@ export interface TipStepProps {
  */
 export const TipAuthorising = ({ total }: { total: number }) => (
     <MobileScreen appBar={<MobileAppBar title="Card Payment" subtitle={usd(total)} leading="close" showOverflow={false} />}>
-        <Stack sx={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2, px: 4, textAlign: "center" }}>
+        <Stack sx={{ height: "100%", alignItems: "center", justifyContent: "center", gap: 2, px: 4, textAlign: "center" }}>
             <ContactlessIcon sx={{ fontSize: 56, color: appColors.slate }} />
             <Typography sx={{ fontSize: 22 }}>Tap, insert or swipe</Typography>
             <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>{usd(total)}</Typography>
@@ -128,14 +128,34 @@ export const TipAuthorising = ({ total }: { total: number }) => (
 /**
  * The first handoff.
  *
- * A deliberate full-screen beat. The card is approved, the amount is fixed, and
- * the next person to touch the device is the customer — so the screen stops and
- * says exactly that rather than letting a tip prompt appear in the employee's
- * hands.
+ * A deliberate full-screen beat. The amount is fixed and the next person to
+ * touch the device is the customer — so the screen stops and says exactly that
+ * rather than letting a tip prompt appear in the employee's hands.
+ *
+ * ## Why the headline is a prop
+ *
+ * `Card approved` is true on a card and false on the other four tenders. Cash
+ * has not been counted yet, a gift card has not been drawn, and a raincheck is
+ * a credit rather than an approval. A handoff screen that says "approved" over
+ * a tender that has not been approved is the kind of small lie that ends up
+ * quoted back in a dispute, so each tender states its own position.
  */
-export const TipHandoff = ({ total, onContinue }: { total: number; onContinue?: () => void }) => (
+export const TipHandoff = ({
+    total,
+    onContinue,
+    title = "Approved",
+    headline = "Card approved",
+    detail,
+}: {
+    total: number;
+    onContinue?: () => void;
+    title?: string;
+    headline?: string;
+    /** What is true of the money right now. Defaults to the card's wording. */
+    detail?: string;
+}) => (
     <MobileScreen
-        appBar={<MobileAppBar title="Approved" leading="none" showOverflow={false} />}
+        appBar={<MobileAppBar title={title} leading="none" showOverflow={false} />}
         actions={
             <MobileActionArea>
                 <MobilePrimary icon={<SwapHorizIcon sx={{ fontSize: 20 }} />} onClick={onContinue}>
@@ -144,11 +164,11 @@ export const TipHandoff = ({ total, onContinue }: { total: number; onContinue?: 
             </MobileActionArea>
         }
     >
-        <Stack sx={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 1.5, px: 4, textAlign: "center" }}>
+        <Stack sx={{ height: "100%", alignItems: "center", justifyContent: "center", gap: 1.5, px: 4, textAlign: "center" }}>
             <CheckCircleIcon sx={{ fontSize: 56, color: appColors.green }} />
-            <Typography sx={{ fontSize: 22, color: appColors.green }}>Card approved</Typography>
+            <Typography sx={{ fontSize: 22, color: appColors.green }}>{headline}</Typography>
             <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>
-                {usd(total)} is authorised. Nothing has been charged yet.
+                {detail ?? `${usd(total)} is authorised. Nothing has been charged yet.`}
             </Typography>
             <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 1 }}>
                 Pass the device to the customer to add a tip.
@@ -179,12 +199,20 @@ export const TipSelect = ({
     onSelect,
     onCustom,
     onApprove,
+    note,
 }: TipStepProps & {
     /** The chosen tip in dollars, or `null` for none yet. */
     selected?: number | null;
     onSelect?: (amount: number) => void;
     onCustom?: () => void;
     onApprove?: () => void;
+    /**
+     * A line under the suggestions, for a tender that cannot carry a tip.
+     *
+     * When set, the suggestions are hidden — offering percentages the tender
+     * cannot take would be collecting an answer nobody can act on.
+     */
+    note?: string;
 }) => {
     const basis = tipBasis === "subtotal" ? (subtotal ?? total) : total;
     const chosen = selected ?? null;
@@ -203,8 +231,8 @@ export const TipSelect = ({
                     {/* "Approve", not "Save" — Weston corrected himself on the
                         call, and it is the right word: the customer is agreeing
                         to a charge, not filing a preference. */}
-                    <MobilePrimary disabled={chosen === null} icon={<CheckCircleIcon sx={{ fontSize: 20 }} />} onClick={onApprove}>
-                        {chosen === null ? "Choose an amount" : `Approve ${usd(total + chosen)}`}
+                    <MobilePrimary disabled={!note && chosen === null} icon={<CheckCircleIcon sx={{ fontSize: 20 }} />} onClick={onApprove}>
+                        {note ? `Approve ${usd(total)}` : chosen === null ? "Choose an amount" : `Approve ${usd(total + chosen)}`}
                     </MobilePrimary>
                 </MobileActionArea>
             }
@@ -216,9 +244,13 @@ export const TipSelect = ({
                 <Typography sx={{ fontSize: 34 }}>{usd(total)}</Typography>
             </Stack>
 
-            <MobileSectionHeading>Add a tip for your server</MobileSectionHeading>
+            {note ? (
+                <Typography sx={{ px: 2, py: 3, fontSize: 16, color: appColors.textSecondary, textAlign: "center" }}>{note}</Typography>
+            ) : (
+                <MobileSectionHeading>Add a tip for your server</MobileSectionHeading>
+            )}
 
-            <Stack sx={{ px: 1.5, gap: 1 }}>
+            <Stack sx={{ px: 1.5, gap: 1, display: note ? "none" : undefined }}>
                 {TIP_PERCENTAGES.map((pct) => {
                     const amount = +((basis * pct) / 100).toFixed(2);
                     const isOn = chosen !== null && Math.abs(chosen - amount) < 0.005;
@@ -417,9 +449,51 @@ export const TipReceipt = ({
  * The customer needs to know they are finished, and the employee needs to know
  * they can take the device. One screen does both.
  */
-export const TipComplete = ({ total, tip, receipt }: { total: number; tip: number; receipt: "email" | "none" }) => (
-    <MobileScreen appBar={<MobileAppBar title="Done" leading="none" showOverflow={false} />}>
-        <Stack sx={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 1.5, px: 4, textAlign: "center" }}>
+export const TipComplete = ({
+    total,
+    tip,
+    receipt,
+    onDone,
+}: {
+    total: number;
+    tip: number;
+    receipt: "email" | "none";
+    /**
+     * Ends the sale and returns the operator to the register.
+     *
+     * The screen used to have no control on it at all — an app bar reading
+     * `Done` and a chip asking for the device back, and nothing to press. The
+     * customer is finished at that point but the *operator* is not, and with no
+     * action the sequence dead-ended: the only way back to the register was the
+     * browser's own history.
+     *
+     * It sits in the action area rather than the body because it belongs to the
+     * person the device is being handed back to, not the one holding it.
+     */
+    onDone?: () => void;
+}) => (
+    <MobileScreen
+        // Titled `Payment complete`, not `Done`. `Done` in the top-left corner
+        // of an app bar is where a close control lives on every other screen in
+        // this app, so a title reading `Done` there is a button that isn't one —
+        // it gets pressed, nothing happens, and the real action at the bottom
+        // gets read as decoration.
+        appBar={<MobileAppBar title="Payment complete" leading="none" showOverflow={false} />}
+        actions={
+            onDone ? (
+                <MobileActionArea>
+                    <MobilePrimary icon={<CheckCircleIcon sx={{ fontSize: 20 }} />} onClick={onDone}>
+                        Done — back to register
+                    </MobilePrimary>
+                </MobileActionArea>
+            ) : undefined
+        }
+    >
+        {/* `height: 100%`, not `flex: 1`. The screen body is a scroll container,
+            not a flex column, so `flex` was inert and the block sat at the top
+            with the whole lower half empty — it read as a layout that had lost
+            something rather than as a finished sale. */}
+        <Stack sx={{ height: "100%", alignItems: "center", justifyContent: "center", gap: 1.5, px: 4, textAlign: "center" }}>
             <CheckCircleIcon sx={{ fontSize: 64, color: appColors.green }} />
             <Typography sx={{ fontSize: 26, color: appColors.green }}>Thank you</Typography>
             <Typography sx={{ fontSize: 18 }}>{usd(total + tip)} charged</Typography>

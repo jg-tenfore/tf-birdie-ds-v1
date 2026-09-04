@@ -35,10 +35,16 @@ const step = async (label, fn) => {
 console.log("mobile prototype");
 await page.goto(BASE, { waitUntil: "networkidle" });
 
-await step("sign-in renders its own numeric keypad", async () => {
-    await page.waitForSelector('input[aria-label="Enter your PIN"]', { timeout: 8000 });
+await step("the lock screen draws dots and its own keypad", async () => {
+    // No text input by design — the PIN screen is a lock screen, so the state
+    // lives in four dots and the keypad is drawn rather than summoned from the
+    // OS. Asserting on an input here is what broke when it was rebuilt.
+    await page.waitForSelector('[role="status"][aria-label*="digits entered"]', { timeout: 8000 });
     const keys = await page.getByRole("button", { name: /^[0-9]$/ }).count();
     if (keys !== 10) throw new Error(`${keys} number keys, expected 10`);
+    for (const label of ["Delete", "Sign in with Face ID"]) {
+        if ((await page.getByRole("button", { name: label }).count()) !== 1) throw new Error(`missing the ${label} key`);
+    }
 });
 
 await step("a four-digit PIN signs in and lands on the register", async () => {
@@ -85,14 +91,52 @@ await step("Pay opens the tender with the amount owed", async () => {
     if (tabs.length !== 5) throw new Error(`${tabs.length} tender tabs, expected 5`);
 });
 
-await step("cash settles the ticket and prints an order number", async () => {
-    await page.getByRole("button", { name: /^Exact/ }).click();
+/**
+ * Cash now runs the tip sequence before the drawer opens.
+ *
+ * This test used to press `Exact` straight from the tender screen, because cash
+ * settled there. It does not any more: the customer is asked for a tip first,
+ * and only then do the Fast Pay keys come back — recomputed on total + tip,
+ * which is the whole reason the order changed. The steps below are that
+ * sequence, and the assertion at the end is that the tip actually reached the
+ * sale rather than being collected and dropped.
+ */
+await step("cash runs the tip sequence, then settles on total + tip", async () => {
+    await page.getByRole("button", { name: /^Take cash/i }).click();
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: /Hand to the customer/i }).click();
+    await page.waitForTimeout(300);
+
+    await page
+        .locator("button")
+        .filter({ hasText: /^2[058]%/ })
+        .first()
+        .click();
     await page.waitForTimeout(200);
-    await page.getByRole("button", { name: /^TAKE \$/i }).click();
-    await page.waitForTimeout(900);
+    await page.getByRole("button", { name: /^Approve/ }).click();
+    await page.waitForTimeout(400);
+
+    if (!(await page.textContent("body")).includes("Now owed")) throw new Error("cash keys did not come back after the tip");
+    await page.getByRole("button", { name: /^Exact ·/ }).click();
+    await page.waitForTimeout(200);
+    await page.getByRole("button", { name: /^Take \$/i }).click();
+    await page.waitForTimeout(700);
+
     const body = await page.textContent("body");
-    if (!body.includes("Paid in full")) throw new Error("sale did not complete");
-    if (!/Order \d/.test(body)) throw new Error("no order number");
+    if (!/[Rr]eceipt/.test(body)) throw new Error("no receipt step");
+    if (!/tip/i.test(body)) throw new Error("the receipt does not mention the tip");
+});
+
+await step("the sale carries the tip through to Order Complete", async () => {
+    // Skip the emailed receipt — the sale is already settled by this point.
+    await page
+        .getByRole("button", { name: /No receipt|Skip|Done/i })
+        .first()
+        .click();
+    await page.waitForTimeout(400);
+    const body = await page.textContent("body");
+    if (!/including a \$/.test(body)) throw new Error("the tip is not on the completion screen");
+    if (!/Thank you/.test(body)) throw new Error("no completion screen");
 });
 
 await step("the drawer carries every destination", async () => {

@@ -324,7 +324,10 @@ export const MobileBaySheetScreen = () => {
                             title={fmt(mins)}
                             trailing={`${BAYS.length - taken} of ${BAYS.length} open`}
                             accent={taken === BAYS.length ? appColors.orange : undefined}
-                            dense
+                            // One height for every slot — see the note in the
+                            // court sheet. A ragged column of times reads as
+                            // broken, not as emphasis.
+                            tall
                             onClick={() => compose(BAYS.find((b) => covering(mins, b).length === 0) ?? BAYS[0], mins)}
                         />
                     );
@@ -341,7 +344,7 @@ export const MobileBaySheetScreen = () => {
                             subtitle={`${starting.name} · ${starting.party} ${starting.party === 1 ? "guest" : "guests"} · ${starting.fee}`}
                             trailing={`${starting.duration} min · ${starting.paid ? "PAID" : "UNPAID"}`}
                             accent={appColors.orange}
-                            dense
+                            tall
                             // The landscape block rings the fee into the cart on
                             // tap. Same action, same line, same price.
                             onClick={() => {
@@ -357,11 +360,11 @@ export const MobileBaySheetScreen = () => {
 
                 if (here.length > 0) {
                     return (
-                        <MobileRow key={mins} title={fmt(mins)} trailing={`Continues · ${here[0].name}`} accent={appColors.orange} dense />
+                        <MobileRow key={mins} title={fmt(mins)} trailing={`Continues · ${here[0].name}`} accent={appColors.orange} tall />
                     );
                 }
 
-                return <MobileRow key={mins} title={fmt(mins)} trailing="Open" dense onClick={() => compose(tab, mins)} />;
+                return <MobileRow key={mins} title={fmt(mins)} trailing="Open" tall onClick={() => compose(tab, mins)} />;
             })}
 
             {/* The pill floats over the body; the spacer stops it covering the

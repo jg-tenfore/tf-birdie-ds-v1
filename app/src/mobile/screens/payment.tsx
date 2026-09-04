@@ -20,7 +20,7 @@ import { MobileEmpty, MobileSearch, MobileSectionHeading } from "@/components/mo
 import { isRedeemable, searchRainchecks } from "@/data/rainchecks";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { money, useActions, useStore } from "../../store";
-import { MobileShell } from "../mobile-shell";
+import { MobileShell, MobileViewport } from "../mobile-shell";
 
 /**
  * Payment, on a phone.
@@ -69,13 +69,31 @@ export const MobilePaymentScreen = () => {
     const [rainId, setRainId] = useState<string | undefined>();
 
     /**
-     * The card path is a sequence, not a button.
+     * Paying is a sequence, not a button — on **every** tender.
      *
-     * From the Sept 4 call: authorise, hand the device to the customer, take a
-     * tip, approve, offer a receipt, hand it back. `null` means the card path is
-     * not running and the ordinary tender UI is on screen.
+     * From the Sept 4 call. `null` means no sequence is running and the ordinary
+     * tender UI is on screen.
+     *
+     * ## Where the tip sits differs by tender, and it has to
+     *
+     * Weston's spec is written for a card: *"once we get an OK from the
+     * processor… then it would go to that tip screen"*. The reason is that an
+     * approved card can be captured for more than it was authorised, so the tip
+     * can come after. That reasoning does not transfer intact:
+     *
+     * | Tender | Sequence | Why |
+     * | -- | -- | -- |
+     * | Credit | authorise → tip → capture | The call, verbatim. The card is good for the money before the tip is chosen |
+     * | Gift card, Member | tip → settle | Both draw on a stored balance, and the balance has to cover the tip too — so the amount must be final before it is drawn |
+     * | Cash | tip → count | You cannot ask for the money before you know the number. The Fast Pay keys are recomputed on total + tip |
+     * | Raincheck | settle, then a separate tip | A credit is issued against a round; it cannot fund a gratuity. The screen says so rather than pretending |
+     *
+     * So the tip is universal and its **position** is not. Putting it in one
+     * fixed place would mean either asking a cash customer for a tip after they
+     * had already handed over the money, or drawing a gift card twice.
      */
-    const [tipStep, setTipStep] = useState<null | "authorising" | "handoff" | "tip" | "custom" | "receipt" | "complete">(null);
+    type Stage = "authorising" | "handoff" | "tip" | "custom" | "cash" | "receipt" | "complete";
+    const [tipStep, setTipStep] = useState<Stage | null>(null);
     const [tip, setTip] = useState<number | null>(null);
     const [tipDigits, setTipDigits] = useState("");
     const [email, setEmail] = useState("");
@@ -93,7 +111,37 @@ export const MobilePaymentScreen = () => {
         return () => clearTimeout(t);
     }, [tipStep]);
 
-    /* --------------------------------------------------- the card sequence */
+    /**
+     * What the customer's `Approve` does, per tender.
+     *
+     * Cash is the one that cannot settle here: the tip changes how much money
+     * has to be counted, so the sequence goes back to the operator with the
+     * Fast Pay keys recomputed on the new figure.
+     */
+    const settleWithTip = (amount: number) => {
+        if (tab === "CASH") return setTipStep("cash");
+        pay(
+            tab === "CREDIT" ? "Card" : tab === "GIFT CARD" ? "Gift card" : tab === "RAIN" ? "Rain Check" : "Member account",
+            undefined,
+            tab === "RAIN" ? selectedRaincheck?.id : undefined,
+            // A raincheck cannot fund a gratuity, so it never carries one.
+            tab === "RAIN" ? 0 : amount,
+        );
+        setTipStep("receipt");
+    };
+
+    /* ------------------------------------------------------- the sequence */
+
+    /**
+     * Every tip screen, centred like every other screen.
+     *
+     * `MobileScreen` is the frame alone — `MobileShell` is what puts it in the
+     * middle of a desktop window, and the tip components compose the former
+     * because Storybook supplies its own centring. In the prototype that
+     * difference is visible: the app would snap from centred to the top-left
+     * corner the moment a payment started, and back again when it finished.
+     */
+    const framed = (el: React.ReactNode) => <MobileViewport>{el}</MobileViewport>;
 
     /**
      * The tip flow, live.
@@ -104,28 +152,59 @@ export const MobilePaymentScreen = () => {
      * and a changed tip needs a second authorisation.
      */
     if (ticket && tipStep) {
-        if (tipStep === "authorising") return <TipAuthorising total={total} />;
+        if (tipStep === "authorising") return framed(<TipAuthorising total={total} />);
 
-        if (tipStep === "handoff") return <TipHandoff total={total} onContinue={() => setTipStep("tip")} />;
+        /**
+         * The handoff, worded per tender.
+         *
+         * Only credit has been approved by anybody. The rest are being handed
+         * over with the money still to be taken, and the screen says which.
+         */
+        if (tipStep === "handoff") {
+            const HANDOFF: Record<Tender, { title: string; headline: string; detail: string }> = {
+                CREDIT: {
+                    title: "Approved",
+                    headline: "Card approved",
+                    detail: `${money(total)} is authorised. Nothing has been charged yet.`,
+                },
+                CASH: { title: "Cash", headline: "Cash sale", detail: `${money(total)} is due. Nothing has been counted yet.` },
+                "GIFT CARD": {
+                    title: "Gift card",
+                    headline: "Gift card ready",
+                    detail: `${money(total)} is due. The card is drawn once the total is final.`,
+                },
+                MEMBER: {
+                    title: "Member",
+                    headline: "Member account",
+                    detail: `${money(total)} will post to the account once the total is final.`,
+                },
+                RAIN: {
+                    title: "Raincheck",
+                    headline: "Raincheck ready",
+                    detail: `${money(selectedRaincheck?.balance ?? 0)} of credit covers this round.`,
+                },
+            };
+            return framed(<TipHandoff total={total} {...HANDOFF[tab]} onContinue={() => setTipStep("tip")} />);
+        }
 
         if (tipStep === "tip")
-            return (
+            return framed(
                 <TipSelect
                     total={total}
                     subtotal={subtotal}
-                    selected={tip}
+                    selected={tab === "RAIN" ? 0 : tip}
                     onSelect={setTip}
                     onCustom={() => setTipStep("custom")}
-                    onApprove={() => {
-                        // Capture happens here, at total + tip.
-                        pay("Card", undefined, undefined, tip ?? 0);
-                        setTipStep("receipt");
-                    }}
-                />
+                    onApprove={() => settleWithTip(tip ?? 0)}
+                    // A raincheck is a credit against a round. It cannot fund a
+                    // gratuity, and saying so beats collecting a tip the tender
+                    // is then unable to take.
+                    note={tab === "RAIN" ? "A raincheck covers the round only — a tip would need to be taken separately." : undefined}
+                />,
             );
 
         if (tipStep === "custom")
-            return (
+            return framed(
                 <TipCustom
                     total={total}
                     value={tipDigits}
@@ -133,18 +212,93 @@ export const MobilePaymentScreen = () => {
                     onApprove={() => {
                         const amount = Number(tipDigits || "0") / 100;
                         setTip(amount);
-                        pay("Card", undefined, undefined, amount);
-                        setTipStep("receipt");
+                        settleWithTip(amount);
                     }}
                     onBack={() => setTipStep("tip")}
-                />
+                />,
             );
+
+        /**
+         * Cash, after the tip.
+         *
+         * The device is back with the operator — the customer is done and the
+         * money still has to be counted. The keys are recomputed on total + tip,
+         * because presets built on the pre-tip figure would be the wrong
+         * numbers at exactly the moment somebody is counting notes.
+         */
+        if (tipStep === "cash") {
+            const owed = +(total + (tip ?? 0)).toFixed(2);
+            return (
+                <MobileShell
+                    title="Take cash"
+                    subtitle={`${money(total)} + ${money(tip ?? 0)} tip`}
+                    active="proshop"
+                    leading="back"
+                    onLeading={() => setTipStep("tip")}
+                    showOverflow={false}
+                    actions={
+                        <MobileActionArea>
+                            <MobilePrimary
+                                disabled={tendered === null}
+                                icon={<CheckIcon sx={{ fontSize: 20 }} />}
+                                onClick={() => {
+                                    pay("Cash", Math.max(tendered ?? owed, owed), undefined, tip ?? 0);
+                                    setTipStep("receipt");
+                                }}
+                            >
+                                {tendered === null ? "Choose an amount" : `Take ${money(tendered)}`}
+                            </MobilePrimary>
+                        </MobileActionArea>
+                    }
+                >
+                    <Stack sx={{ px: 1.5, py: 1.5, bgcolor: appColors.green, color: "#fff" }}>
+                        <Typography sx={{ fontSize: 13, opacity: 0.9 }}>Now owed</Typography>
+                        <Typography sx={{ fontSize: 32 }}>{money(owed)}</Typography>
+                    </Stack>
+                    <MobileSectionHeading>Amount tendered</MobileSectionHeading>
+                    <Stack sx={{ px: 1.5, gap: 1, pb: 2 }}>
+                        <ButtonBase
+                            onClick={() => setTendered(owed)}
+                            sx={{
+                                minHeight: 52,
+                                bgcolor: tendered === owed ? appColors.green : appColors.slate,
+                                color: "#fff",
+                                borderRadius: `${appRadius.button}px`,
+                                fontSize: 16,
+                            }}
+                        >
+                            Exact · {money(owed)}
+                        </ButtonBase>
+                        {FAST.filter((f) => f >= owed).map((f) => (
+                            <ButtonBase
+                                key={f}
+                                onClick={() => setTendered(f)}
+                                sx={{
+                                    minHeight: 48,
+                                    bgcolor: tendered === f ? appColors.green : appColors.slate,
+                                    color: "#fff",
+                                    borderRadius: `${appRadius.button}px`,
+                                    fontSize: 15,
+                                }}
+                            >
+                                {money(f)}
+                            </ButtonBase>
+                        ))}
+                        {tendered !== null && tendered > owed && (
+                            <Typography sx={{ fontSize: 15, color: appColors.green, textAlign: "center", pt: 0.5 }}>
+                                Change due {money(tendered - owed)}
+                            </Typography>
+                        )}
+                    </Stack>
+                </MobileShell>
+            );
+        }
     }
 
     // Past capture the ticket is gone, so these read from `lastSale` — the same
     // record the terminal's Order Complete prints from.
     if (sale && tipStep === "receipt")
-        return (
+        return framed(
             <TipReceipt
                 total={sale.total}
                 tip={sale.tip}
@@ -154,10 +308,27 @@ export const MobilePaymentScreen = () => {
                     setReceipt(choice);
                     setTipStep("complete");
                 }}
-            />
+            />,
         );
 
-    if (sale && tipStep === "complete") return <TipComplete total={sale.total} tip={sale.tip} receipt={receipt} />;
+    if (sale && tipStep === "complete")
+        return framed(
+            <TipComplete
+                total={sale.total}
+                tip={sale.tip}
+                receipt={receipt}
+                // Clearing `tipStep` first matters: without it the screen would
+                // still be in the sequence when the next ticket opened, and the
+                // register would come back mid-tip.
+                onDone={() => {
+                    setTipStep(null);
+                    setTip(null);
+                    setTipDigits("");
+                    setTendered(null);
+                    navigate("/proshop");
+                }}
+            />,
+        );
 
     /* ---------------------------------------------------------- complete */
 
@@ -214,19 +385,26 @@ export const MobilePaymentScreen = () => {
     /* ------------------------------------------------------------ tender */
 
     const onRain = tab === "RAIN";
-    const canCommit = onRain ? Boolean(selectedRaincheck) : tab !== "CASH" || tendered !== null;
 
+    /**
+     * Only a raincheck needs anything picked before the sequence starts.
+     *
+     * Cash no longer does: its amount is chosen *after* the tip, because the
+     * tip changes the figure being counted.
+     */
+    const canCommit = onRain ? Boolean(selectedRaincheck) : true;
+
+    /**
+     * Start the sequence. Every tender runs one — that is the whole point of
+     * tipping being an extension of the payment screen rather than a card
+     * feature.
+     *
+     * Credit is the only tender that authorises first; the rest go straight to
+     * the handoff, because there is nothing to ask a processor about.
+     */
     const commit = () => {
-        if (onRain) {
-            if (!selectedRaincheck) return;
-            pay("Rain Check", 0, selectedRaincheck.id);
-            return;
-        }
-        if (tab === "CREDIT") return setTipStep("authorising");
-        pay(
-            tab === "CASH" ? "Cash" : tab === "GIFT CARD" ? "Gift card" : "Member account",
-            tab === "CASH" ? Math.max(tendered ?? total, total) : undefined,
-        );
+        if (onRain && !selectedRaincheck) return;
+        setTipStep(tab === "CREDIT" ? "authorising" : "handoff");
     };
 
     return (
@@ -247,19 +425,20 @@ export const MobilePaymentScreen = () => {
                         icon={onRain ? <BoltIcon sx={{ fontSize: 20 }} /> : <CheckIcon sx={{ fontSize: 20 }} />}
                         onClick={commit}
                     >
+                        {/* No tender commits from this button any more — each
+                            one starts a sequence that ends with the customer
+                            approving. The labels say "start", never "charged". */}
                         {onRain
                             ? selectedRaincheck
                                 ? `Apply ${money(selectedRaincheck.balance)}`
                                 : "Pick a raincheck"
-                            : tab === "CASH" && tendered === null
-                              ? "Choose an amount"
-                              : /* Card does not commit here — it starts the
-                                   authorise → tip → approve sequence, and the
-                                   label says so rather than promising a charge
-                                   that has not been asked for yet. */
-                                tab === "CREDIT"
-                                ? "Take card payment"
-                                : `Take ${money(total)}`}
+                            : tab === "CREDIT"
+                              ? "Take card payment"
+                              : tab === "CASH"
+                                ? `Take cash · ${money(total)}`
+                                : tab === "GIFT CARD"
+                                  ? "Draw the gift card"
+                                  : "Charge the member"}
                     </MobilePrimary>
                 </MobileActionArea>
             }
@@ -312,43 +491,15 @@ export const MobilePaymentScreen = () => {
             </Stack>
 
             {tab === "CASH" && (
-                <>
-                    <MobileSectionHeading>Amount tendered</MobileSectionHeading>
-                    <Stack sx={{ px: 1.5, gap: 1, pb: 2 }}>
-                        <ButtonBase
-                            onClick={() => setTendered(total)}
-                            sx={{
-                                minHeight: 52,
-                                bgcolor: tendered === total ? appColors.green : appColors.slate,
-                                color: "#fff",
-                                borderRadius: `${appRadius.button}px`,
-                                fontSize: 16,
-                            }}
-                        >
-                            Exact · {money(total)}
-                        </ButtonBase>
-                        {FAST.filter((f) => f >= total).map((f) => (
-                            <ButtonBase
-                                key={f}
-                                onClick={() => setTendered(f)}
-                                sx={{
-                                    minHeight: 48,
-                                    bgcolor: tendered === f ? appColors.green : appColors.slate,
-                                    color: "#fff",
-                                    borderRadius: `${appRadius.button}px`,
-                                    fontSize: 15,
-                                }}
-                            >
-                                {money(f)}
-                            </ButtonBase>
-                        ))}
-                        {tendered !== null && tendered > total && (
-                            <Typography sx={{ fontSize: 15, color: appColors.green, textAlign: "center", pt: 0.5 }}>
-                                Change due {money(tendered - total)}
-                            </Typography>
-                        )}
-                    </Stack>
-                </>
+                <Stack sx={{ alignItems: "center", gap: 1, py: 5, px: 3 }}>
+                    <Typography sx={{ fontSize: 16, textAlign: "center" }}>Hand the device over first.</Typography>
+                    {/* The amount deliberately is not chosen here. A tip changes
+                        what has to be counted, so picking the notes before the
+                        customer has been asked would mean picking them twice. */}
+                    <Typography sx={{ fontSize: 13, color: appColors.textSecondary, textAlign: "center" }}>
+                        The customer adds a tip, then the cash keys come back with the new total.
+                    </Typography>
+                </Stack>
             )}
 
             {tab === "CREDIT" && (

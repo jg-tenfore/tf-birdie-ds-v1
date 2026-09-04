@@ -150,7 +150,12 @@ export const MobileCourtSheetScreen = () => {
                         title={slot}
                         trailing={booked ?? "Open"}
                         accent={booked ? appColors.purple : undefined}
-                        dense
+                        // Every slot is 64dp, booked or not. Sizing only the
+                        // open ones made the list ragged — a column of times at
+                        // two different heights reads as a rendering fault
+                        // rather than as emphasis, and the booked rows are
+                        // tappable too (that is how a booking gets cancelled).
+                        tall
                         onClick={() => navigate(`/coursheet/${encodeURIComponent(court)}/${encodeURIComponent(slot)}`)}
                     />
                 );

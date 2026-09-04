@@ -186,6 +186,8 @@ const preview: Preview = {
                     "Mobile Screens",
                     [
                         "Overview",
+                        // The front door comes before the app it opens.
+                        "PIN lock",
                         // Same numeric order as App Screens above, and for the
                         // same reason: alphabetically "10-tablechart" sorts
                         // before "2-teesheet".

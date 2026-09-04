@@ -120,10 +120,13 @@ const PositionRow = ({ position, index, onOpen }: { position: Position; index: n
             borderBottom: `1px solid ${appColors.divider}`,
         }}
     >
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1, minHeight: 52 }}>
+        {/* 64, matching the open row beneath it. These two alternate down the
+            sheet, so different heights read as a rendering fault rather than as
+            a distinction — the colour bar already carries the difference. */}
+        <Stack direction="row" sx={{ alignItems: "center", gap: 1, minHeight: 64 }}>
             <Box sx={{ width: 5, alignSelf: "stretch", bgcolor: positionTone(position, index), flexShrink: 0 }} />
             <Stack sx={{ flex: 1, minWidth: 0, py: 0.75 }}>
-                <Typography sx={{ fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <Typography sx={{ fontSize: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     ({position.party}) {position.name}
                 </Typography>
                 {/* The tags line carries only what changes the sale: a nine-hole
@@ -147,7 +150,14 @@ const PositionRow = ({ position, index, onOpen }: { position: Position; index: n
     </ButtonBase>
 );
 
-/** Consecutive open positions, as one row. The count leads because it is the question. */
+/**
+ * Consecutive open positions, as one row. The count leads because it is the question.
+ *
+ * 64dp rather than 44. This is the row that sells a tee time, and it was the
+ * shortest one under a time block — a filled position is 52dp because it
+ * carries a name, so the sheet was giving the most room to the rows nobody taps
+ * and the least to the one everybody does.
+ */
 const OpenRow = ({ count, onOpen }: { count: number; onOpen: () => void }) => (
     <ButtonBase
         onClick={onOpen}
@@ -159,11 +169,11 @@ const OpenRow = ({ count, onOpen }: { count: number; onOpen: () => void }) => (
             borderBottom: `1px solid ${appColors.divider}`,
         }}
     >
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1, minHeight: 44, px: 1.5 }}>
-            <Typography sx={{ fontSize: 14, color: appColors.textSecondary, flex: 1 }}>
+        <Stack direction="row" sx={{ alignItems: "center", gap: 1, minHeight: 64, px: 1.5 }}>
+            <Typography sx={{ fontSize: 17, color: appColors.textPrimary, flex: 1 }}>
                 {count} open {count === 1 ? "position" : "positions"}
             </Typography>
-            <ChevronRightIcon sx={{ fontSize: 18, color: appColors.textSecondary }} />
+            <ChevronRightIcon sx={{ fontSize: 22, color: appColors.textSecondary }} />
         </Stack>
     </ButtonBase>
 );
@@ -225,8 +235,10 @@ const GridRow = ({ booking, onOpen }: { booking: TeeTimeBooking; onOpen: () => v
                 borderBottom: `1px solid ${appColors.divider}`,
             }}
         >
-            <Stack direction="row" sx={{ alignItems: "center", gap: 1, px: 1.5, minHeight: 48 }}>
-                <Typography sx={{ fontSize: 15, minWidth: 74 }}>{booking.time}</Typography>
+            {/* Every grid row is a booking target, so all of them get 64 —
+                there is no "read-only" row in this view to trade against. */}
+            <Stack direction="row" sx={{ alignItems: "center", gap: 1, px: 1.5, minHeight: 64 }}>
+                <Typography sx={{ fontSize: 16, minWidth: 74 }}>{booking.time}</Typography>
                 <Box sx={{ flex: 1, height: 8, display: "flex", gap: 0.5 }}>
                     {booking.positions.map((p, i) => (
                         <Box
