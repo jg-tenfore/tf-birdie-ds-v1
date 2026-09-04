@@ -10,6 +10,7 @@ import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 
 import { foodImage } from "@/components/screens/restaurant/quick-order-food-image";
 import { seatBandColors } from "@/components/screens/restaurant/tabs-parts";
+import { posCategory, posItem } from "@/data/pos-inventory";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
 import { MobileAttachedCustomer, MobileFab, MobileFilterTabs, MobileRow, MobileSearch, MobileSeatBand } from "../mobile-parts";
@@ -49,22 +50,13 @@ import {
 
 const MENU_SETS = ["All", "Dinner", "19th Hole Menu", "Blue Sky"];
 
-const categories = [
-    { name: "Beers", image: foodImage("Beer") },
-    { name: "Golf Balls", image: foodImage("Golf Balls") },
-    { name: "Accessories", image: foodImage("Accessories") },
-    { name: "Hats", image: foodImage("Hats") },
-    { name: "Japanese Cuisine", image: foodImage("Japanese Cuisine") },
-];
+/** Real F&B categories, from `@/data/pos-inventory`. */
+const categories = ["Beer & Wine", "Snacks", "Beverages", "Grill", "Sandwiches"]
+    .map((label) => posCategory(label))
+    .filter((c) => c !== undefined);
 
-const products = [
-    { name: "Combo", price: 100 },
-    { name: "Golf Balls", price: 34.99 },
-    { name: "Accessories", price: 14.99 },
-    { name: "Hats", price: 29.99 },
-    { name: "Japanese Cuisine", price: 18.99 },
-    { name: "Miscellaneous", price: 19.99 },
-];
+/** The flat variant: real stock, added straight to the order. */
+const products = categories.flatMap((c) => c.items.slice(0, 2)).slice(0, 8);
 
 const seatedLines = [
     { seat: 1, name: "Busch Prod", price: 5 },
@@ -119,7 +111,13 @@ export const MobileTables = ({
                     { name: "Heineken", price: 15.75 },
                     { name: "Anchor Steam", price: 22.75 },
                 ].map((b) => (
-                    <MobileRow key={b.name} title={b.name} price={b.price} image={foodImage(b.name)} onClick={() => {}} />
+                    <MobileRow
+                        key={b.name}
+                        title={b.name}
+                        price={posItem(b.name)?.price ?? b.price}
+                        image={posItem(b.name)?.image ?? foodImage(b.name)}
+                        onClick={() => {}}
+                    />
                 ))}
             </MobileScreen>
         );
@@ -144,19 +142,27 @@ export const MobileTables = ({
             {/* Flat rows add straight to the order; chevron rows go somewhere.
                 With no room for a second visual convention, the chevron is the
                 only thing distinguishing the two. */}
-            {(flat ? products : categories).map((c) =>
-                flat ? (
-                    <MobileRow
-                        key={c.name}
-                        title={c.name}
-                        price={"price" in c ? (c.price as number) : undefined}
-                        image={foodImage(c.name)}
-                        onClick={() => {}}
-                    />
-                ) : (
-                    <MobileRow key={c.name} title={c.name} image={"image" in c ? (c.image as string) : ""} drills onClick={() => {}} />
-                ),
-            )}
+            {flat
+                ? products.map((p) => (
+                      <MobileRow
+                          key={p.id}
+                          title={p.name}
+                          subtitle={p.description}
+                          price={p.price}
+                          image={p.image ?? ""}
+                          onClick={() => {}}
+                      />
+                  ))
+                : categories.map((c) => (
+                      <MobileRow
+                          key={c.label}
+                          title={c.label}
+                          subtitle={`${c.items.length} ${c.items.length === 1 ? "item" : "items"}`}
+                          image={c.image ?? ""}
+                          drills
+                          onClick={() => {}}
+                      />
+                  ))}
             <Box sx={{ height: 64 }} />
         </MobileScreen>
     );
@@ -203,7 +209,13 @@ export const MobileTableOrder = ({ fired = false }: { fired?: boolean }) => {
                     {seatedLines
                         .filter((l) => l.seat === seat)
                         .map((l, i) => (
-                            <MobileRow key={`${l.name}-${i}`} title={l.name} price={l.price} image={foodImage(l.name)} overflow />
+                            <MobileRow
+                                key={`${l.name}-${i}`}
+                                title={l.name}
+                                price={l.price}
+                                image={posItem(l.name)?.image ?? foodImage(l.name)}
+                                overflow
+                            />
                         ))}
                 </Box>
             ))}

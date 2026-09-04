@@ -1,0 +1,9 @@
+Button order: 23
+Button label: BRIDGESTONE TOUR B XS BOX
+PGA product/page title: Bridgestone 2026 TOUR B XS Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/2026-tour-b-xs-golf-balls/2000000058277.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (1073284 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058277-92-01_pc?fmt=png&w=1200
+- 02_product_image.png (804306 bytes): https://cdn.media.amplience.net/i/pgatss/2000000058277-92-02_pc?fmt=png&w=1200

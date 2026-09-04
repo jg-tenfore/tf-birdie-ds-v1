@@ -16,6 +16,7 @@ import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import { foodImage } from "@/components/screens/restaurant/quick-order-food-image";
 import { seatBandColors } from "@/components/screens/restaurant/tabs-parts";
 import { openTabs } from "@/components/screens/restaurant/tabs-story-parts";
+import { posCategory, posItem } from "@/data/pos-inventory";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
 import { MobileAttachedCustomer, MobileFab, MobileFilterTabs, MobileRow, MobileSearch, MobileSeatBand } from "../mobile-parts";
@@ -56,23 +57,19 @@ import { MobileActionArea, MobileAppBar, MobileBottomNav, MobileBottomSheet, Mob
 
 const MENU_SETS = ["All", "Dinner", "19th Hole Menu", "Blue Sky"];
 
-const categories = [
-    { name: "Beers", image: foodImage("Beer") },
-    { name: "Golf Balls", image: foodImage("Golf Balls") },
-    { name: "Accessories", image: foodImage("Accessories") },
-    { name: "Hats", image: foodImage("Hats") },
-    { name: "Japanese Cuisine", image: foodImage("Japanese Cuisine") },
-];
+/**
+ * Real categories, from `@/data/pos-inventory`.
+ *
+ * A tab is rung against the kitchen and the bar, so these are the F&B
+ * categories rather than the shipping grid's merchandise mix — and each one now
+ * carries a photograph from the catalogue instead of a tinted placeholder.
+ */
+const categories = ["Beer & Wine", "Snacks", "Beverages", "Grill", "Sandwiches"]
+    .map((label) => posCategory(label))
+    .filter((c) => c !== undefined);
 
-export const beerList = [
-    { name: "Combo", price: 9.5 },
-    { name: "Stella Artois", price: 10.25 },
-    { name: "Corona", price: 9.0 },
-    { name: "Blue Moon", price: 11.0 },
-    { name: "Sapporo", price: 12.25 },
-    { name: "Heineken", price: 15.75 },
-    { name: "Anchor Steam", price: 22.75 },
-];
+/** The drilled-in list, real stock at real prices. */
+export const beerList = (posCategory("Beer & Wine")?.items ?? []).slice(0, 8);
 
 const seatedLines = [
     { seat: 1, name: "Busch Prod", price: 5 },
@@ -210,7 +207,7 @@ export const MobileTabDetail = ({
                                     key={`${l.name}-${i}`}
                                     title={l.name}
                                     price={l.price}
-                                    image={foodImage(l.name)}
+                                    image={posItem(l.name)?.image ?? foodImage(l.name)}
                                     overflow
                                     onOverflow={() => setSheet("line")}
                                 />
@@ -221,7 +218,14 @@ export const MobileTabDetail = ({
                 <>
                     <MobileSearch placeholder="Search Beers" />
                     {beerList.map((b) => (
-                        <MobileRow key={b.name} title={b.name} price={b.price} image={foodImage(b.name)} onClick={() => {}} />
+                        <MobileRow
+                            key={b.id}
+                            title={b.name}
+                            subtitle={b.description}
+                            price={b.price}
+                            image={b.image ?? ""}
+                            onClick={() => {}}
+                        />
                     ))}
                 </>
             ) : showCombos ? (
@@ -237,7 +241,14 @@ export const MobileTabDetail = ({
                     <MobileFilterTabs tabs={MENU_SETS} active={menuSet} onChange={setMenuSet} />
                     <MobileSearch placeholder="Search Items" />
                     {categories.map((c) => (
-                        <MobileRow key={c.name} title={c.name} image={c.image} drills onClick={() => {}} />
+                        <MobileRow
+                            key={c.label}
+                            title={c.label}
+                            subtitle={`${c.items.length} ${c.items.length === 1 ? "item" : "items"}`}
+                            image={c.image ?? ""}
+                            drills
+                            onClick={() => {}}
+                        />
                     ))}
                     <Box sx={{ height: 64 }} />
                 </>

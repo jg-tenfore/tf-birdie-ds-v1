@@ -1,0 +1,12 @@
+Button order: 24
+Button label: BRIDGESTONE E6 BOX
+PGA product/page title: Bridgestone e6 Soft 2025 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/e6-soft-2025-golf-balls/2000000051380.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (1196642 bytes): https://cdn.media.amplience.net/i/pgatss/2000000051380-01_pc?fmt=png&w=1200
+- 02_product_image.png (1498291 bytes): https://cdn.media.amplience.net/i/pgatss/2000000051380-02_pc?fmt=png&w=1200
+- 03_product_image.png (1465486 bytes): https://cdn.media.amplience.net/i/pgatss/2000000051380-03_pc?fmt=png&w=1200
+- 04_product_image.png (971330 bytes): https://cdn.media.amplience.net/i/pgatss/2000000051380-92-01_pc?fmt=png&w=1200
+- 05_product_image.png (1196642 bytes): https://cdn.media.amplience.net/i/pgatss/2000000051380-96-01_pc?fmt=png&w=1200

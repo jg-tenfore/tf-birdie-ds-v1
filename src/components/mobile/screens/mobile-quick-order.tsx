@@ -17,6 +17,7 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 
 import { foodImage } from "@/components/screens/restaurant/quick-order-food-image";
+import { posCategories, posItem } from "@/data/pos-inventory";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
 import {
@@ -81,18 +82,19 @@ import {
 
 const MENU_SETS = ["All", "Dinner", "19th Hole Menu", "Blue Sky"];
 
-/** The list the references show, in their order, at their prices. */
-export const quickOrderProducts = [
-    { name: "Gift Card", price: 100, image: foodImage("Gift Card") },
-    { name: "Golf Balls", price: 34.99, image: foodImage("Golf Balls") },
-    { name: "Accessories", price: 14.99, image: foodImage("Accessories") },
-    { name: "Hats", price: 29.99, image: foodImage("Hats") },
-    { name: "Japanese Cuisine", price: 18.99, image: foodImage("Japanese Cuisine") },
-    { name: "Miscellaneous", price: 19.99, image: foodImage("Miscellaneous") },
-    { name: "Beer", price: 8.5, image: foodImage("Beer") },
-    { name: "Punch Cards", price: 45, image: foodImage("Punch Cards") },
-    { name: "Sandwiches", price: 12.5, image: foodImage("Sandwiches") },
-];
+/**
+ * Real inventory, from `@/data/pos-inventory`.
+ *
+ * These rows used to be nine hardcoded `{ name, price }` pairs with
+ * `foodImage(name)` beside them — and `foodImage` resolves against the *kitchen*
+ * catalogue, so "Gift Card", "Golf Balls" and "Hats" all missed and drew tinted
+ * placeholders. The screen looked photographed and was not.
+ *
+ * Now every row is a catalogued product with its own photograph, price and
+ * description. The category list is what the pro shop actually stocks rather
+ * than the shipping grid's odd mix of merchandise and cuisines.
+ */
+const productRows = posCategories.flatMap((c) => c.items.slice(0, 2)).slice(0, 12);
 
 export const quickOrderCombos = [
     { name: "6 Pack Combo", price: 17.53 },
@@ -104,9 +106,16 @@ export const quickOrderCombos = [
     { name: "Test 1", price: 10 },
 ];
 
+/**
+ * Two lines on the order.
+ *
+ * Kept as the shipping app's own product names — the replica stories use them
+ * and changing them here would make the two categories disagree — but the
+ * photograph and the price now come from the catalogue where it has them.
+ */
 const orderLines = [
-    { name: "Pearl Beer", price: 12, image: foodImage("Pearl Beer") },
-    { name: "Potato Skins", price: 16.65, image: foodImage("Potato Skins") },
+    { name: "Pearl Beer", price: posItem("Corona Extra")?.price ?? 12, image: foodImage("Pearl Beer") },
+    { name: "Potato Skins", price: posItem("Chicken Tenders")?.price ?? 16.65, image: foodImage("Potato Skins") },
 ];
 
 type Tab = "menus" | "order";
@@ -207,15 +216,20 @@ export const MobileQuickOrder = ({
                 <>
                     <MobileFilterTabs tabs={MENU_SETS} active={menuSet} onChange={setMenuSet} />
                     <MobileSearch placeholder={combos ? "Search Combos" : "Search Items"} />
-                    {(combos ? quickOrderCombos : quickOrderProducts).map((p) => (
-                        <MobileRow
-                            key={p.name}
-                            title={p.name}
-                            price={p.price}
-                            image={"image" in p ? (p.image as string) : ""}
-                            onClick={() => {}}
-                        />
-                    ))}
+                    {combos
+                        ? quickOrderCombos.map((p) => <MobileRow key={p.name} title={p.name} price={p.price} image="" onClick={() => {}} />)
+                        : productRows.map((p) => (
+                              <MobileRow
+                                  key={p.id}
+                                  title={p.name}
+                                  // The catalogue's own sentence, truncated by the
+                                  // row rather than by an author guessing a length.
+                                  subtitle={p.description}
+                                  price={p.price}
+                                  image={p.image ?? ""}
+                                  onClick={() => {}}
+                              />
+                          ))}
                     {/* The list ends with clearance for the floating pill, which
                         would otherwise sit on top of the last row. */}
                     <Box sx={{ height: 64 }} />

@@ -1,0 +1,16 @@
+Button order: 01
+Button label: TITLEIST PRO V1 BOX
+PGA product/page title: Titleist Pro V1 2025 Standard Play Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/pro-v1-2025-standard-play-golf-balls/2000000050258.html
+Note: Exact button maps to current PGA product page; folder includes product gallery imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (416241 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-01_pc?fmt=png&w=1200
+- 02_product_image.png (827158 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-02_pc?fmt=png&w=1200
+- 03_product_image.png (711980 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-03_pc?fmt=png&w=1200
+- 04_product_image.png (715411 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-04_pc?fmt=png&w=1200
+- 05_product_image.png (328043 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-05_pc?fmt=png&w=1200
+- 06_product_image.png (657937 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-06_pc?fmt=png&w=1200
+- 07_product_image.png (1332270 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-07_pc?fmt=png&w=1200
+- 08_product_image.png (416241 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-92-01_pc?fmt=png&w=1200
+- 09_product_image.png (536499 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050258-96-01_pc?fmt=png&w=1200

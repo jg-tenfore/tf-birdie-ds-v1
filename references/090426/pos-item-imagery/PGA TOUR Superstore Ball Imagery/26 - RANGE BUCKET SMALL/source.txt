@@ -1,0 +1,8 @@
+Button order: 26
+Button label: RANGE BUCKET SMALL
+PGA product/page title: Complete home practice range
+PGA product/page URL: https://www.pgatoursuperstore.com/complete-home-practice-range/1091931.html
+Note: No separate PGA small range bucket product imagery found; used closest PGA range/practice imagery.
+
+Downloaded PNG images:
+- 01_product_image.png (1327426 bytes): https://cdn.media.amplience.net/i/pgatss/1000000016906-01_pc?fmt=png&w=1200

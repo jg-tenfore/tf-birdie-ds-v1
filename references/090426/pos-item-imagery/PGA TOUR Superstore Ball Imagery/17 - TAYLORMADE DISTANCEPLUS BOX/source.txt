@@ -1,0 +1,13 @@
+Button order: 17
+Button label: TAYLORMADE DISTANCE+ BOX
+PGA product/page title: TaylorMade Distance+ 2025 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/distance-2025-golf-balls/2000000050606.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (667427 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050606-01_pc?fmt=png&w=1200
+- 02_product_image.png (997571 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050606-02_pc?fmt=png&w=1200
+- 03_product_image.png (577227 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050606-03_pc?fmt=png&w=1200
+- 04_product_image.png (588361 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050606-04_pc?fmt=png&w=1200
+- 05_product_image.png (667427 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050606-92-01_pc?fmt=png&w=1200
+- 06_product_image.png (711854 bytes): https://cdn.media.amplience.net/i/pgatss/2000000050606-96-01_pc?fmt=png&w=1200

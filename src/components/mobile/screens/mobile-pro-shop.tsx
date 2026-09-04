@@ -14,10 +14,8 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
 
-import { proShopCategories } from "@/components/screens/pro-shop/pro-shop-catalog";
-import { golfBalls, golfShoes, mens, accessoriesAndTraining } from "@/data/store-catalog";
+import { posCategories } from "@/data/pos-inventory";
 import { appColors } from "@/theme/app-replica-tokens";
-import { storeImage } from "@/utils/asset-url";
 import { MobileNavDrawer } from "../mobile-drawer";
 import { MobileAttachedCustomer, MobileEmpty, MobileRow, MobileSearch, MobileSectionHeading, MobileTotals } from "../mobile-parts";
 import {
@@ -58,18 +56,22 @@ import {
  * action that should cost a deliberate second tap on a device you can drop.
  */
 
-const photoFor: Record<string, string | undefined> = {
-    "Golf Balls": golfBalls[0] && storeImage(golfBalls[0].path),
-    "Range Balls": golfBalls[3] && storeImage(golfBalls[3].path),
-    Shoes: golfShoes[0] && storeImage(golfShoes[0].path),
-    Shirts: mens[0] && storeImage(mens[0].path),
-    Accessories: accessoriesAndTraining[0] && storeImage(accessoriesAndTraining[0].path),
-};
+/**
+ * Real categories, from `@/data/pos-inventory`.
+ *
+ * The tablet grid prints 24 labels and had photography for six of them — the
+ * rest drew an empty tile, because the labels were a hardcoded list and the
+ * photographs were hand-picked one at a time. These come from the catalogue, so
+ * every category on screen has a picture behind it and an item count that is
+ * true.
+ */
+const categories = posCategories;
 
-const orderLines = [
-    { name: "Titleist Pro V1", price: 54.99, image: golfBalls[0] && storeImage(golfBalls[0].path) },
-    { name: "Golf Glove", price: 24.99, image: accessoriesAndTraining[0] && storeImage(accessoriesAndTraining[0].path) },
-];
+/** Two real products on the order, priced from the catalogue. */
+const orderLines = posCategories
+    .flatMap((c) => c.items)
+    .filter((i) => !i.isSynthetic && i.image)
+    .slice(0, 2);
 
 type Tab = "shop" | "order";
 
@@ -188,8 +190,15 @@ export const MobileProShop = ({
                     ) : (
                         <>
                             <MobileSearch placeholder="Search categories" />
-                            {proShopCategories.map((c) => (
-                                <MobileRow key={c} title={c} image={photoFor[c] ?? ""} drills onClick={() => {}} />
+                            {categories.map((c) => (
+                                <MobileRow
+                                    key={c.label}
+                                    title={c.label}
+                                    subtitle={`${c.items.length} ${c.items.length === 1 ? "item" : "items"}`}
+                                    image={c.image ?? ""}
+                                    drills
+                                    onClick={() => {}}
+                                />
                             ))}
                         </>
                     )}
@@ -201,8 +210,9 @@ export const MobileProShop = ({
                     <MobileSectionHeading>Order</MobileSectionHeading>
                     {lines.map((l) => (
                         <MobileRow
-                            key={l.name}
+                            key={l.id}
                             title={l.name}
+                            subtitle={l.description}
                             price={l.price}
                             image={l.image ?? ""}
                             overflow

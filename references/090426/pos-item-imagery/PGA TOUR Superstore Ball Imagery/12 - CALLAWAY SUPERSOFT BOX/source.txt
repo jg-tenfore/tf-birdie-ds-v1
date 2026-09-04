@@ -1,0 +1,17 @@
+Button order: 12
+Button label: CALLAWAY SUPERSOFT BOX
+PGA product/page title: Callaway Supersoft 2025 Golf Balls
+PGA product/page URL: https://www.pgatoursuperstore.com/callaway-supersoft-2025-golf-balls/2000000049486.html
+Note: Exact/current PGA product page.
+
+Downloaded PNG images:
+- 01_product_image.png (933221 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-01_pc?fmt=png&w=1200
+- 02_product_image.png (621047 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-02_pc?fmt=png&w=1200
+- 03_product_image.png (638723 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-03_pc?fmt=png&w=1200
+- 04_product_image.png (534780 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-04_pc?fmt=png&w=1200
+- 05_product_image.png (999554 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-38-01_pc?fmt=png&w=1200
+- 06_product_image.png (949962 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-63-01_pc?fmt=png&w=1200
+- 07_product_image.png (981040 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-66-01_pc?fmt=png&w=1200
+- 08_product_image.png (985252 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-72-01_pc?fmt=png&w=1200
+- 09_product_image.png (933221 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-92-01_pc?fmt=png&w=1200
+- 10_product_image.png (951666 bytes): https://cdn.media.amplience.net/i/pgatss/2000000049486-96-01_pc?fmt=png&w=1200
