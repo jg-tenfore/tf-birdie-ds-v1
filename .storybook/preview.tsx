@@ -17,14 +17,25 @@ import "@fontsource/roboto-mono/400.css";
 import "@fontsource/roboto-mono/500.css";
 
 /**
- * Every reference device is landscape. There is no portrait entry on purpose:
- * Birdie POS is a fixed-orientation app, and offering a portrait viewport here
- * would invite layouts that can never ship.
+ * The counter devices are all landscape — the POS proper is fixed-orientation,
+ * and offering a portrait viewport for those screens would invite layouts that
+ * can never ship.
+ *
+ * The one portrait entry is `mobile` (402x797), added Sept 4 for the
+ * `Mobile Screens` category. It is scoped by **story**, not offered as a global
+ * default: those stories set it on their meta's `globals`, everything else stays
+ * on `tablet10` via `initialGlobals` below. So the portrait canvas is reachable
+ * from the toolbar but nothing lands on it by accident.
  */
 const viewportOptions = Object.fromEntries(
     Object.entries(devices).map(([key, device]) => [
         key,
-        { name: device.name, styles: { width: `${device.width}px`, height: `${device.height}px` }, type: "tablet" as const },
+        {
+            name: device.name,
+            styles: { width: `${device.width}px`, height: `${device.height}px` },
+            // Portrait phone vs counter tablet — the toolbar labels them apart.
+            type: device.height > device.width ? ("mobile" as const) : ("tablet" as const),
+        },
     ]),
 );
 
@@ -307,6 +318,8 @@ const preview: Preview = {
     initialGlobals: {
         theme: "light",
         // The 10" landscape tablet is the primary device — stories open on it.
+        // `Mobile Screens` overrides this per-meta with the portrait canvas; see
+        // the note on `viewportOptions`.
         viewport: { value: "tablet10", isRotated: false },
     },
 

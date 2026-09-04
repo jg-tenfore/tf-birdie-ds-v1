@@ -16,7 +16,20 @@ import { MobileCustomerSearch } from "@/components/mobile/screens/mobile-custome
  */
 const meta = {
     title: "Mobile Screens/11-customerSearch",
-    parameters: { layout: "centered", replica: true, viewport: { defaultViewport: "mobile" } },
+    parameters: { layout: "fullscreen", replica: true },
+    /**
+     * Portrait, only here.
+     *
+     * Storybook 10 reads the viewport from **globals**, not from
+     * `parameters.viewport.defaultViewport` — that is the Storybook 7 API and is
+     * silently ignored, which is how every one of these stories was opening on
+     * the 1280x800 tablet while rendering a 402px frame inside it.
+     *
+     * Set on the meta rather than in `preview.tsx` so it stays scoped to this
+     * category: `initialGlobals` there keeps every other story on `tablet10`,
+     * and the POS has no portrait mode outside these screens.
+     */
+    globals: { viewport: { value: "mobile", isRotated: false } },
 } satisfies Meta;
 
 export default meta;
