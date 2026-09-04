@@ -73,22 +73,32 @@ empty order once the panel stopped being permanently visible.
 
 ## What the phone gives up
 
-Four screens lose a real capability. They are listed here rather than left for
+Six screens lose a real capability. They are listed here rather than left for
 someone to discover, because each is a product decision hiding inside a layout
 problem.
 
 | Screen | Lost | Why it cannot be recovered at 402px |
 | :-- | :-- | :-- |
 | **2-teesheet** — Multi & Back 9 | Comparing courses, or the front and back nine, **at a glance** | Three columns of four positions is 32px per position. The data survives behind a switcher; the side-by-side read does not, and that read is the whole reason those views exist |
+| **3-coursheet** | *"Is anything free at 7:20?"* as **one row** across six facilities | Six columns at 402px are 67px each. That question now costs up to six taps. Nothing single-column recovers it — if it turns out to be the phone's main job, the answer is **a different screen** (availability keyed by time), not a smaller grid |
+| **4-baysheet** | **Duration as shape** — a 90-minute block becomes the words "90 min" | A calendar encodes length as height. A list has one row height. Partly rescued: the `All bays` tab keeps *"6 of 6 open"* per half hour, so **how many** survives; **which** still costs a tap |
 | **7-tables** | **Choosing which table you are serving** | A floor plan is spatial. Shrink the room and every table is too small to hit; crop it and you hide half. The phone assumes you arrived with a table in hand |
-| **10-tablechart** | **Placing** tables in a room | The phone lists a room's tables and can add one. It does not position them — that is a sit-down task on a counter terminal |
-| **4-baysheet** | Seeing the bays either side of the one you are on | A calendar's second axis cannot be dropped and cannot be shown; the phone shows one bay's day |
+| **10-tablechart** | **Placing** tables in a room | The phone lists a room's tables and can add one. It does not position them — that is a sit-down task on a counter terminal. The screen prints this rather than hiding it |
+| **11-customerSearch** — profile | **Awarded and Spent** on a raincheck row | The credit table is 7 columns. Balance is what a counter is asked for, so it survives and the other two do not — which means **a partly-spent credit now looks like a small one**. The ledger stays a terminal job |
 
 The pattern is consistent: **spatial and multi-axis views do not narrow.** They
 survive as one-axis-at-a-time with a switcher, which keeps every fact and loses
-the comparison. Where a capability genuinely cannot exist on a phone, the screen
-says so on the screen rather than in a footnote — see `10-tablechart`, which
-prints the sentence.
+the comparison.
+
+Two of these are worth arguing with rather than accepting:
+
+- **3-coursheet.** If a phone's actual job on a court sheet is "what is free
+  right now", then a facility switcher is answering the wrong question well. The
+  fix is a screen this project has not drawn.
+- **11-customerSearch.** Dropping Awarded and Spent is the only place in this
+  category where **data disappears** rather than moving. Everything else here is
+  a lost *view*; this is a lost *fact*, and it deserves a second look before
+  anyone builds it.
 
 ## Reading a screen against its landscape original
 
