@@ -164,6 +164,16 @@ const preview: Preview = {
                         // way the screen does.
                         "checkoutScreens",
                     ],
+                    // The same screens laid out for a phone, from
+                    // references/090426. Folder names mirror App Screens exactly
+                    // so the two categories can be read side by side — the whole
+                    // point is comparing one screen against its own landscape
+                    // version, and that only works if they are named alike.
+                    //
+                    // Same explicit ordering problem as App Screens: "11-" sorts
+                    // before "5-" alphabetically.
+                    "Mobile Screens",
+                    ["Overview", "1-proshop", "5-quickorder", "6-tabs", "7-tables", "11-customerSearch", "checkoutScreens"],
                     // A second axis through the same components. App Screens is
                     // organised by screen, mirroring the reference folders; this
                     // is organised by journey, because the failures that matter

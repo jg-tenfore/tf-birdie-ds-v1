@@ -129,10 +129,25 @@ export const layout = {
 } as const;
 
 /**
- * Reference devices. All landscape — this product has no portrait mode, and
- * these are the exact viewports wired into the Storybook toolbar.
+ * Reference devices, wired into the Storybook toolbar.
+ *
+ * Every counter device is landscape — the POS itself has no portrait mode. The
+ * one exception is `mobile`, added Sept 4 for the `Mobile Screens` category:
+ * the same app laid out for a phone held in one hand, from
+ * `references/090426/`. It is portrait because that is the only way a phone is
+ * ever held, and it is deliberately the only portrait entry so a landscape
+ * screen cannot be drawn against it by accident.
  */
 export const devices = {
+    /**
+     * 402×797 — the reference phone canvas.
+     *
+     * Note what that height has to absorb: an Android status bar and a
+     * three-button navigation bar, which together take ~72dp and leave ~725dp
+     * of app. `MobileFrame` draws both, so a layout that fits in Storybook fits
+     * on the device.
+     */
+    mobile: { name: "Mobile portrait (402×797)", width: 402, height: 797 },
     tablet10: { name: 'Tablet 10" landscape (1280×800)', width: 1280, height: 800 },
     tablet11: { name: 'Tablet 11" landscape (1366×768)', width: 1366, height: 768 },
     tablet12: { name: 'Tablet 12.4" landscape (1600×1000)', width: 1600, height: 1000 },
