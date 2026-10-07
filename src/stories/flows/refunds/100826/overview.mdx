@@ -1,0 +1,86 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Refunds/100826/Overview" />
+
+# Oct 8 — the chosen refund, and refunding twice
+
+**Option A won.** Weston, with Austin and Jarrett:
+
+> *"I like option A the best. Threw it to Austin and Jarrett, and they think the
+> same as well."*
+
+This folder is that option with his notes applied, plus the one genuinely new
+capability he asked for: **more than one refund against the same order**. The
+Oct 6 folder stays beside it as the record of how the choice was made.
+
+## What is in here
+
+| Story | What it is |
+| :-- | :-- |
+| **Issue refund** | Every state of the modal, live — first refund, second refund, nothing left, and the order itself between refunds |
+| **End to end** | The whole thing working: refund part of an order, go back in, refund the rest |
+| **Flow storyboards** | The same two journeys as comps on one sheet each, for the ticket |
+
+## His four notes, and what they did
+
+| Note | What changed |
+| :-- | :-- |
+| *"Remove this amount option and the items, and bump everything up. We can't really do amount right now — that would require a pretty big back-end change."* | The ITEMS / AMOUNT tabs are gone and the basket starts at the top of the pane. Amount refunds are out of this design entirely |
+| *"We have the total here and the refund total here and items, and they all tell the same number… I think we could just keep this one on the bottom left."* | One figure while composing, bottom left. The Items / Tax / Refund total breakdown survives on the confirmation, where it is read once rather than watched changing — it matters on an order carrying tax, where the three are not the same number |
+| *"Change this cancel button to be a back button… you have the X here to get out of it."* | No Cancel while composing; the header X is the way out. On the confirmation the left button is **BACK**, to the basket |
+| *"Support multiple refunds on the same order."* | The rest of this page |
+
+## Refunding an order more than once
+
+Birdie cannot do this today. The design rests on one idea: **the order remembers
+what it gave back**, and every screen reads from that remainder.
+
+- **A refunded line is shown, not hidden.** It holds its place, greyed, with a
+  `Refunded` chip and a dead checkbox. The operator is holding a receipt; a line
+  that quietly vanished would read as a bug.
+- **A part-refunded line says so** — `1 of 2 refunded` — and its stepper is
+  capped at what is left.
+- **A tender that has given back everything it took is closed.** Weston's case:
+  cash went back in full on the first refund, so the second one can only go to
+  the gift card, and the row says *$21.62 left of $25.58* rather than letting an
+  operator pick a tender with nothing in it.
+- **`Select all items` means all of what is left**, not all of what was sold.
+- **An order with nothing left stops offering REFUND**, on the transaction
+  screen, before a refund is started. The modal refuses on its own terms too.
+- **Each refund writes its own reversal order.** A second refund is a second
+  reversal, never an edit of the first — the reporting model Weston wanted kept,
+  now applied more than once to one sale.
+
+### The order between refunds
+
+The transaction screen gains three things and loses nothing: a status band
+(*Partially refunded · $28.96 returned · $21.62 still on this order*), per-line
+chips, and per-tender state in Payments. That screen is what makes a second
+refund safe to start, and answers his question directly — *"does it look like
+now that these two items have been refunded?"*
+
+## Still open
+
+1. **Tax on a partial refund.** Prorated from the order total, as before. If the
+   backend can return tax per line, use that instead — it matters on mixed-rate
+   baskets, and it matters more now that one order can be refunded in pieces.
+2. **Refunding to a tender that was not on the order** (cash back on a card
+   sale). Not drawn; nobody has said whether it should be allowed.
+3. **Permissions.** Nothing here asks who is refunding. If a manager PIN is
+   wanted, the confirmation is where it belongs — and a second refund on an
+   order is the likeliest place to want one.
+4. **The reason list.** Four plus `Other`. What `Other` collects in the first
+   month should decide what gets promoted into the list.
+
+## Where the code lives
+
+| Piece | File |
+| :-- | :-- |
+| The remainder — what an order has already given back | `src/components/concepts/refunds/100826/refund-ledger.ts` |
+| Parts: item row, tender split, reason, totals, footer | `src/components/concepts/refunds/100826/refund-modal-parts.tsx` |
+| The modal | `src/components/concepts/refunds/100826/refund-modal.tsx` |
+| The order screen between refunds | `src/components/concepts/refunds/100826/refunded-transaction-details.tsx` |
+| The journey that remembers | `src/components/concepts/refunds/100826/refund-journey.tsx` |
+
+Reference: `references/100626/` for the shipping screens, and Weston's Oct 7
+walkthrough for everything on this page.
