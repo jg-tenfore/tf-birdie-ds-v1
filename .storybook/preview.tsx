@@ -307,6 +307,27 @@ const preview: Preview = {
                             // Steps 3 and 4, which Aug 20 does not touch.
                             "Record & register",
                         ],
+                        // The shipping refund path, transcribed from
+                        // references/100626. Current state only — the proposals
+                        // that come out of it will sit under it the way the
+                        // dated passes sit under Rainchecks.
+                        "Refunds",
+                        [
+                            "Overview",
+                            "1 — Find the order",
+                            "2 — The transaction",
+                            "3 — Create a refund",
+                            "4 — The reason",
+                            "5 — The result",
+                            // Last among the as-is steps, because it is the trip
+                            // rather than a screen.
+                            "6 — End to end",
+                            // Oct 6: the redesign, after the record of what
+                            // ships — two options for the one screen Weston
+                            // asked to have cleaned up.
+                            "100626",
+                            ["Overview", "Option A — One pane", "Option B — Stepped"],
+                        ],
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would
                     // split this into two nested folders in the sidebar.
