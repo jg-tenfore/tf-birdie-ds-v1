@@ -1,0 +1,83 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Refunds/Overview" />
+
+# Refunds
+
+Money going back out. Transcribed from `references/100626/` — this folder is the
+**current state**, reproduced in Birdie components at tablet size, so that what
+ships can be argued with precisely before anything is redesigned.
+
+Like Rainchecks, this is organised by **journey** rather than by screen, because
+a refund is not a screen. It is Order Lookup, a results list, a transaction, a
+builder, a dialog and a banner, and the failures live in the joins between them.
+
+## The path
+
+| # | Story | Screen | What happens |
+| :-- | :-- | :-- | :-- |
+| 1 | **Find the order** | Order Lookup → Results | Search is scoped to one course and one day; refunds are rows with a minus sign |
+| 2 | **The transaction** | Transaction Details | The receipt, six facts, and the only **REFUND** button in the app |
+| 3 | **Create a refund** | Create a Refund | Steppers set the amount, checkboxes set the tenders, one sentence totals it |
+| 4 | **The reason** | Dialog | "Why are you issuing this refund?" — free text, green OK, no Cancel |
+| 5 | **The result** | Results + Transaction Details | A green band, and the refund as a brand-new order |
+| 6 | **End to end** | All of it | The whole path, live — seven screens and two full-screen loads |
+
+## The model underneath
+
+**A refund is a new order, not a change to the old one.** 6521260 is the sale;
+6521287 is its refund, two minutes later, carrying the returned lines at −1
+apiece and its own negative payments. The two are never linked on screen — not in
+the results list, not on either record.
+
+Everything else follows from that. The results list cannot show a refunded order
+as refunded, because the original is untouched. Transaction Details offers REFUND
+on an order that has already been refunded in full, and on a refund itself.
+Reconciling a day means matching equal and opposite amounts by eye.
+
+## What the flow does not tell the operator
+
+These are the findings, in the order they cost the most:
+
+1. **The tender split is invisible until after the fact.** Refunding $42.34
+   across Cash and a Gift Card puts $25.00 on one and $17.34 on the other. The
+   operator checks two boxes and sees those numbers for the first time on the
+   finished record, in step 5.
+2. **Validation arrives on press, and says the wrong thing.** Nothing is said
+   while a selection is made; REFUND with nothing checked produces *"Price of
+   selected payments is less than total price to be refunded"* — true of an empty
+   selection, but the actual problem is that no destination was chosen. It names
+   no shortfall and blocks nothing visibly.
+3. **Excluding an item means counting it to 0,** which leaves the line in place
+   at full price. On the finished record that line is simply gone, so the record
+   cannot distinguish "kept it" from "was never on the order".
+4. **The reason prompt is not a confirmation.** It repeats no amount, no tender
+   and no item count, offers no Cancel, and commits with a green button after the
+   screen behind it used a red one. A mis-set stepper has nothing to catch it.
+5. **Tax has no line to go back on.** Order 6516551 totalled $18.44 and charged
+   $18.44, but its only item prices at $15.44, so the fullest refund the screen
+   can build is $15.44. Worth settling what the missing $3.00 is before this
+   screen is redrawn.
+6. **The flow ends on a list.** Success is a green band naming no order, over the
+   day's results; the refund has to be found by eye. Nothing is printed and
+   nothing is offered to the guest.
+
+## Where the code lives
+
+| Piece | File |
+| :-- | :-- |
+| Fixtures, both orders, money format | `src/components/concepts/refunds/refund-data.ts` |
+| Results list, success band, loading | `src/components/concepts/refunds/order-lookup-results.tsx` |
+| Transaction Details, **Refunded** chip | `src/components/concepts/refunds/transaction-details.tsx` |
+| Create a Refund, steppers, warning band | `src/components/concepts/refunds/create-refund.tsx` |
+| Reason dialog and scrim | `src/components/concepts/refunds/refund-reason-dialog.tsx` |
+
+The search screen itself is not re-implemented here — it is the existing
+**App Screens → 12-orderlookup**, reused.
+
+## Reference captures
+
+`references/100626/` — 28 screenshots of the shipping app taken 10/06/2026,
+covering both example orders from sale through refund. Four of them are the Pro
+Shop sale that created 6521260 (basket, cash tender, gift card tender); they are
+context for the multi-tender example rather than part of the refund path.
