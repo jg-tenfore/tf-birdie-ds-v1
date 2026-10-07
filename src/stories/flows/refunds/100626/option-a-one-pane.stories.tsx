@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { FlowStoryboard, StoryboardFrame } from "@/components/concepts/refunds/100626/flow-storyboard";
 import { OptionAOnePane } from "@/components/concepts/refunds/100626/option-a-one-pane";
+import { RefundJourney } from "@/components/concepts/refunds/100626/refund-journey";
 import { chickenWingsOrder, proShopOrder } from "@/components/concepts/refunds/refund-data";
-import { RefundBackdrop } from "./backdrop";
+import { RefundBackdrop, RefundResultsScreen } from "./backdrop";
 
 /**
  * **Option A — one pane, then confirm.**
@@ -183,5 +185,132 @@ export const TaxIncluded: Story = {
         <RefundBackdrop order={chickenWingsOrder}>
             <OptionAOnePane order={chickenWingsOrder} reversalOrderId="6516890" seed={{ selectAll: true }} />
         </RefundBackdrop>
+    ),
+};
+
+/* ------------------------------------------------------- the whole flow */
+
+/**
+ * **The flow, clickable.** Start on **6521260 — Tony Finau, $50.58**.
+ *
+ * Order Lookup Results → the transaction → the modal → back to the list, with
+ * the reversal order now on top of it. Open that row to see what the record
+ * kept.
+ *
+ * Four surfaces, one of them new. Compare with the as-is **6 — End to end**,
+ * where the same refund crosses seven and waits through two full-screen loads.
+ *
+ * Worth doing here rather than in the single states: press REVIEW REFUND with
+ * no reason chosen, pull a tender out mid-flow, and come back from the
+ * confirmation to change the basket — the places a real counter goes wrong.
+ */
+export const EndToEnd: Story = {
+    name: "End to end",
+    render: () => (
+        <RefundJourney
+            renderModal={({ order, reversalOrderId, onClose, onCommitted }) => (
+                <OptionAOnePane order={order} reversalOrderId={reversalOrderId} onClose={onClose} onCommitted={onCommitted} />
+            )}
+        />
+    ),
+};
+
+/**
+ * **The flow, as comps.** Every frame is a real screen at 1280×800, scaled —
+ * so this sheet cannot drift away from the prototype it documents.
+ *
+ * Five surfaces, two of them the modal. The partial selection is included
+ * because it is where this option earns its shape: the quantity, the split and
+ * the total all change in one view, with nothing to page between.
+ */
+export const Storyboard: Story = {
+    name: "Flow storyboard",
+    parameters: { layout: "fullscreen", replica: true, viewport: { defaultViewport: "reset" } },
+    render: () => (
+        <FlowStoryboard
+            title="Option A — one pane, then confirm"
+            summary="A whole-order refund is select all → reason → review → refund. The tender split is on screen from the first tap, and the confirmation adds no new decisions."
+        >
+            <StoryboardFrame
+                step={1}
+                title="The transaction"
+                caption="REFUND opens the modal over the order rather than replacing it. The receipt stays legible around the edges."
+            >
+                <RefundBackdrop order={proShopOrder}>{null}</RefundBackdrop>
+            </StoryboardFrame>
+
+            <StoryboardFrame
+                step={2}
+                title="Issue refund — as it opens"
+                caption="Nothing selected. The operator says what goes back; Select all items keeps the common case at one tap."
+            >
+                <RefundBackdrop order={proShopOrder}>
+                    <OptionAOnePane order={proShopOrder} reversalOrderId="6521287" />
+                </RefundBackdrop>
+            </StoryboardFrame>
+
+            <StoryboardFrame
+                step={3}
+                title="Chosen, with a part kept"
+                caption="One of two Bubly Limes kept — the line reads 1 of 2. Cash takes its $25.00 and the Gift Card absorbs the rest, priced, before anything commits."
+            >
+                <RefundBackdrop order={proShopOrder}>
+                    <OptionAOnePane
+                        order={proShopOrder}
+                        reversalOrderId="6521287"
+                        seed={{
+                            selectAll: true,
+                            quantities: {
+                                "Callaway Supersoft (Dozen)": 1,
+                                "Callaway Supersoft Sleeve": 1,
+                                Coffee: 1,
+                                "Bubly Lime": 1,
+                                Gatorade: 1,
+                                "Meatball Sub": 1,
+                            },
+                            reason: "Returned goods",
+                        }}
+                    />
+                </RefundBackdrop>
+            </StoryboardFrame>
+
+            <StoryboardFrame
+                step={4}
+                title="Confirm"
+                caption="No new decisions — the lines, the totals, the destinations and the reason, restated, with the amount on the button itself."
+            >
+                <RefundBackdrop order={proShopOrder}>
+                    <OptionAOnePane
+                        order={proShopOrder}
+                        reversalOrderId="6521287"
+                        openAt="confirm"
+                        seed={{ selectAll: true, reason: "Returned goods" }}
+                    />
+                </RefundBackdrop>
+            </StoryboardFrame>
+
+            <StoryboardFrame
+                step={5}
+                title="Refund complete"
+                caption="The amount, every destination it went to, and the reversal order number — plus the receipt reprint, while the guest is still at the counter."
+            >
+                <RefundBackdrop order={proShopOrder}>
+                    <OptionAOnePane
+                        order={proShopOrder}
+                        reversalOrderId="6521287"
+                        openAt="done"
+                        seed={{ selectAll: true, reason: "Returned goods" }}
+                    />
+                </RefundBackdrop>
+            </StoryboardFrame>
+
+            <StoryboardFrame
+                step={6}
+                title="Back on the list"
+                caption="The reversal order sits on top. No success band: the completion screen already named the amount, the destinations and the order number."
+            >
+                <RefundResultsScreen />
+            </StoryboardFrame>
+        </FlowStoryboard>
     ),
 };

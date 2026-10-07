@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
+import { OrderLookupResults } from "@/components/concepts/refunds/order-lookup-results";
 import { TransactionDetails } from "@/components/concepts/refunds/transaction-details";
-import type { TransactionOrder } from "@/components/concepts/refunds/refund-data";
+import { dayOrderRows, type TransactionOrder } from "@/components/concepts/refunds/refund-data";
 
 /**
  * The transaction the modal is refunding, behind the modal.
@@ -37,3 +38,23 @@ export const RefundBackdrop = ({ order, children }: { order: TransactionOrder; c
 );
 
 export default RefundBackdrop;
+
+/**
+ * The list the flow lands back on, with the reversal order on top.
+ *
+ * Used as the closing frame of each storyboard: the refund is a new order, as it
+ * is today, and the only change here is that nobody has to hunt for it — the
+ * modal named it on the way out.
+ */
+export const RefundResultsScreen = () => (
+    <AppShell
+        title="Order Lookup Results"
+        active="orderlookup"
+        accountLabel=""
+        showLogOut={false}
+        showOverflow={false}
+        actionBar={<ActionButton icon={<ChevronLeftIcon />}>BACK</ActionButton>}
+    >
+        <OrderLookupResults rows={dayOrderRows} />
+    </AppShell>
+);

@@ -18,6 +18,7 @@ import {
     ShortfallNote,
     TenderSplit,
 } from "./refund-modal-parts";
+import type { RefundCommit } from "./refund-commit";
 import { useRefundDraft, type RefundDraftSeed } from "./use-refund-draft";
 
 /**
@@ -46,12 +47,15 @@ export const OptionBStepped = ({
     order,
     reversalOrderId,
     onClose,
+    onCommitted,
     seed,
     openAt = 1,
 }: {
     order: TransactionOrder;
     reversalOrderId: string;
     onClose?: () => void;
+    /** Fires the moment the refund commits, carrying what was refunded. */
+    onCommitted?: (commit: RefundCommit) => void;
     /** Stories open the modal in the state they are about; the rest is live. */
     seed?: RefundDraftSeed;
     openAt?: 1 | 2 | 3;
@@ -85,7 +89,14 @@ export const OptionBStepped = ({
                         primaryLabel={`Refund ${formatMoney(draft.breakdown.total)}`}
                         primaryDisabled={!draft.isComplete}
                         committing
-                        onPrimary={() => setStep(3)}
+                        onPrimary={() => {
+                            onCommitted?.({
+                                total: draft.breakdown.total,
+                                allocations: draft.allocations,
+                                lines: draft.lines.filter((line) => line.quantity > 0),
+                            });
+                            setStep(3);
+                        }}
                         onCancel={() => setStep(1)}
                     />
                 }

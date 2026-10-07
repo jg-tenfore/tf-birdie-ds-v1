@@ -19,6 +19,7 @@ import {
     ShortfallNote,
     TenderSplit,
 } from "./refund-modal-parts";
+import type { RefundCommit } from "./refund-commit";
 import { useRefundDraft, type RefundDraftSeed } from "./use-refund-draft";
 
 /**
@@ -43,12 +44,15 @@ export const OptionAOnePane = ({
     order,
     reversalOrderId,
     onClose,
+    onCommitted,
     seed,
     openAt = "compose",
 }: {
     order: TransactionOrder;
     reversalOrderId: string;
     onClose?: () => void;
+    /** Fires the moment the refund commits, carrying what was refunded. */
+    onCommitted?: (commit: RefundCommit) => void;
     /** Stories open the modal in the state they are about; the rest is live. */
     seed?: RefundDraftSeed;
     openAt?: "compose" | "confirm" | "done";
@@ -85,7 +89,14 @@ export const OptionAOnePane = ({
                         hint="This creates a reversal order"
                         primaryLabel={`Refund ${formatMoney(draft.breakdown.total)}`}
                         committing
-                        onPrimary={() => setStage("done")}
+                        onPrimary={() => {
+                            onCommitted?.({
+                                total: draft.breakdown.total,
+                                allocations: draft.allocations,
+                                lines: draft.lines.filter((line) => line.quantity > 0),
+                            });
+                            setStage("done");
+                        }}
                         onCancel={() => setStage("compose")}
                     />
                 }
