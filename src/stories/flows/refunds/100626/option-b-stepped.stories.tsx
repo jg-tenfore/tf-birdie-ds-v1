@@ -160,7 +160,9 @@ export const TaxIncluded: Story = {
 /* ------------------------------------------------------- the whole flow */
 
 /**
- * **The flow, clickable.** Start on **6521260 — Tony Finau, $50.58**.
+ * **The flow, clickable.** DETAILS on **any row** starts it — the whole day is
+ * live, from a six-line basket on two tenders to a $414 driver on one card, and
+ * the reversals in the list cannot be refunded.
  *
  * Order Lookup Results → the transaction → step 1 → step 2 → complete → back to
  * the list with the reversal order on it.

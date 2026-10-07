@@ -155,6 +155,7 @@ export const ActionButton = ({
     /** Buttons that render stored casing verbatim, e.g. `[Detached Tables]`. */
     preserveCase = false,
     grow = 1,
+    disabled = false,
     onClick,
 }: {
     children: ReactNode;
@@ -163,6 +164,12 @@ export const ActionButton = ({
     iconEdge?: "left" | "right" | "group";
     preserveCase?: boolean;
     grow?: number;
+    /**
+     * Unavailable here, rather than merely styled that way — the `disabled`
+     * tone only paints a button grey, which leaves it clickable and reachable
+     * by a screen reader.
+     */
+    disabled?: boolean;
     onClick?: () => void;
 }) => {
     const palette = {
@@ -181,6 +188,7 @@ export const ActionButton = ({
     return (
         <Button
             onClick={onClick}
+            disabled={disabled}
             disableElevation
             startIcon={iconEdge === "group" ? icon : undefined}
             sx={{
@@ -192,6 +200,7 @@ export const ActionButton = ({
                 color: palette.fg,
                 textTransform: preserveCase ? "none" : undefined,
                 "&:hover": { bgcolor: palette.hover },
+                "&.Mui-disabled": { bgcolor: appColors.greyLight, color: "rgba(255,255,255,0.8)" },
             }}
         >
             {isEdgeAnchored && (

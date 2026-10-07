@@ -191,13 +191,23 @@ export const TaxIncluded: Story = {
 /* ------------------------------------------------------- the whole flow */
 
 /**
- * **The flow, clickable.** Start on **6521260 — Tony Finau, $50.58**.
+ * **The flow, clickable.** DETAILS on **any row** starts it.
  *
  * Order Lookup Results → the transaction → the modal → back to the list, with
  * the reversal order now on top of it. Open that row to see what the record
  * kept.
  *
- * Four surfaces, one of them new. Compare with the as-is **6 — End to end**,
+ * The whole day is live, which is the point: the rehearsed case is only one
+ * shape of refund.
+ *
+ * | Row | What it tests |
+ * | :-- | :-- |
+ * | **6521260 · $50.58** | Six lines across two tenders — the split, and a partial |
+ * | **6520847 · $414.28** | One card, three lines, a $27.31 tax remainder |
+ * | **6520452 · $207.14** | Two green fees on one line: quantity on a service, not a product |
+ * | **6520575 · −$140.83** | A reversal. REFUND is dead here — a refund is not refundable |
+ *
+ * Five surfaces, one of them new. Compare with the as-is **6 — End to end**,
  * where the same refund crosses seven and waits through two full-screen loads.
  *
  * Worth doing here rather than in the single states: press REVIEW REFUND with
