@@ -169,3 +169,152 @@ export const refundOrder: TransactionOrder = {
 /** `$1,234.56`, or `-$42.34` — sign outside the dollar, as the app prints it. */
 export const formatMoney = (value: number): string =>
     `${value < 0 ? "-" : ""}$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/* ------------------------------------------------------------------ *
+ * The rest of the day
+ * ------------------------------------------------------------------ */
+
+/**
+ * A plausible order behind every row in {@link dayOrderRows}.
+ *
+ * The captures only recorded two transactions in full, which left eight rows in
+ * the results list that looked clickable and were not. In a walkthrough that is
+ * worse than useless: the operator being shown the flow learns that most of the
+ * list is scenery.
+ *
+ * So the other eight are reconstructed. Only two things about them are from the
+ * device — the **id, time, customer, tender and amount** in the row, and the
+ * fact that **refunds are their own orders**. The baskets are invented to fit
+ * the totals, with the gap between the lines and the total carried as tax, which
+ * is exactly how the real two behave.
+ *
+ * The pairs are worth keeping in view while reading the list: 6520452 is a
+ * $207.14 sale and 6520482 its reversal two minutes later; 6520411 and 6520431
+ * are the same story at $103.57. Nothing in the row says so, which is the point
+ * the as-is folder makes.
+ */
+
+/** Items plus a tax remainder — the pattern every reconstructed order follows. */
+const sale = (
+    orderId: string,
+    date: string,
+    customer: { name: string; email: string; phone: string },
+    total: number,
+    items: OrderItem[],
+    payments: OrderPayment[],
+): TransactionOrder => ({
+    orderId,
+    total,
+    date,
+    customerName: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    items,
+    payments,
+});
+
+/** The same order, written as the reversal it became. */
+const reversalOf = (order: TransactionOrder, orderId: string, date: string): TransactionOrder => ({
+    ...order,
+    orderId,
+    date,
+    total: -order.total,
+    isRefund: true,
+    items: order.items.map((item) => ({ ...item, quantity: -item.quantity, price: -item.price })),
+    payments: order.payments.map((payment) => ({ ...payment, amount: -payment.amount })),
+});
+
+const sawyer = { name: "Sawyer Card", email: "sawyer.card@tenfore.golf", phone: "8015559042" };
+const jeremy = { name: "Jeremy Mehlman", email: "jeremy.mehlman@tenfore.golf", phone: "8015552217" };
+const cody = { name: "Cody Sanders", email: "cody.sanders@tenfore.golf", phone: "8015558830" };
+
+/** Two identical $414.28 sales eight minutes apart, exactly as the day shows them. */
+const driverFitting = (orderId: string, date: string) =>
+    sale(
+        orderId,
+        date,
+        sawyer,
+        414.28,
+        [
+            { name: "Rogue ST Max Driver", quantity: 1, price: 349.99 },
+            { name: "FootJoy WeatherSof Glove", quantity: 1, price: 24.99 },
+            { name: "Callaway Supersoft Sleeve", quantity: 1, price: 11.99 },
+        ],
+        [{ method: "Credit", amount: 414.28 }],
+    );
+
+const twilightFoursome = sale(
+    "6520452",
+    "10/06/2026 3:07 PM",
+    jeremy,
+    207.14,
+    [
+        { name: "Green Fee — 18 holes", quantity: 2, price: 178.0 },
+        { name: "Cart Fee", quantity: 1, price: 15.0 },
+    ],
+    [{ method: "Credit", amount: 207.14 }],
+);
+
+const singleRound = sale(
+    "6520411",
+    "10/06/2026 3:04 PM",
+    jeremy,
+    103.57,
+    [
+        { name: "Green Fee — 18 holes", quantity: 1, price: 89.0 },
+        { name: "Large Range Bucket", quantity: 1, price: 7.0 },
+    ],
+    [{ method: "Credit", amount: 103.57 }],
+);
+
+/** Cody's two reversals: the sales they undo happened before this day's list starts. */
+const apparelReturn = sale(
+    "—",
+    "10/06/2026 3:12 PM",
+    cody,
+    115.32,
+    [
+        { name: "Nike Dri-FIT Polo", quantity: 1, price: 79.99 },
+        { name: "FootJoy WeatherSof Glove", quantity: 1, price: 24.99 },
+    ],
+    [{ method: "Credit", amount: 115.32 }],
+);
+
+const outfitReturn = sale(
+    "—",
+    "10/06/2026 3:16 PM",
+    cody,
+    140.83,
+    [
+        { name: "Nike Dri-FIT Polo", quantity: 1, price: 79.99 },
+        { name: "Tenfore Logo Cap", quantity: 1, price: 29.99 },
+        { name: "FootJoy WeatherSof Glove", quantity: 1, price: 20.0 },
+    ],
+    [{ method: "Credit", amount: 140.83 }],
+);
+
+/** Every row in the day's results, by order id. */
+export const ordersById: Record<string, TransactionOrder> = {
+    "6521287": refundOrder,
+    "6521260": proShopOrder,
+    "6520847": driverFitting("6520847", "10/06/2026 3:35 PM"),
+    "6520575": reversalOf(outfitReturn, "6520575", "10/06/2026 3:16 PM"),
+    "6520532": reversalOf(apparelReturn, "6520532", "10/06/2026 3:12 PM"),
+    "6520482": reversalOf(twilightFoursome, "6520482", "10/06/2026 3:09 PM"),
+    "6520475": driverFitting("6520475", "10/06/2026 3:08 PM"),
+    "6520452": twilightFoursome,
+    "6520431": reversalOf(singleRound, "6520431", "10/06/2026 3:05 PM"),
+    "6520411": singleRound,
+};
+
+/**
+ * The id a refund of this order would be given.
+ *
+ * The device issues the next free order number; the one refund in the captures
+ * landed 27 ids after its sale, so the walkthrough uses that gap rather than
+ * inventing a number with no relationship to the one it reverses.
+ */
+export const reversalIdFor = (orderId: string): string => String(Number(orderId) + 27);
+
+/** Chicken wings, searched by product, lives outside the day list. */
+export const westonOrdersById: Record<string, TransactionOrder> = { "6516551": chickenWingsOrder };
