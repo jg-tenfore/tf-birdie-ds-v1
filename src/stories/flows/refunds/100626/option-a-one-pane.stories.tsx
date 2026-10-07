@@ -20,7 +20,10 @@ import { RefundBackdrop } from "./backdrop";
  */
 const meta = {
     title: "Flows/Refunds/100626/Option A — One pane",
-    parameters: { layout: "fullscreen" },
+    // The replica theme, deliberately: this is a cleanup of a screen inside
+    // the shipping app, so it is drawn with the app's own type, chrome and
+    // controls rather than the design system's target-state ones.
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

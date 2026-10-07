@@ -9,7 +9,9 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 
-import { brand, fontSize, neutral, radius, status, touchTarget } from "@/theme/tokens";
+import { ActionButton } from "@/components/app-chrome/app-shell";
+import { appColors, appRadius } from "@/theme/app-replica-tokens";
+import { touchTarget } from "@/theme/tokens";
 import { formatMoney, type OrderPayment, type TransactionOrder } from "../refund-data";
 
 /**
@@ -34,8 +36,16 @@ import { formatMoney, type OrderPayment, type TransactionOrder } from "../refund
  * backend already applies. The design makes the rule visible rather than
  * replacing it.
  *
- * These render on the Birdie design system (`birdieTheme`), not the MD2 replica:
- * this is the target state, and the folder beside it is the record of today.
+ * **The look is the app's, not a new one.** Weston: *"keep it in the same
+ * design system, we don't need to do anything super crazy."* So every surface
+ * here is built from what the app already uses — navy dialog header, grey
+ * section bands, 4px corners, ALL-CAPS slate/green/red actions, square dark
+ * checkboxes, MD2 filled fields. What changed is the **order and the honesty of
+ * the information**, not the paint.
+ *
+ * The one place the design system overrides the app is **touch size**: controls
+ * here sit on the 48dp floor rather than the device's 40px, because this is the
+ * screen that moves money.
  */
 
 /* ----------------------------------------------------------------- math */
@@ -138,11 +148,14 @@ export type RefundReason = (typeof refundReasons)[number];
  * refunding. Option B runs at 760 wide for a single column, Option A at 1000
  * for two.
  *
- * Sized so the order behind it stays legible around the edges — the operator is
+ * Chrome is the app's own dialog chrome — a solid navy header bar with the
+ * title centred in it, a white body, and a light action band at the foot — so
+ * this reads as a screen the product already has rather than a new idea bolted
+ * on.
+ *
+ * Sized so the order behind it stays legible around the edges: the operator is
  * working *on* that transaction, and hiding it is how the full-screen version
- * lost the context in the first place. 640 leaves 80px of chrome visible top and
- * bottom on the 800px reference device, which is enough for the destination,
- * the reason and the totals to sit on one surface without scrolling.
+ * lost the context in the first place.
  */
 export const RefundModal = ({
     title,
@@ -154,7 +167,7 @@ export const RefundModal = ({
     padBody = true,
 }: {
     title: string;
-    /** Right-hand header note — the step count, or the amount being committed. */
+    /** Right-hand header note — the step count, or the order being refunded. */
     caption?: string;
     onClose?: () => void;
     footer?: ReactNode;
@@ -164,7 +177,7 @@ export const RefundModal = ({
     /** Off when the body lays out its own columns and owns their padding. */
     padBody?: boolean;
 }) => (
-    <Box sx={{ position: "absolute", inset: 0, bgcolor: "rgba(16,24,40,0.55)", display: "grid", placeItems: "center", zIndex: 1300 }}>
+    <Box sx={{ position: "absolute", inset: 0, bgcolor: "rgba(0,0,0,0.5)", display: "grid", placeItems: "center", zIndex: 1300 }}>
         <Box
             role="dialog"
             aria-label={title}
@@ -173,89 +186,122 @@ export const RefundModal = ({
                 height: 680,
                 display: "flex",
                 flexDirection: "column",
-                bgcolor: "background.paper",
-                borderRadius: `${radius.lg}px`,
-                boxShadow: "0 24px 48px -12px rgba(16,24,40,0.25)",
+                bgcolor: appColors.surface,
+                borderRadius: `${appRadius.card}px`,
+                boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
                 overflow: "hidden",
             }}
         >
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    px: 3,
-                    minHeight: 72,
-                    borderBottom: "1px solid",
-                    borderColor: "divider",
-                }}
-            >
-                <IconButton onClick={onClose} aria-label="Close" sx={{ ml: -1 }}>
+            {/* Navy bar, centred title — the app's dialog header, unchanged. */}
+            <Box sx={{ position: "relative", display: "flex", alignItems: "center", minHeight: 64, px: 1, bgcolor: appColors.navy }}>
+                <IconButton onClick={onClose} aria-label="Close" sx={{ color: "#fff", zIndex: 1 }}>
                     <CloseIcon />
                 </IconButton>
-                <Typography sx={{ flex: 1, fontSize: fontSize.h6, fontWeight: 500 }}>{title}</Typography>
-                {caption && <Typography sx={{ fontSize: fontSize.body1, color: "text.secondary" }}>{caption}</Typography>}
+
+                <Typography
+                    sx={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: 20,
+                        color: "#fff",
+                        pointerEvents: "none",
+                    }}
+                >
+                    {title}
+                </Typography>
+
+                <Box sx={{ flex: 1 }} />
+                {caption && (
+                    <Typography sx={{ pr: 2, fontSize: 14, letterSpacing: "0.04em", color: "rgba(255,255,255,0.8)", zIndex: 1 }}>
+                        {caption}
+                    </Typography>
+                )}
             </Box>
 
-            <Box sx={{ flex: 1, minHeight: 0, overflowY: padBody ? "auto" : "hidden", ...(padBody && { px: 3, py: 2.5 }) }}>{children}</Box>
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: padBody ? "auto" : "hidden", ...(padBody && { px: 2, py: 2 }) }}>{children}</Box>
 
-            {footer && <Box sx={{ borderTop: "1px solid", borderColor: "divider", px: 3, py: 2, bgcolor: neutral[25] }}>{footer}</Box>}
+            {footer && <Box sx={{ flexShrink: 0, bgcolor: appColors.canvasAlt, px: 2, py: 1.5 }}>{footer}</Box>}
         </Box>
     </Box>
 );
 
-/** Section label above each block of the modal. */
+/**
+ * Section heading.
+ *
+ * The same grey band Transaction Details puts over *Order Items* and
+ * *Payments*, reused rather than re-invented — it is how this app says "new
+ * section" and it already reads at arm's length.
+ */
 export const SectionLabel = ({ children }: { children: string }) => (
-    <Typography sx={{ fontSize: fontSize.caption, fontWeight: 500, letterSpacing: "0.08em", color: "text.secondary", mb: 1 }}>
-        {children.toUpperCase()}
-    </Typography>
+    <Box sx={{ height: 36, display: "flex", alignItems: "center", px: 1.25, mb: 0.5, bgcolor: "#F0F1F3" }}>
+        <Typography sx={{ fontSize: 16, color: appColors.textPrimary }}>{children}</Typography>
+    </Box>
 );
 
 /* ------------------------------------------------------- what to refund */
 
-/** ITEMS / AMOUNT. Two ways to answer one question, so neither is buried. */
+/**
+ * ITEMS / AMOUNT.
+ *
+ * Built as the app's category chips: the active one navy, the rest mid-grey,
+ * ALL-CAPS. Two ways to answer one question, in a control the operator already
+ * uses on the Pro Shop screen every day.
+ */
 export const ScopeTabs = ({ value, onChange }: { value: "items" | "amount"; onChange: (next: "items" | "amount") => void }) => (
-    <Box sx={{ display: "flex", gap: 1, p: 0.5, bgcolor: neutral[100], borderRadius: `${radius.md}px`, mb: 2.5 }}>
+    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
         {(["items", "amount"] as const).map((tab) => (
             <Button
                 key={tab}
                 onClick={() => onChange(tab)}
-                variant="text"
+                disableElevation
                 sx={{
                     flex: 1,
                     minHeight: touchTarget.min,
-                    borderRadius: `${radius.sm}px`,
-                    bgcolor: value === tab ? "background.paper" : "transparent",
-                    color: value === tab ? "text.primary" : "text.secondary",
-                    boxShadow: value === tab ? "0 1px 2px rgba(16,24,40,0.12)" : "none",
-                    "&:hover": { bgcolor: value === tab ? "background.paper" : neutral[200] },
+                    borderRadius: `${appRadius.button}px`,
+                    bgcolor: value === tab ? appColors.navy : appColors.grey,
+                    color: "#fff",
+                    fontSize: 14,
+                    letterSpacing: "0.06em",
+                    "&:hover": { bgcolor: value === tab ? appColors.navyDeep : "#8D8D8D" },
                 }}
             >
-                {tab === "items" ? "Items" : "Amount"}
+                {tab === "items" ? "ITEMS" : "AMOUNT"}
             </Button>
         ))}
     </Box>
 );
 
+/** Row geometry shared by the item list and the tender list. */
 const rowSx = {
     display: "flex",
     alignItems: "center",
-    gap: 1.5,
+    gap: 1,
     minHeight: touchTarget.comfortable,
     px: 1,
-    borderRadius: `${radius.sm}px`,
+    borderBottom: "1px solid",
+    borderColor: appColors.divider,
+};
+
+/** The app's square, dark checkbox — not a brand-coloured one. */
+const checkboxSx = {
+    color: appColors.textPrimary,
+    "&.Mui-checked": { color: appColors.textPrimary },
+    "&.MuiCheckbox-indeterminate": { color: appColors.textPrimary },
 };
 
 /** One tap for the common case: the whole order goes back. */
 export const SelectAllRow = ({ checked, indeterminate, onToggle }: { checked: boolean; indeterminate: boolean; onToggle: () => void }) => (
-    <Box sx={{ ...rowSx, borderBottom: "1px solid", borderColor: "divider", borderRadius: 0 }}>
+    <Box sx={{ ...rowSx, bgcolor: appColors.canvas }}>
         <Checkbox
             checked={checked}
             indeterminate={indeterminate}
             onChange={onToggle}
+            sx={checkboxSx}
             slotProps={{ input: { "aria-label": "Select all items" } }}
         />
-        <Typography sx={{ fontSize: fontSize.body1, fontWeight: 500 }}>Select all items</Typography>
+        <Typography sx={{ fontSize: 15, fontWeight: 500, color: appColors.textPrimary }}>Select all items</Typography>
     </Box>
 );
 
@@ -264,7 +310,7 @@ export const SelectAllRow = ({ checked, indeterminate, onToggle }: { checked: bo
  *
  * The checkbox carries inclusion and the stepper carries quantity — two
  * questions, two controls, where the shipping screen asked both through one
- * number. The stepper only appears on a line that was sold more than once, and
+ * number. The stepper is the app's own bordered `− n +` box, kept at 48dp, and
  * reads `1 of 2` so the part being kept is stated rather than inferred.
  */
 export const ItemSelectRow = ({
@@ -282,50 +328,95 @@ export const ItemSelectRow = ({
     const selected = line.quantity > 0;
 
     return (
-        <Box sx={{ ...rowSx, bgcolor: selected ? brand[25] : "transparent" }}>
-            <Checkbox checked={selected} onChange={onToggle} slotProps={{ input: { "aria-label": `Refund ${line.name}` } }} />
+        <Box sx={{ ...rowSx, bgcolor: selected ? "#F3F7F4" : appColors.surface }}>
+            <Checkbox
+                checked={selected}
+                onChange={onToggle}
+                sx={checkboxSx}
+                slotProps={{ input: { "aria-label": `Refund ${line.name}` } }}
+            />
 
-            <Typography sx={{ flex: 1, minWidth: 0, fontSize: fontSize.body1 }} noWrap>
+            <Typography sx={{ flex: 1, minWidth: 0, fontSize: 15, color: appColors.textPrimary }} noWrap>
                 {line.name}
             </Typography>
 
             {line.soldQuantity > 1 && selected && (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Button
-                        variant="outlined"
-                        onClick={() => onQuantityChange(Math.max(1, line.quantity - 1))}
-                        aria-label={`One fewer ${line.name}`}
-                        sx={{ minWidth: touchTarget.min, minHeight: touchTarget.min, px: 0 }}
-                    >
-                        −
-                    </Button>
-                    <Typography sx={{ width: 68, textAlign: "center", fontSize: fontSize.body2, color: "text.secondary" }}>
-                        {line.quantity} of {line.soldQuantity}
-                    </Typography>
-                    <Button
-                        variant="outlined"
-                        onClick={() => onQuantityChange(Math.min(line.soldQuantity, line.quantity + 1))}
-                        aria-label={`One more ${line.name}`}
-                        sx={{ minWidth: touchTarget.min, minHeight: touchTarget.min, px: 0 }}
-                    >
-                        +
-                    </Button>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "stretch",
+                        height: touchTarget.min,
+                        mr: 1,
+                        border: "1px solid",
+                        borderColor: appColors.textPrimary,
+                        borderRadius: `${appRadius.button}px`,
+                        overflow: "hidden",
+                    }}
+                >
+                    {[
+                        { glyph: "−", label: `One fewer ${line.name}`, next: Math.max(1, line.quantity - 1) },
+                        { glyph: "", label: "", next: 0 },
+                        { glyph: "+", label: `One more ${line.name}`, next: Math.min(line.soldQuantity, line.quantity + 1) },
+                    ].map((control, index) =>
+                        index === 1 ? (
+                            <Typography
+                                key="count"
+                                sx={{ alignSelf: "center", width: 72, textAlign: "center", fontSize: 14, color: appColors.textSecondary }}
+                            >
+                                {line.quantity} of {line.soldQuantity}
+                            </Typography>
+                        ) : (
+                            <Button
+                                key={control.glyph}
+                                variant="text"
+                                aria-label={control.label}
+                                onClick={() => onQuantityChange(control.next)}
+                                disableRipple
+                                sx={{
+                                    minWidth: touchTarget.min,
+                                    minHeight: 0,
+                                    p: 0,
+                                    lineHeight: 1,
+                                    fontSize: 20,
+                                    borderRadius: 0,
+                                    bgcolor: "transparent",
+                                    color: appColors.textPrimary,
+                                    "&:hover": { bgcolor: "rgba(0,0,0,0.04)" },
+                                }}
+                            >
+                                {control.glyph}
+                            </Button>
+                        ),
+                    )}
                 </Box>
             )}
 
             <Typography
                 sx={{
-                    width: 96,
+                    width: 92,
                     textAlign: "right",
-                    fontSize: fontSize.body1,
-                    fontVariantNumeric: "tabular-nums",
-                    color: selected ? "text.primary" : "text.secondary",
+                    fontSize: 15,
+                    color: selected ? appColors.textPrimary : appColors.textSecondary,
                 }}
             >
                 {formatMoney(selected ? amount : line.linePrice)}
             </Typography>
         </Box>
     );
+};
+
+/** The app's MD2 filled field: grey fill, hard bottom rule, square top corners. */
+const filledFieldSx = {
+    width: "100%",
+    minHeight: touchTarget.min,
+    px: 1.875,
+    fontFamily: "inherit",
+    color: appColors.textPrimary,
+    bgcolor: appColors.fieldFill,
+    border: "none",
+    borderBottom: "1px solid rgba(0,0,0,0.42)",
+    borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
+    outline: "none",
 };
 
 /**
@@ -338,34 +429,23 @@ export const ItemSelectRow = ({
 export const AmountPane = ({ value, refundable, onChange }: { value: string; refundable: number; onChange: (next: string) => void }) => (
     <Box>
         <SectionLabel>Amount to refund</SectionLabel>
-        <Box
-            component="input"
-            inputMode="decimal"
-            aria-label="Amount to refund"
-            value={value}
-            placeholder="$0.00"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
-            sx={{
-                width: "100%",
-                minHeight: touchTarget.large,
-                px: 2,
-                fontSize: fontSize.h5,
-                fontFamily: "inherit",
-                color: "text.primary",
-                bgcolor: "background.paper",
-                border: "1px solid",
-                borderColor: neutral[300],
-                borderRadius: `${radius.md}px`,
-                outline: "none",
-                "&:focus": { borderColor: brand[600], boxShadow: `0 0 0 3px ${brand[100]}` },
-            }}
-        />
-        <Typography sx={{ mt: 1.5, fontSize: fontSize.body2, color: "text.secondary" }}>
-            {formatMoney(refundable)} available to refund on this order.
-        </Typography>
-        <Typography sx={{ mt: 0.5, fontSize: fontSize.body2, color: status.warning.dark }}>
-            An amount refund does not return items to inventory, and will not appear in item sales reporting.
-        </Typography>
+        <Box sx={{ px: 1.25, pt: 1 }}>
+            <Box
+                component="input"
+                inputMode="decimal"
+                aria-label="Amount to refund"
+                value={value}
+                placeholder="$0.00"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
+                sx={{ ...filledFieldSx, minHeight: 56, fontSize: 20 }}
+            />
+            <Typography sx={{ mt: 1.5, fontSize: 14, color: appColors.textSecondary }}>
+                {formatMoney(refundable)} available to refund on this order.
+            </Typography>
+            <Typography sx={{ mt: 0.5, fontSize: 14, color: "#A9661F" }}>
+                An amount refund does not return items to inventory, and will not appear in item sales reporting.
+            </Typography>
+        </Box>
     </Box>
 );
 
@@ -397,23 +477,23 @@ export const TenderSplit = ({
             const isSelected = selected.includes(payment.method);
 
             return (
-                <Box key={payment.method} sx={{ ...rowSx, bgcolor: isSelected ? brand[25] : "transparent" }}>
+                <Box key={payment.method} sx={{ ...rowSx, bgcolor: isSelected ? "#F3F7F4" : appColors.surface }}>
                     <Checkbox
                         checked={isSelected}
                         onChange={() => onToggle(payment.method)}
+                        sx={checkboxSx}
                         slotProps={{ input: { "aria-label": `Refund to ${payment.method}` } }}
                     />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{ fontSize: fontSize.body1 }}>{payment.method}</Typography>
-                        <Typography sx={{ fontSize: fontSize.caption, color: "text.secondary" }}>
+                        <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{payment.method}</Typography>
+                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
                             {formatMoney(payment.amount)} taken on this order
                         </Typography>
                     </Box>
                     <Typography
                         sx={{
-                            fontSize: fontSize.subtitle,
-                            fontVariantNumeric: "tabular-nums",
-                            color: allocation && allocation.amount > 0 ? "text.primary" : "text.disabled",
+                            fontSize: 17,
+                            color: allocation && allocation.amount > 0 ? appColors.textPrimary : appColors.textDisabled,
                         }}
                     >
                         {formatMoney(allocation?.amount ?? 0)}
@@ -424,10 +504,17 @@ export const TenderSplit = ({
     </Box>
 );
 
-/** Inline, specific, and present before the operator presses anything. */
+/**
+ * The shortfall, in the app's warning orange.
+ *
+ * Same colour the device already uses for *"Price of selected payments is less
+ * than total price to be refunded"* — and that is the point: the band is
+ * familiar, the sentence is not. It names the gap and the remedy, and it is
+ * here while the selection is being made rather than after a press.
+ */
 export const ShortfallNote = ({ message }: { message: string }) => (
-    <Box sx={{ mt: 1.5, px: 2, py: 1.5, bgcolor: status.warning.light, borderRadius: `${radius.md}px` }}>
-        <Typography sx={{ fontSize: fontSize.body2, color: status.warning.dark }}>{message}</Typography>
+    <Box sx={{ mt: 1.5, mx: 1.25, px: 2, py: 1.5, bgcolor: appColors.orange, borderRadius: `${appRadius.button}px` }}>
+        <Typography sx={{ fontSize: 15, color: "#fff" }}>{message}</Typography>
     </Box>
 );
 
@@ -445,41 +532,46 @@ export const ReasonPicker = ({
 }) => (
     <Box>
         <SectionLabel>Reason for refund</SectionLabel>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {refundReasons.map((reason) => (
-                <Button
-                    key={reason}
-                    onClick={() => onChange(reason)}
-                    variant={value === reason ? "contained" : "outlined"}
-                    sx={{ minHeight: touchTarget.min, borderRadius: `${radius.pill}px`, px: 2, fontSize: fontSize.body2 }}
-                >
-                    {reason}
-                </Button>
-            ))}
-        </Box>
+        <Box sx={{ px: 1.25, pt: 0.5 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {refundReasons.map((reason) => {
+                    const isSelected = value === reason;
 
-        {value === "Other" && (
-            <Box
-                component="input"
-                aria-label="Refund reason note"
-                value={note}
-                placeholder="What happened?"
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => onNoteChange(event.target.value)}
-                sx={{
-                    mt: 1.5,
-                    width: "100%",
-                    minHeight: touchTarget.comfortable,
-                    px: 2,
-                    fontSize: fontSize.body1,
-                    fontFamily: "inherit",
-                    border: "1px solid",
-                    borderColor: neutral[300],
-                    borderRadius: `${radius.md}px`,
-                    outline: "none",
-                    "&:focus": { borderColor: brand[600], boxShadow: `0 0 0 3px ${brand[100]}` },
-                }}
-            />
-        )}
+                    return (
+                        <Button
+                            key={reason}
+                            onClick={() => onChange(reason)}
+                            disableElevation
+                            sx={{
+                                minHeight: touchTarget.min,
+                                px: 2,
+                                borderRadius: `${appRadius.button}px`,
+                                textTransform: "none",
+                                fontSize: 15,
+                                bgcolor: isSelected ? appColors.navy : appColors.surface,
+                                color: isSelected ? "#fff" : appColors.textPrimary,
+                                border: "1px solid",
+                                borderColor: isSelected ? appColors.navy : appColors.greyLight,
+                                "&:hover": { bgcolor: isSelected ? appColors.navyDeep : appColors.canvas },
+                            }}
+                        >
+                            {reason}
+                        </Button>
+                    );
+                })}
+            </Box>
+
+            {value === "Other" && (
+                <Box
+                    component="input"
+                    aria-label="Refund reason note"
+                    value={note}
+                    placeholder="What happened?"
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => onNoteChange(event.target.value)}
+                    sx={{ ...filledFieldSx, mt: 1.5, fontSize: 15 }}
+                />
+            )}
+        </Box>
     </Box>
 );
 
@@ -491,10 +583,8 @@ export const RefundTotals = ({ breakdown, dense = false }: { breakdown: RefundBr
         {[{ label: "Items", value: breakdown.subtotal }, ...(breakdown.tax > 0.004 ? [{ label: "Tax", value: breakdown.tax }] : [])].map(
             (row) => (
                 <Box key={row.label} sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
-                    <Typography sx={{ fontSize: fontSize.body2, color: "text.secondary" }}>{row.label}</Typography>
-                    <Typography sx={{ fontSize: fontSize.body2, color: "text.secondary", fontVariantNumeric: "tabular-nums" }}>
-                        {formatMoney(row.value)}
-                    </Typography>
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>{row.label}</Typography>
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>{formatMoney(row.value)}</Typography>
                 </Box>
             ),
         )}
@@ -506,11 +596,11 @@ export const RefundTotals = ({ breakdown, dense = false }: { breakdown: RefundBr
                 pt: 1,
                 mt: 0.5,
                 borderTop: "1px solid",
-                borderColor: "divider",
+                borderColor: appColors.divider,
             }}
         >
-            <Typography sx={{ fontSize: fontSize.body1, fontWeight: 500 }}>Refund total</Typography>
-            <Typography sx={{ fontSize: dense ? fontSize.h6 : fontSize.h5, fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 500, color: appColors.textPrimary }}>Refund total</Typography>
+            <Typography sx={{ fontSize: dense ? 20 : 24, fontWeight: 500, color: appColors.textPrimary }}>
                 {formatMoney(breakdown.total)}
             </Typography>
         </Box>
@@ -521,8 +611,10 @@ export const RefundTotals = ({ breakdown, dense = false }: { breakdown: RefundBr
  * The footer: the running total on the left, the way out and the way on on the
  * right.
  *
- * The committing button carries the amount — *Refund $42.34*, never a bare
- * verb — so the last thing read before the money moves is the money.
+ * The buttons are the app's bottom-bar buttons — same slate, same green, same
+ * red, same ALL-CAPS — because they do the same jobs here. The committing one
+ * carries the amount (*REFUND $42.34*, never a bare verb), so the last thing
+ * read before the money moves is the money.
  */
 export const ModalFooter = ({
     total,
@@ -538,30 +630,27 @@ export const ModalFooter = ({
     primaryDisabled?: boolean;
     onPrimary?: () => void;
     onCancel?: () => void;
-    /** The step that actually moves money: red, and taller. */
+    /** The step that actually moves money: red, and wider. */
     committing?: boolean;
     hint?: string;
 }) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: fontSize.h6, fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-                {formatMoney(total)}
-            </Typography>
-            {hint && <Typography sx={{ fontSize: fontSize.body2, color: "text.secondary" }}>{hint}</Typography>}
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0, pl: 0.5 }}>
+            <Typography sx={{ fontSize: 20, fontWeight: 500, color: appColors.textPrimary }}>{formatMoney(total)}</Typography>
+            {hint && <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{hint}</Typography>}
         </Box>
 
-        <Button variant="outlined" onClick={onCancel} sx={{ minHeight: touchTarget.comfortable, minWidth: 140 }}>
-            Cancel
-        </Button>
-        <Button
-            variant="contained"
-            color={committing ? "error" : "primary"}
-            disabled={primaryDisabled}
-            onClick={onPrimary}
-            sx={{ minHeight: committing ? touchTarget.large : touchTarget.comfortable, minWidth: 220 }}
-        >
-            {primaryLabel}
-        </Button>
+        <Box sx={{ display: "flex", width: 160 }}>
+            <ActionButton onClick={onCancel}>CANCEL</ActionButton>
+        </Box>
+        <Box sx={{ display: "flex", width: committing ? 280 : 240 }}>
+            <ActionButton
+                tone={primaryDisabled ? "disabled" : committing ? "danger" : "primary"}
+                onClick={primaryDisabled ? undefined : onPrimary}
+            >
+                {primaryLabel}
+            </ActionButton>
+        </Box>
     </Box>
 );
 
@@ -585,42 +674,37 @@ export const RefundComplete = ({
     onDone?: () => void;
 }) => (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, px: 4 }}>
-        <Box
-            sx={{
-                width: 72,
-                height: 72,
-                display: "grid",
-                placeItems: "center",
-                borderRadius: "50%",
-                bgcolor: status.success.light,
-                color: status.success.dark,
-            }}
-        >
-            <CheckIcon sx={{ fontSize: 40 }} />
+        <Box sx={{ width: 72, height: 72, display: "grid", placeItems: "center", borderRadius: "50%", bgcolor: appColors.green }}>
+            <CheckIcon sx={{ fontSize: 42, color: "#fff" }} />
         </Box>
 
-        <Typography sx={{ fontSize: fontSize.h5, fontWeight: 500 }}>{formatMoney(total)} refunded</Typography>
+        <Typography sx={{ fontSize: 24, color: appColors.textPrimary }}>{formatMoney(total)} refunded</Typography>
 
-        <Box sx={{ width: 380 }}>
+        <Box sx={{ width: 360 }}>
             {allocations.map((allocation) => (
-                <Box key={allocation.method} sx={{ display: "flex", justifyContent: "space-between", py: 0.75 }}>
-                    <Typography sx={{ fontSize: fontSize.body1, color: "text.secondary" }}>{allocation.method}</Typography>
-                    <Typography sx={{ fontSize: fontSize.body1, fontVariantNumeric: "tabular-nums" }}>
-                        {formatMoney(allocation.amount)}
-                    </Typography>
+                <Box
+                    key={allocation.method}
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        py: 1,
+                        borderBottom: "1px solid",
+                        borderColor: appColors.divider,
+                    }}
+                >
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>{allocation.method}</Typography>
+                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{formatMoney(allocation.amount)}</Typography>
                 </Box>
             ))}
         </Box>
 
-        <Typography sx={{ fontSize: fontSize.body2, color: "text.secondary" }}>Reversal order #{reversalOrderId}</Typography>
+        <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>Reversal order #{reversalOrderId}</Typography>
 
-        <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-            <Button variant="outlined" startIcon={<PrintIcon />} sx={{ minHeight: touchTarget.comfortable, minWidth: 200 }}>
-                Print receipt
-            </Button>
-            <Button variant="contained" onClick={onDone} sx={{ minHeight: touchTarget.comfortable, minWidth: 200 }}>
-                Done
-            </Button>
+        <Box sx={{ display: "flex", gap: 1, mt: 1, width: 420 }}>
+            <ActionButton icon={<PrintIcon />}>PRINT RECEIPT</ActionButton>
+            <ActionButton tone="primary" onClick={onDone}>
+                DONE
+            </ActionButton>
         </Box>
     </Box>
 );

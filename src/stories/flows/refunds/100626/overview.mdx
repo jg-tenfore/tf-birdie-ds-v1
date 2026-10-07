@@ -48,6 +48,22 @@ not about components.
 | A reason prompt that confirmed nothing, with no Cancel | Four reasons and a catch-all — short enough to answer honestly, fixed enough to report on — then a confirmation that restates the decisions and carries the amount on the button |
 | The flow ended on a list, with a banner naming no order | It ends on the refund: amount, every destination, the reversal order number, and **Print receipt** — the ask from the call |
 
+## How it is drawn
+
+The paint is the app's, not a new one. Weston asked for a cleanup inside the
+existing system, so these screens use what the product already has:
+
+- the **navy dialog header** with a centred title, as every dialog in the app has;
+- the **grey section band** that Transaction Details puts over *Order Items* and *Payments*;
+- **4px corners**, square dark checkboxes, MD2 filled fields;
+- **ALL-CAPS slate / green / red action buttons** — the same `ActionButton` the bottom bar uses, in the same three tones;
+- the **warning orange** the device already shows a refund shortfall in.
+
+These stories therefore render on the **replica theme**, like the as-is folder,
+rather than the design system's target-state theme. One override: every control
+sits on the **48dp touch floor** instead of the device's 40px, because this is
+the screen that moves money.
+
 ## What deliberately did not change
 
 - **A refund is still a reversal order.** Weston: *"it's a lot better that way,

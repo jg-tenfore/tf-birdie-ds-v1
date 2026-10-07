@@ -3,7 +3,7 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { fontSize, neutral, radius } from "@/theme/tokens";
+import { appColors } from "@/theme/app-replica-tokens";
 import { formatMoney, type TransactionOrder } from "../refund-data";
 import {
     AmountPane,
@@ -77,6 +77,8 @@ export const OptionAOnePane = ({
                 title="Confirm refund"
                 caption={`Order #${order.orderId}`}
                 onClose={onClose}
+                width={1000}
+                padBody={false}
                 footer={
                     <ModalFooter
                         total={draft.breakdown.total}
@@ -88,26 +90,40 @@ export const OptionAOnePane = ({
                     />
                 }
             >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    <Box>
+                {/* Same two columns as the compose pane, so confirming is a
+                    reading of the screen just left rather than a new layout to
+                    parse under time pressure. */}
+                <Box sx={{ height: "100%", display: "flex", minHeight: 0 }}>
+                    <Box sx={{ flex: 1, minWidth: 0, overflowY: "auto", px: 2, py: 2 }}>
                         <SectionLabel>Going back</SectionLabel>
                         {draft.scope === "amount" ? (
-                            <Typography sx={{ fontSize: fontSize.body1 }}>
+                            <Typography sx={{ px: 1.25, py: 1, fontSize: 15, color: appColors.textPrimary }}>
                                 {formatMoney(draft.breakdown.total)} as an amount — no items returned to inventory
                             </Typography>
                         ) : (
                             selected.map((line) => (
-                                <Box key={line.name} sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
-                                    <Typography sx={{ fontSize: fontSize.body1 }}>
+                                <Box
+                                    key={line.name}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        minHeight: 44,
+                                        alignItems: "center",
+                                        px: 1.25,
+                                        borderBottom: "1px solid",
+                                        borderColor: appColors.divider,
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>
                                         {line.name}
                                         {line.soldQuantity > 1 && (
-                                            <Typography component="span" sx={{ fontSize: fontSize.body2, color: "text.secondary" }}>
+                                            <Typography component="span" sx={{ fontSize: 13, color: appColors.textSecondary }}>
                                                 {"  "}
                                                 {line.quantity} of {line.soldQuantity}
                                             </Typography>
                                         )}
                                     </Typography>
-                                    <Typography sx={{ fontSize: fontSize.body1, fontVariantNumeric: "tabular-nums" }}>
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>
                                         {formatMoney((line.linePrice / line.soldQuantity) * line.quantity)}
                                     </Typography>
                                 </Box>
@@ -115,28 +131,60 @@ export const OptionAOnePane = ({
                         )}
                     </Box>
 
-                    <Box sx={{ p: 2, bgcolor: neutral[50], borderRadius: `${radius.md}px` }}>
-                        <RefundTotals breakdown={draft.breakdown} dense />
-                    </Box>
+                    <Box
+                        sx={{
+                            width: 380,
+                            flexShrink: 0,
+                            minHeight: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            borderLeft: "1px solid",
+                            borderColor: appColors.divider,
+                        }}
+                    >
+                        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", py: 2 }}>
+                            <SectionLabel>Going to</SectionLabel>
+                            {draft.allocations.map((allocation) => (
+                                <Box
+                                    key={allocation.method}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        minHeight: 44,
+                                        alignItems: "center",
+                                        px: 1.25,
+                                        borderBottom: "1px solid",
+                                        borderColor: appColors.divider,
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{allocation.method}</Typography>
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>
+                                        {formatMoney(allocation.amount)}
+                                    </Typography>
+                                </Box>
+                            ))}
 
-                    <Box>
-                        <SectionLabel>Going to</SectionLabel>
-                        {draft.allocations.map((allocation) => (
-                            <Box key={allocation.method} sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
-                                <Typography sx={{ fontSize: fontSize.body1 }}>{allocation.method}</Typography>
-                                <Typography sx={{ fontSize: fontSize.body1, fontVariantNumeric: "tabular-nums" }}>
-                                    {formatMoney(allocation.amount)}
+                            <Box sx={{ mt: 2 }}>
+                                <SectionLabel>Reason</SectionLabel>
+                                <Typography sx={{ px: 1.25, py: 1, fontSize: 15, color: appColors.textPrimary }}>
+                                    {draft.reason}
+                                    {draft.reason === "Other" && draft.note ? ` — ${draft.note}` : ""}
                                 </Typography>
                             </Box>
-                        ))}
-                    </Box>
+                        </Box>
 
-                    <Box>
-                        <SectionLabel>Reason</SectionLabel>
-                        <Typography sx={{ fontSize: fontSize.body1 }}>
-                            {draft.reason}
-                            {draft.reason === "Other" && draft.note ? ` — ${draft.note}` : ""}
-                        </Typography>
+                        <Box
+                            sx={{
+                                flexShrink: 0,
+                                px: 2,
+                                py: 2,
+                                bgcolor: appColors.canvas,
+                                borderTop: "1px solid",
+                                borderColor: appColors.divider,
+                            }}
+                        >
+                            <RefundTotals breakdown={draft.breakdown} dense />
+                        </Box>
                     </Box>
                 </Box>
             </RefundModal>
@@ -168,7 +216,7 @@ export const OptionAOnePane = ({
              * show. The basket scrolls; the money never does.
              */}
             <Box sx={{ height: "100%", display: "flex", minHeight: 0 }}>
-                <Box sx={{ flex: 1, minWidth: 0, overflowY: "auto", px: 3, py: 2.5 }}>
+                <Box sx={{ flex: 1, minWidth: 0, overflowY: "auto", px: 2, py: 2 }}>
                     <ScopeTabs value={draft.scope} onChange={draft.setScope} />
 
                     {draft.scope === "items" ? (
@@ -201,16 +249,14 @@ export const OptionAOnePane = ({
                         display: "flex",
                         flexDirection: "column",
                         borderLeft: "1px solid",
-                        borderColor: "divider",
-                        bgcolor: neutral[25],
+                        borderColor: appColors.divider,
+                        bgcolor: appColors.surface,
                     }}
                 >
                     {/* Destination and reason scroll if they must; the totals
                         never do — a figure the operator has to scroll to find is
                         the failure this redesign started from. */}
-                    <Box
-                        sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 3, py: 2, display: "flex", flexDirection: "column", gap: 2.5 }}
-                    >
+                    <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", py: 2, display: "flex", flexDirection: "column", gap: 2 }}>
                         <Box>
                             <TenderSplit
                                 payments={order.payments}
@@ -224,7 +270,16 @@ export const OptionAOnePane = ({
                         <ReasonPicker value={draft.reason} note={draft.note} onChange={draft.setReason} onNoteChange={draft.setNote} />
                     </Box>
 
-                    <Box sx={{ flexShrink: 0, px: 3, py: 2, borderTop: "1px solid", borderColor: "divider" }}>
+                    <Box
+                        sx={{
+                            flexShrink: 0,
+                            px: 2,
+                            py: 2,
+                            bgcolor: appColors.canvas,
+                            borderTop: "1px solid",
+                            borderColor: appColors.divider,
+                        }}
+                    >
                         <RefundTotals breakdown={draft.breakdown} dense />
                     </Box>
                 </Box>

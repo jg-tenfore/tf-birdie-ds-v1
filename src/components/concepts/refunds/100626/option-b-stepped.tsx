@@ -3,7 +3,7 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { fontSize, neutral, radius } from "@/theme/tokens";
+import { appColors } from "@/theme/app-replica-tokens";
 import { formatMoney, type TransactionOrder } from "../refund-data";
 import {
     AmountPane,
@@ -14,7 +14,6 @@ import {
     RefundModal,
     RefundTotals,
     ScopeTabs,
-    SectionLabel,
     SelectAllRow,
     ShortfallNote,
     TenderSplit,
@@ -104,7 +103,7 @@ export const OptionBStepped = ({
 
                     <ReasonPicker value={draft.reason} note={draft.note} onChange={draft.setReason} onNoteChange={draft.setNote} />
 
-                    <Box sx={{ p: 2, bgcolor: neutral[50], borderRadius: `${radius.md}px` }}>
+                    <Box sx={{ p: 2, bgcolor: appColors.canvas }}>
                         <RefundTotals breakdown={draft.breakdown} dense />
                     </Box>
                 </Box>
@@ -117,6 +116,7 @@ export const OptionBStepped = ({
             title="Issue refund"
             caption="Step 1 of 2"
             onClose={onClose}
+            padBody={false}
             footer={
                 <ModalFooter
                     total={draft.breakdown.total}
@@ -128,36 +128,50 @@ export const OptionBStepped = ({
                 />
             }
         >
-            <Typography sx={{ fontSize: fontSize.body2, color: "text.secondary", mb: 2 }}>
-                Order #{order.orderId} · {formatMoney(order.total)} · {order.customerName}
-            </Typography>
+            {/* The basket scrolls; the total it adds up to does not. */}
+            <Box sx={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+                <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 2, py: 2 }}>
+                    <Typography sx={{ fontSize: 13, color: appColors.textSecondary, mb: 2, px: 1.25 }}>
+                        Order #{order.orderId} · {formatMoney(order.total)} · {order.customerName}
+                    </Typography>
 
-            <ScopeTabs value={draft.scope} onChange={draft.setScope} />
+                    <ScopeTabs value={draft.scope} onChange={draft.setScope} />
 
-            {draft.scope === "items" ? (
-                <Box>
-                    <SelectAllRow
-                        checked={draft.allSelected}
-                        indeterminate={!draft.allSelected && draft.someSelected}
-                        onToggle={draft.toggleAll}
-                    />
-                    {draft.lines.map((line) => (
-                        <ItemSelectRow
-                            key={line.name}
-                            line={line}
-                            amount={(line.linePrice / line.soldQuantity) * line.quantity}
-                            onToggle={() => draft.toggleLine(line.name)}
-                            onQuantityChange={(next) => draft.setLineQuantity(line.name, next)}
-                        />
-                    ))}
-                    <Box sx={{ mt: 2 }}>
-                        <SectionLabel>Refund total</SectionLabel>
-                        <RefundTotals breakdown={draft.breakdown} dense />
-                    </Box>
+                    {draft.scope === "items" ? (
+                        <Box>
+                            <SelectAllRow
+                                checked={draft.allSelected}
+                                indeterminate={!draft.allSelected && draft.someSelected}
+                                onToggle={draft.toggleAll}
+                            />
+                            {draft.lines.map((line) => (
+                                <ItemSelectRow
+                                    key={line.name}
+                                    line={line}
+                                    amount={(line.linePrice / line.soldQuantity) * line.quantity}
+                                    onToggle={() => draft.toggleLine(line.name)}
+                                    onQuantityChange={(next) => draft.setLineQuantity(line.name, next)}
+                                />
+                            ))}
+                        </Box>
+                    ) : (
+                        <AmountPane value={draft.amountText} refundable={order.total} onChange={draft.setAmountText} />
+                    )}
                 </Box>
-            ) : (
-                <AmountPane value={draft.amountText} refundable={order.total} onChange={draft.setAmountText} />
-            )}
+
+                <Box
+                    sx={{
+                        flexShrink: 0,
+                        px: 3,
+                        py: 1.5,
+                        bgcolor: appColors.canvas,
+                        borderTop: "1px solid",
+                        borderColor: appColors.divider,
+                    }}
+                >
+                    <RefundTotals breakdown={draft.breakdown} dense />
+                </Box>
+            </Box>
         </RefundModal>
     );
 };
