@@ -327,6 +327,11 @@ const preview: Preview = {
                             // asked to have cleaned up.
                             "100626",
                             ["Overview", "Option A — One pane", "Option B — Stepped"],
+                            // Oct 8: Option A chosen, with Weston's notes and
+                            // multi-refund. 100626 stays above as the record of
+                            // the comparison that produced it.
+                            "100826",
+                            ["Overview", "Issue refund", "End to end", "Flow storyboards"],
                         ],
                     ],
                     // "∕" is U+2215 (division slash), not "/" — a real slash would
