@@ -40,7 +40,7 @@ import { chickenWingsOrder, proShopOrder, type TransactionOrder } from "@/compon
  */
 const meta = {
     title: "Flows/Refunds/3 — Create a refund",
-    parameters: { layout: "fullscreen" },
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

@@ -1,0 +1,87 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Refunds/100626/Overview" />
+
+# Oct 6 — Create a Refund, as a modal
+
+One screen is being redesigned: **Create a Refund**. Everything else in the
+refund path stays as it is. Two options are drawn here so the shape can be
+chosen on screens rather than in the abstract.
+
+From the Oct 6 call with Weston:
+
+> *"That doesn't make sense. So what these are doing is you're saying what you
+> don't want to refund."*
+
+> *"Keep it in the same design system. We don't need to do anything super crazy,
+> but let's clean that up."*
+
+So: same system, same reversal-order model, one screen replaced — and the
+replacement is a **modal over the transaction**, because a refund is an act
+performed on an order and the full-screen version loses that order the moment it
+opens.
+
+## The two options
+
+| | **A — One pane** | **B — Stepped** |
+| :-- | :-- | :-- |
+| Shape | Items, tenders and reason on one surface, then a confirmation | Items → tenders + reason → done |
+| Whole-order refund | Select all → reason → review → refund | Select all → Next → reason → refund |
+| Tender split visible | While the basket is being chosen | One step later |
+| Density | Scrolls at six lines plus two tenders | Nothing scrolls |
+| Best when | The operator wants the whole picture before committing | The counter is busy and one question at a time is easier |
+
+Both share every part — the item row, the split, the reason picker, the totals,
+the completion screen. **There is one item row in this design, not one per
+option**, so a decision between them is a decision about sequence and density,
+not about components.
+
+## What changed, and why
+
+| Fixed | How |
+| :-- | :-- |
+| Selection was inverted — full quantity pre-filled, you subtracted what the guest kept | Nothing is selected until it is chosen. **Select all items** makes the common case one tap |
+| A kept line was a `0` in a stepper, identical to an included line | The checkbox carries inclusion; quantity is a second control inside a selected row, reading **1 of 2** |
+| The tender split was invisible until after the refund | Each tender prints what it will take, live. Cash first — the rule the backend already applies, now stated |
+| *"Price of selected payments is less than total price to be refunded"*, after a press | A sentence in dollars, inline, as it happens: *"$25.58 short. Add a tender, or refund fewer items."* |
+| Tax had no line to go back on, so an $18.44 charge could only return $15.44 | Tax is prorated to the share being returned and shown as its own row. Refund everything and the whole charge comes back |
+| A reason prompt that confirmed nothing, with no Cancel | Four reasons and a catch-all — short enough to answer honestly, fixed enough to report on — then a confirmation that restates the decisions and carries the amount on the button |
+| The flow ended on a list, with a banner naming no order | It ends on the refund: amount, every destination, the reversal order number, and **Print receipt** — the ask from the call |
+
+## What deliberately did not change
+
+- **A refund is still a reversal order.** Weston: *"it's a lot better that way,
+  reporting-wise."* The design only names the new order instead of leaving it to
+  be found.
+- **Allocation is still cash first**, in the order tenders were taken. The rule
+  is the backend's; this makes it legible.
+- **Order Lookup, the results list and Transaction Details are untouched** in
+  this folder. They are recorded as-is one level up.
+
+## Open questions for the ticket
+
+1. **Tax per line.** The design prorates it from the order total. If the backend
+   can return tax per line, the summary should use that instead — it matters on
+   mixed-rate baskets.
+2. **Refunding to a tender that was not on the order** (cash back on a card
+   sale). Not drawn: the current app does not allow it, and nobody has said
+   whether it should.
+3. **Permissions.** Nothing here asks who is refunding. If a manager PIN is
+   wanted, the confirmation is where it belongs.
+4. **The reason list.** Four plus `Other` is a starting set, not a decision. What `Other` collects in the first month should decide what gets promoted into the list.
+5. **Already-refunded orders.** The modal does not yet show what a previous
+   refund took off this order, which is the one place a double refund gets
+   caught.
+
+## Where the code lives
+
+| Piece | File |
+| :-- | :-- |
+| Shared parts, tax math, cash-first allocation | `src/components/concepts/refunds/100626/refund-modal-parts.tsx` |
+| The refund being composed, shared by both options | `src/components/concepts/refunds/100626/use-refund-draft.ts` |
+| Option A | `src/components/concepts/refunds/100626/option-a-one-pane.tsx` |
+| Option B | `src/components/concepts/refunds/100626/option-b-stepped.tsx` |
+
+Reference: `references/100626/RefundFlow-new` — nine captures of another tablet
+POS's refund flow, used for its patterns (an explicit item/amount choice, a
+fixed reason list, a completion screen), not its visual design.

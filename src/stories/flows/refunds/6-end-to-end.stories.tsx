@@ -38,7 +38,7 @@ import { TransactionDetails } from "@/components/concepts/refunds/transaction-de
  */
 const meta = {
     title: "Flows/Refunds/6 — End to end",
-    parameters: { layout: "fullscreen" },
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

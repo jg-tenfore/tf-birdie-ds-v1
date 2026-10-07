@@ -26,7 +26,7 @@ import { OrderLookupForm } from "@/components/screens/operations/order-lookup-fo
  */
 const meta = {
     title: "Flows/Refunds/1 — Find the order",
-    parameters: { layout: "fullscreen" },
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

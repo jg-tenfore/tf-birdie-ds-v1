@@ -31,7 +31,7 @@ import { proShopOrder } from "@/components/concepts/refunds/refund-data";
  */
 const meta = {
     title: "Flows/Refunds/4 — The reason",
-    parameters: { layout: "fullscreen" },
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;

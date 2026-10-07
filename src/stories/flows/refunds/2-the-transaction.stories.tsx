@@ -20,7 +20,7 @@ import { TransactionDetails } from "@/components/concepts/refunds/transaction-de
  */
 const meta = {
     title: "Flows/Refunds/2 — The transaction",
-    parameters: { layout: "fullscreen" },
+    parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 
 export default meta;
