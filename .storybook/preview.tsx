@@ -222,6 +222,11 @@ const preview: Preview = {
                     // inside any one of them.
                     "Flows",
                     [
+                        // Selling a clinic from the Pro Shop, from
+                        // references/102026: the shipping path, then the
+                        // Oct 20 revisions.
+                        "Clinics",
+                        ["Current state", "102026", ["Overview", "Options"]],
                         "Rainchecks",
                         [
                             "Overview",
