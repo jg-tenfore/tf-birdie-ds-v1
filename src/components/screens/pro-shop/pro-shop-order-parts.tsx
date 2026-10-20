@@ -67,14 +67,23 @@ export const OrderTotals = () => (
  * The bottom bar. PAY is grey until the order has a line on it, which is the
  * only affordance telling staff the order is still empty.
  */
-export const ProShopActions = ({ payLabel = "Pay $0.00", payEnabled = false }: { payLabel?: string; payEnabled?: boolean }) => (
+export const ProShopActions = ({
+    payLabel = "Pay $0.00",
+    payEnabled = false,
+    onPay,
+}: {
+    payLabel?: string;
+    payEnabled?: boolean;
+    /** Supplied by the prototypes; the as-is stories leave the bar inert. */
+    onPay?: () => void;
+}) => (
     <>
         <ActionButton icon={<CalendarMonthIcon />}>Tee Sheet</ActionButton>
         <ActionButton icon={<ReplayIcon />}>Reset</ActionButton>
         <ActionButton icon={<SaveAltIcon />}>Pop</ActionButton>
         <ActionButton icon={<PersonIcon />}>Anonymous</ActionButton>
         <ActionButton icon={<CategoryIcon />}>Combos</ActionButton>
-        <ActionButton icon={<ShoppingCartIcon />} tone={payEnabled ? "primary" : "disabled"}>
+        <ActionButton icon={<ShoppingCartIcon />} tone={payEnabled ? "primary" : "disabled"} onClick={payEnabled ? onPay : undefined}>
             {payLabel}
         </ActionButton>
     </>

@@ -7,6 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { touchTarget } from "@/theme/tokens";
 import { camp, clinicSummary, isNearlyFull, sessionDate, spotsLabel, usd, type SessionAvailability } from "./clinic-availability";
+import { ClinicStepper } from "./clinic-stepper";
 
 /**
  * **Option C — the guest, first.**
@@ -30,6 +31,11 @@ import { camp, clinicSummary, isNearlyFull, sessionDate, spotsLabel, usd, type S
  *   here it is never not on screen.
  * - The action bar commits with the amount on it — *Add to order $67.41* —
  *   rather than a bare SAVE.
+ *
+ * **The two questions are two steps**, named in a bar at the top — *1 Guest*,
+ * then *2 Dates* — the same stepper B uses, run in the other order. Keeping the
+ * guest first is what buys the clash check; everything else about the two
+ * options' chrome matches so they can be compared fairly.
  *
  * The cost: it is a bigger build than A or B, and it asks the counter to answer
  * "who" before "when", which is a change of habit. Worth it only if the roster
@@ -189,95 +195,113 @@ const DateCard = ({ session, selected, onToggle }: { session: SessionAvailabilit
 export const ClinicBookingC = ({
     guest = GUEST,
     selected = [],
+    step = 1,
     onToggle,
+    onStep,
 }: {
     guest?: { name: string; detail: string } | null;
     selected?: string[];
+    /** 0 = the guest, 1 = the dates. The guest comes first here, by design. */
+    step?: number;
     onToggle?: (label: string) => void;
+    onStep?: (index: number) => void;
 }) => {
     const chosen = camp.sessions.filter((session) => selected.includes(session.label));
     const total = chosen.reduce((sum, session) => sum + session.price, 0);
     const summary = clinicSummary(camp.sessions);
 
     return (
-        <Box sx={{ minHeight: "100%", display: "flex", bgcolor: appColors.canvas }}>
-            <Box sx={{ flex: 1, minWidth: 0, px: 3, py: 3, display: "flex", flexDirection: "column", gap: 3 }}>
-                <GuestStep guest={guest} />
+        <Box sx={{ minHeight: "100%", display: "flex", flexDirection: "column", bgcolor: appColors.canvas }}>
+            <ClinicStepper
+                steps={[
+                    { label: "Guest", hint: guest ? guest.name : "Nobody chosen yet" },
+                    { label: "Dates", hint: chosen.length ? `${chosen.length} chosen · ${usd(total)}` : "None chosen yet" },
+                ]}
+                current={step}
+                onStep={onStep}
+            />
 
-                <Box>
-                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 2, mb: 1 }}>
-                        <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary }}>
-                            2 · WHICH DATES
-                        </Typography>
-                        <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
-                            {summary.openSessions} of {camp.sessions.length} open · {usd(camp.sessions[0].price)} each
-                        </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
-                        {camp.sessions.map((session) => (
-                            <DateCard
-                                key={session.label}
-                                session={session}
-                                selected={selected.includes(session.label)}
-                                onToggle={() => onToggle?.(session.label)}
-                            />
-                        ))}
-                    </Box>
-                </Box>
-            </Box>
-
-            {/* The booking, built as it is made. */}
-            <Box
-                sx={{
-                    width: 360,
-                    flexShrink: 0,
-                    bgcolor: appColors.surface,
-                    borderLeft: "1px solid",
-                    borderColor: appColors.divider,
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                <Box sx={{ px: 2.5, py: 2, borderBottom: "1px solid", borderColor: appColors.divider }}>
-                    <Typography sx={{ fontSize: 18, fontWeight: 500, color: appColors.textPrimary }}>{camp.name}</Typography>
-                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
-                        {guest ? guest.name : "No guest chosen yet"}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-                    {chosen.length === 0 ? (
-                        <Typography sx={{ px: 2.5, py: 2, fontSize: 15, color: appColors.textSecondary }}>
-                            Pick the dates on the left and they appear here.
-                        </Typography>
+            <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
+                <Box sx={{ flex: 1, minWidth: 0, px: 3, py: 3 }}>
+                    {step === 0 ? (
+                        <GuestStep guest={guest} />
                     ) : (
-                        chosen.map((session) => (
-                            <Box
-                                key={session.label}
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    minHeight: touchTarget.min,
-                                    px: 2.5,
-                                    borderBottom: "1px solid",
-                                    borderColor: appColors.divider,
-                                }}
-                            >
-                                <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{sessionDate(session)}</Typography>
-                                <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{usd(session.price)}</Typography>
+                        <Box>
+                            <Box sx={{ display: "flex", alignItems: "baseline", gap: 2, mb: 1 }}>
+                                <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary }}>
+                                    WHICH DATES
+                                </Typography>
+                                <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
+                                    {summary.openSessions} of {camp.sessions.length} open · {usd(camp.sessions[0].price)} each
+                                </Typography>
                             </Box>
-                        ))
+
+                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+                                {camp.sessions.map((session) => (
+                                    <DateCard
+                                        key={session.label}
+                                        session={session}
+                                        selected={selected.includes(session.label)}
+                                        onToggle={() => onToggle?.(session.label)}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
                     )}
                 </Box>
 
-                <Box sx={{ px: 2.5, py: 2, bgcolor: appColors.canvas, borderTop: "1px solid", borderColor: appColors.divider }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                        <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>
-                            {chosen.length} {chosen.length === 1 ? "session" : "sessions"}
+                {/* The booking, built as it is made. */}
+                <Box
+                    sx={{
+                        width: 360,
+                        flexShrink: 0,
+                        bgcolor: appColors.surface,
+                        borderLeft: "1px solid",
+                        borderColor: appColors.divider,
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <Box sx={{ px: 2.5, py: 2, borderBottom: "1px solid", borderColor: appColors.divider }}>
+                        <Typography sx={{ fontSize: 18, fontWeight: 500, color: appColors.textPrimary }}>{camp.name}</Typography>
+                        <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
+                            {guest ? guest.name : "No guest chosen yet"}
                         </Typography>
-                        <Typography sx={{ fontSize: 22, fontWeight: 500, color: appColors.textPrimary }}>{usd(total)}</Typography>
+                    </Box>
+
+                    <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+                        {chosen.length === 0 ? (
+                            <Typography sx={{ px: 2.5, py: 2, fontSize: 15, color: appColors.textSecondary }}>
+                                {step === 0 ? "Find the guest, then pick their dates." : "Pick the dates on the left and they appear here."}
+                            </Typography>
+                        ) : (
+                            chosen.map((session) => (
+                                <Box
+                                    key={session.label}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        minHeight: touchTarget.min,
+                                        px: 2.5,
+                                        borderBottom: "1px solid",
+                                        borderColor: appColors.divider,
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{sessionDate(session)}</Typography>
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{usd(session.price)}</Typography>
+                                </Box>
+                            ))
+                        )}
+                    </Box>
+
+                    <Box sx={{ px: 2.5, py: 2, bgcolor: appColors.canvas, borderTop: "1px solid", borderColor: appColors.divider }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                            <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>
+                                {chosen.length} {chosen.length === 1 ? "session" : "sessions"}
+                            </Typography>
+                            <Typography sx={{ fontSize: 22, fontWeight: 500, color: appColors.textPrimary }}>{usd(total)}</Typography>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
