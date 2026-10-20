@@ -42,7 +42,7 @@ import { ProShopActions } from "@/components/screens/pro-shop/pro-shop-order-par
  *    order panel, its name on the receipt.
  */
 const meta = {
-    title: "Clinics/Current state",
+    title: "Flows/Clinics/Current state",
     parameters: { layout: "fullscreen", replica: true },
 } satisfies Meta;
 

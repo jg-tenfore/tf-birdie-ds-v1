@@ -1,0 +1,62 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Clinics/102026/Overview" />
+
+# Oct 20 — fixing the clinic screens
+
+Three versions of the two screens Weston named, from his walkthrough of the
+shipping flow. **Current state** sits beside this folder as the record of what
+ships today.
+
+## What he asked for
+
+| His note | What it means on screen |
+| :-- | :-- |
+| *"The `10` shown on the clinic tile represents max roster size, not availability"* | The number on the card is unlabelled and answers the wrong question |
+| *"No indication of spots remaining before checkout. Users can fill out full registration and only hit the limit at the very end"* | Availability has to arrive before the work, not after it |
+| *"Show per-instance availability — e.g. 2 spots left per date"* | Every session carries its own count |
+| *"Remove the 'no items in order' shelf, not used"* | The empty order panel goes, on both clinic screens |
+| *"Clean up within the existing design system"* | Same chrome, same controls, no new visual language |
+
+All three versions do all five. They differ in how far they move.
+
+## The three
+
+| | **A — Counts in place** | **B — Roster first** | **C — Guest first** |
+| :-- | :-- | :-- | :-- |
+| The change | Same screens, every number labelled | Chips become rows | The job is reordered |
+| Dates | Chips, each with its own count | A table: date, time, fill meter, count, price | Cards, checked against the guest |
+| The guest | The six fields, kept | The six fields, under the dates | One search field, asked first |
+| Price | A line under the dates | A summary bar above the action bar | A running rail on the right |
+| Best when | The fix should ship this sprint | A manager wants to see how the clinic is filling | The roster check at the end is what is hurting |
+| Risk | Lowest | Medium | Highest |
+
+**A** is the small change he described: nothing moves, everything is labelled,
+and the freed order-panel space pays for a second line on each chip.
+
+**B** treats a clinic as a roster with dates attached. Ten rows in columns are
+read down; ten chips of text are read one at a time, and the nearly-full dates
+are the ones that matter.
+
+**C** asks *who* before *when*. Because the guest is known first, a date they
+already hold reads **Already booked** and cannot be chosen twice — a check the
+current design cannot make, since it never learns the guest until after the
+dates are picked.
+
+## Two things all three fix that were not on the list
+
+- **Price appears before SAVE.** The shipping screens show no figure anywhere;
+  the first number anyone sees is in the order panel on the next screen.
+- **A full session loses its radio.** Today it keeps one, which invites a tap
+  that does nothing.
+
+## About the numbers
+
+The availability counts are **invented**. The device never exposes a remaining
+figure — that is the complaint — so the two sessions it marks `(FULL)` are the
+only real ones. The spread (one date with a single place left, two nearly full,
+the rest open) is there to show the states, not to describe this clinic.
+
+Still open: what the order line should say once a booking lands in the cart.
+Today it prints the clinic's blurb, *"Come learn the game!"*, with no dates and
+no guest — recorded under **Current state**, step 5, and untouched here.
