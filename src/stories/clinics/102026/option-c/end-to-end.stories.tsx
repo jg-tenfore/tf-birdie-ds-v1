@@ -12,6 +12,10 @@ import { ClinicBookingC } from "@/components/concepts/clinics/102026/option-c-gu
  * the order as the dates are picked. **10/8 reads "Already booked"** and cannot
  * be taken — the guest is known early enough to check.
  *
+ * Two steps, in the other order from B: **1 Guest**, then **2 Dates**. Keeping
+ * the guest first is what buys the clash check — 10/8 reads *Already booked*
+ * once the app knows who it is for.
+ *
  * The clinic list is B's card, since C changes the booking screen rather than
  * the list; swap it if the list should differ too.
  */
@@ -47,7 +51,14 @@ export const SellAClinic: Story = {
         <ClinicJourney
             selectableSessions={openSessions}
             renderList={({ open }) => <ClinicListB onOpen={open} />}
-            renderSessions={({ selected, toggle }) => <ClinicBookingC selected={selected} onToggle={toggle} />}
+            sessionSteps={2}
+            // The guest is a given in this prototype, so step 1 is always
+            // ready; the dates have to be chosen before it can commit.
+            canAdvance={(step, selected) => (step === 0 ? true : selected.length > 0)}
+            nextLabel={() => "NEXT · DATES"}
+            renderSessions={({ selected, toggle, step, back }) => (
+                <ClinicBookingC selected={selected} step={step} onToggle={toggle} onStep={(index) => index === 0 && back()} />
+            )}
             linesFor={linesFor}
             saveLabel={(selected) => (selected.length === 0 ? "ADD TO ORDER" : `ADD TO ORDER · ${usd(selected.length * SESSION_PRICE)}`)}
         />

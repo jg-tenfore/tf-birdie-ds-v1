@@ -11,6 +11,10 @@ import { ClinicListB, ClinicSessionsB } from "@/components/concepts/clinics/1020
  * time, meter, count, price — under a header that says how the whole clinic is
  * filling. The running total sits above the action bar the entire time.
  *
+ * Two steps: **1 Dates**, then **2 Guest**. The name fields are a step of
+ * their own rather than a second half of the dates screen, and the action bar
+ * reads NEXT until the last one.
+ *
  * Worth watching on the way through: the nearly-full dates are found down one
  * column rather than read chip by chip.
  */
@@ -46,8 +50,16 @@ export const SellAClinic: Story = {
         <ClinicJourney
             selectableSessions={openSessions}
             renderList={({ open }) => <ClinicListB onOpen={open} />}
-            renderSessions={({ selected, toggle, selectAll }) => (
-                <ClinicSessionsB selected={selected} onToggle={toggle} onSelectAll={selectAll} />
+            sessionSteps={2}
+            canAdvance={(step, selected) => (step === 0 ? selected.length > 0 : true)}
+            renderSessions={({ selected, toggle, selectAll, step, back }) => (
+                <ClinicSessionsB
+                    selected={selected}
+                    step={step}
+                    onToggle={toggle}
+                    onSelectAll={selectAll}
+                    onStep={(index) => index === 0 && back()}
+                />
             )}
             linesFor={linesFor}
             saveLabel={(selected) => (selected.length === 0 ? "SAVE" : `SAVE · ${usd(selected.length * SESSION_PRICE)}`)}

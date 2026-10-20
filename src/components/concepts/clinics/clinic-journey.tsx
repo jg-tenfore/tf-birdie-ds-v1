@@ -36,6 +36,10 @@ export interface ClinicSessionsApi {
     selected: string[];
     toggle: (label: string) => void;
     selectAll: () => void;
+    /** Which step of the booking screen is showing, for the stepped versions. */
+    step: number;
+    next: () => void;
+    back: () => void;
 }
 
 export interface ClinicJourneyProps {
@@ -54,6 +58,15 @@ export interface ClinicJourneyProps {
     selectableSessions: string[];
     /** The label on the commit button, which the versions put a price on. */
     saveLabel?: (selected: string[]) => string;
+    /**
+     * How many steps the booking screen has. B and C split it in two — dates
+     * and guest — so the action bar shows NEXT until the last one.
+     */
+    sessionSteps?: number;
+    /** Whether the step in hand is finished enough to move on. */
+    canAdvance?: (step: number, selected: string[]) => boolean;
+    /** The label for each step's forward button. Defaults to NEXT. */
+    nextLabel?: (step: number) => string;
 }
 
 export const ClinicJourney = ({
@@ -63,9 +76,13 @@ export const ClinicJourney = ({
     showOrderPanel = false,
     selectableSessions,
     saveLabel,
+    sessionSteps = 1,
+    canAdvance,
+    nextLabel,
 }: ClinicJourneyProps) => {
     const [stage, setStage] = useState<"proshop" | "list" | "sessions" | "order" | "payment" | "complete">("proshop");
     const [selected, setSelected] = useState<string[]>([]);
+    const [step, setStep] = useState(0);
     /** What was booked, held separately so the picker can be reopened. */
     const [booked, setBooked] = useState<string[]>([]);
 
@@ -76,6 +93,7 @@ export const ClinicJourney = ({
     const reset = () => {
         setSelected([]);
         setBooked([]);
+        setStep(0);
         setStage("proshop");
     };
 
@@ -130,6 +148,9 @@ export const ClinicJourney = ({
     }
 
     if (stage === "sessions") {
+        const lastStep = step >= sessionSteps - 1;
+        const ready = canAdvance ? canAdvance(step, selected) : selected.length > 0;
+
         return (
             <AppShell
                 title={girlsSummerCamp.name}
@@ -137,21 +158,33 @@ export const ClinicJourney = ({
                 orderPanel={clinicPanel}
                 actionBar={
                     <>
-                        <ActionButton icon={<ChevronLeftIcon />} onClick={() => setStage("list")}>
+                        <ActionButton
+                            icon={<ChevronLeftIcon />}
+                            onClick={() => {
+                                if (step > 0) setStep(step - 1);
+                                else setStage("list");
+                            }}
+                        >
                             BACK
                         </ActionButton>
                         <ActionButton
-                            tone={selected.length === 0 ? "disabled" : "primary"}
+                            tone="primary"
+                            // Genuinely unavailable, not merely painted grey:
+                            // a step that cannot be left should not be
+                            // clickable or reachable by a screen reader.
+                            disabled={!ready}
                             onClick={
-                                selected.length === 0
+                                !ready
                                     ? undefined
-                                    : () => {
-                                          setBooked(selected);
-                                          setStage("order");
-                                      }
+                                    : lastStep
+                                      ? () => {
+                                            setBooked(selected);
+                                            setStage("order");
+                                        }
+                                      : () => setStep(step + 1)
                             }
                         >
-                            {saveLabel ? saveLabel(selected) : "SAVE"}
+                            {lastStep ? (saveLabel ? saveLabel(selected) : "SAVE") : nextLabel ? nextLabel(step) : "NEXT"}
                         </ActionButton>
                     </>
                 }
@@ -160,6 +193,9 @@ export const ClinicJourney = ({
                     selected,
                     toggle: (label) => setSelected((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label])),
                     selectAll: () => setSelected(selectableSessions),
+                    step,
+                    next: () => setStep((prev) => Math.min(prev + 1, sessionSteps - 1)),
+                    back: () => setStep((prev) => Math.max(prev - 1, 0)),
                 })}
             </AppShell>
         );

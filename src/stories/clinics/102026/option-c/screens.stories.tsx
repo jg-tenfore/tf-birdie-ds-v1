@@ -54,7 +54,7 @@ export const CGuest: Story = {
     name: "C — Who is it for",
     render: () => (
         <ClinicShell title={camp.name} saveLabel="ADD TO ORDER">
-            <ClinicBookingC guest={null} />
+            <ClinicBookingC guest={null} step={0} />
         </ClinicShell>
     ),
 };
@@ -79,6 +79,7 @@ export const CDates: Story = {
             <ClinicShell title={camp.name} saveLabel={`ADD TO ORDER · ${usd(total)}`}>
                 <ClinicBookingC
                     selected={selected}
+                    step={1}
                     onToggle={(label) => setSelected((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]))}
                 />
             </ClinicShell>

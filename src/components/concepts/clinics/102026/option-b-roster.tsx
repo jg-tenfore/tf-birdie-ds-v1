@@ -7,6 +7,7 @@ import { ClinicCustomerSearch } from "@/components/screens/clinics/clinic-screen
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { touchTarget } from "@/theme/tokens";
 import { camp, clinicSummary, isNearlyFull, sessionDate, spotsLabel, usd, type SessionAvailability } from "./clinic-availability";
+import { ClinicStepper } from "./clinic-stepper";
 
 /**
  * **Option B — the roster, first.**
@@ -29,8 +30,14 @@ import { camp, clinicSummary, isNearlyFull, sessionDate, spotsLabel, usd, type S
  *   on screen while dates are being chosen.
  * - No order panel, as Weston asked.
  *
+ * **The guest is a second step, not a second half.** The shipping screen stacks
+ * the dates and a bank of name fields on one canvas with no heading between
+ * them; here a stepper names both questions and asks them one at a time —
+ * *1 Dates*, then *2 Guest*. Going back is a tap on a finished step.
+ *
  * The cost: rows take more height than chips, so a ten-session clinic fills the
- * screen and a twenty-session one scrolls. Option A stays denser.
+ * screen and a twenty-session one scrolls, and the guest is now a page turn
+ * away. Option A stays denser and flatter.
  */
 
 /* ----------------------------------------------------------- the list */
@@ -168,12 +175,17 @@ const SessionRow = ({ session, selected, onToggle }: { session: SessionAvailabil
 
 export const ClinicSessionsB = ({
     selected = [],
+    step = 0,
     onToggle,
     onSelectAll,
+    onStep,
 }: {
     selected?: string[];
+    /** 0 = the dates, 1 = the guest. */
+    step?: number;
     onToggle?: (label: string) => void;
     onSelectAll?: () => void;
+    onStep?: (index: number) => void;
 }) => {
     const chosen = camp.sessions.filter((session) => selected.includes(session.label));
     const total = chosen.reduce((sum, session) => sum + session.price, 0);
@@ -182,7 +194,16 @@ export const ClinicSessionsB = ({
 
     return (
         <Box sx={{ minHeight: "100%", display: "flex", flexDirection: "column", bgcolor: appColors.canvas }}>
-            {/* The clinic, stated once, above its dates. */}
+            <ClinicStepper
+                steps={[
+                    { label: "Dates", hint: chosen.length ? `${chosen.length} chosen · ${usd(total)}` : "None chosen yet" },
+                    { label: "Guest", hint: "Who is being booked" },
+                ]}
+                current={step}
+                onStep={onStep}
+            />
+
+            {/* The clinic, stated once, above whichever step is showing. */}
             <Box sx={{ px: 3, py: 2, bgcolor: appColors.surface, borderBottom: "1px solid", borderColor: appColors.divider }}>
                 <Box sx={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                     <Typography sx={{ fontSize: 20, fontWeight: 500, color: appColors.textPrimary }}>{camp.name}</Typography>
@@ -201,33 +222,68 @@ export const ClinicSessionsB = ({
             </Box>
 
             <Box sx={{ flex: 1, minHeight: 0, px: 3, py: 2.5 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary }}>DATES</Typography>
-                    <Box sx={{ width: 180 }}>
-                        <ActionButton onClick={onSelectAll}>SELECT ALL OPEN</ActionButton>
-                    </Box>
-                </Box>
+                {step === 0 ? (
+                    <>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                            <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary }}>DATES</Typography>
+                            <Box sx={{ width: 180 }}>
+                                <ActionButton onClick={onSelectAll}>SELECT ALL OPEN</ActionButton>
+                            </Box>
+                        </Box>
 
-                <Box sx={{ bgcolor: appColors.surface, borderRadius: `${appRadius.card}px`, overflow: "hidden" }}>
-                    {camp.sessions.map((session) => (
-                        <SessionRow
-                            key={session.label}
-                            session={session}
-                            selected={selected.includes(session.label)}
-                            onToggle={() => onToggle?.(session.label)}
-                        />
-                    ))}
-                </Box>
+                        <Box sx={{ bgcolor: appColors.surface, borderRadius: `${appRadius.card}px`, overflow: "hidden" }}>
+                            {camp.sessions.map((session) => (
+                                <SessionRow
+                                    key={session.label}
+                                    session={session}
+                                    selected={selected.includes(session.label)}
+                                    onToggle={() => onToggle?.(session.label)}
+                                />
+                            ))}
+                        </Box>
+                    </>
+                ) : (
+                    <>
+                        {/* Step 2 opens with what step 1 decided, so the guest
+                            is being attached to something visible rather than
+                            to a selection two screens back. */}
+                        <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 1 }}>
+                            BOOKING
+                        </Typography>
+                        <Box sx={{ bgcolor: appColors.surface, borderRadius: `${appRadius.card}px`, px: 2, py: 1, mb: 3 }}>
+                            {chosen.map((session) => (
+                                <Box
+                                    key={session.label}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        minHeight: 40,
+                                        alignItems: "center",
+                                        borderBottom: "1px solid",
+                                        borderColor: appColors.divider,
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{sessionDate(session)}</Typography>
+                                    <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>{usd(session.price)}</Typography>
+                                </Box>
+                            ))}
+                            <Box sx={{ display: "flex", justifyContent: "space-between", minHeight: 44, alignItems: "center" }}>
+                                <Typography sx={{ fontSize: 16, fontWeight: 500, color: appColors.textPrimary }}>
+                                    {chosen.length} {chosen.length === 1 ? "session" : "sessions"}
+                                </Typography>
+                                <Typography sx={{ fontSize: 18, fontWeight: 500, color: appColors.textPrimary }}>{usd(total)}</Typography>
+                            </Box>
+                        </Box>
 
-                <Box sx={{ mt: 3 }}>
-                    <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 1 }}>
-                        WHO IS IT FOR
-                    </Typography>
-                    <ClinicCustomerSearch />
-                </Box>
+                        <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 1 }}>
+                            WHO IS IT FOR
+                        </Typography>
+                        <ClinicCustomerSearch />
+                    </>
+                )}
             </Box>
 
-            {/* Money, on screen while the dates are being chosen. */}
+            {/* Money, on screen through both steps. */}
             <Box
                 sx={{
                     flexShrink: 0,

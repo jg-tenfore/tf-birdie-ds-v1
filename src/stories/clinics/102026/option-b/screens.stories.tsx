@@ -87,3 +87,27 @@ export const BSessions: Story = {
         );
     },
 };
+
+/**
+ * **B — step 2, the guest.**
+ *
+ * The name fields are their own step now rather than a second half of the
+ * dates screen. It opens with what step 1 decided — the dates and the total —
+ * so the guest is attached to something visible.
+ *
+ * The bar at the top shows the first step finished and allows a tap back to it.
+ */
+export const BGuest: Story = {
+    name: "B — Guest details",
+    render: function BGuestStory() {
+        const [step, setStep] = useState(1);
+        const chosen = ["10/6/26 2:00 PM", "10/22/26 2:00 PM", "11/3/26 1:00 PM"];
+        const total = camp.sessions.filter((s) => chosen.includes(s.label)).reduce((sum, s) => sum + s.price, 0);
+
+        return (
+            <ClinicShell title={camp.name} saveLabel={`SAVE · ${usd(total)}`}>
+                <ClinicSessionsB selected={chosen} step={step} onStep={setStep} />
+            </ClinicShell>
+        );
+    },
+};
