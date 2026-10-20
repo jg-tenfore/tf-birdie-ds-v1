@@ -220,6 +220,11 @@ const preview: Preview = {
                     // is organised by journey, because the failures that matter
                     // in a flow live in the joins between screens rather than
                     // inside any one of them.
+                    // Clinics: selling a clinic from the Pro Shop, from
+                    // references/102026. Its own category because it spans the
+                    // catalogue, a booking screen and the ordinary checkout.
+                    "Clinics",
+                    ["Current state"],
                     "Flows",
                     [
                         "Rainchecks",
