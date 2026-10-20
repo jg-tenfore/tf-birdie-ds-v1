@@ -226,7 +226,24 @@ const preview: Preview = {
                         // references/102026: the shipping path, then the
                         // Oct 20 revisions.
                         "Clinics",
-                        ["Current state", "102026", ["Overview", "Options"]],
+                        [
+                            "Current state",
+                            ["Overview", "Screens", "End to end"],
+                            "102026",
+                            [
+                                "Overview",
+                                // Each option carries its own screens and its
+                                // own run of the whole flow, so two versions
+                                // can be compared end to end rather than
+                                // screen by screen.
+                                "Option A — Counts in place",
+                                ["Screens", "End to end"],
+                                "Option B — Roster first",
+                                ["Screens", "End to end"],
+                                "Option C — Guest first",
+                                ["Screens", "End to end"],
+                            ],
+                        ],
                         "Rainchecks",
                         [
                             "Overview",

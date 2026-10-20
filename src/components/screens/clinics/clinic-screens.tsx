@@ -74,15 +74,16 @@ export const ClinicList = ({ clinics, onOpen }: { clinics: Clinic[]; onOpen?: (c
 /**
  * One session chip.
  *
- * 160 × 72 on the device, five to a row. The radio is pinned to the left edge
- * of the chip rather than laid out with the label, so on a two-line date it
- * overlaps the first character — visible on `10/6/26 2:00 PM` in every capture.
- * That is reproduced here, not tidied.
+ * 160 × 72 on the device, five to a row. The device pins the radio to the
+ * chip's left edge and centres the label over the top of it, so on a two-line
+ * date the circle sits under the first character — visible on `10/6/26 2:00 PM`
+ * in every capture.
  *
- * A chosen session swaps the radio for a green check and gains a green border.
- * A full one keeps its radio, greys its text and carries `(FULL)` inside the
- * same label — so the difference between "bookable" and "not" is a word at the
- * end of a date and a shade of grey.
+ * **That overlap is corrected here**: the radio gets its own column and the
+ * date reads left-aligned beside it. It is the one as-is detail this folder
+ * does not reproduce, because it made the screen hard to read at a glance and
+ * costs nothing to fix. Everything else is the device's — the `(FULL)` inside
+ * the label, the grey, and the radio that a full session still draws.
  */
 export const SessionChip = ({ session, selected, onToggle }: { session: ClinicSession; selected?: boolean; onToggle?: () => void }) => (
     <Box
@@ -92,12 +93,12 @@ export const SessionChip = ({ session, selected, onToggle }: { session: ClinicSe
         aria-label={session.label}
         aria-disabled={session.full}
         sx={{
-            position: "relative",
-            width: 156,
-            minHeight: 72,
-            display: "grid",
-            placeItems: "center",
-            px: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            width: 160,
+            minHeight: 76,
+            px: 1.5,
             py: 1,
             bgcolor: session.full ? "#F4F4F4" : appColors.surface,
             border: "1px solid",
@@ -110,10 +111,7 @@ export const SessionChip = ({ session, selected, onToggle }: { session: ClinicSe
         {selected ? (
             <Box
                 sx={{
-                    position: "absolute",
-                    left: 6,
-                    top: "50%",
-                    transform: "translateY(-50%)",
+                    flexShrink: 0,
                     width: 20,
                     height: 20,
                     display: "grid",
@@ -127,10 +125,7 @@ export const SessionChip = ({ session, selected, onToggle }: { session: ClinicSe
         ) : (
             <Box
                 sx={{
-                    position: "absolute",
-                    left: 6,
-                    top: "50%",
-                    transform: "translateY(-50%)",
+                    flexShrink: 0,
                     width: 18,
                     height: 18,
                     borderRadius: "50%",
@@ -142,9 +137,10 @@ export const SessionChip = ({ session, selected, onToggle }: { session: ClinicSe
 
         <Typography
             sx={{
-                fontSize: 19,
-                lineHeight: 1.25,
-                textAlign: "center",
+                flex: 1,
+                minWidth: 0,
+                fontSize: 16,
+                lineHeight: 1.3,
                 color: session.full ? appColors.textDisabled : appColors.textPrimary,
             }}
         >
@@ -233,7 +229,7 @@ export const ClinicSessionPicker = ({
     <Box sx={{ minHeight: "100%", bgcolor: appColors.canvas, px: 3, py: 3 }}>
         <SelectAllButton onClick={onSelectAll} />
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2.5, maxWidth: 820 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2.5, maxWidth: 840 }}>
             {clinic.sessions.map((session) => (
                 <SessionChip
                     key={session.label}

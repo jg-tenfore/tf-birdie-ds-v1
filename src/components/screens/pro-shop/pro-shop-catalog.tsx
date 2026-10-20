@@ -97,12 +97,17 @@ export const ScanModeRow = ({ checked = false }: { checked?: boolean }) => (
     </Stack>
 );
 
-export const ProShopCatalog = ({ scanMode = false }: { scanMode?: boolean }) => (
+export const ProShopCatalog = ({ scanMode = false, onSelect }: { scanMode?: boolean; onSelect?: (label: string) => void }) => (
     <Box>
         <ScanModeRow checked={scanMode} />
         <Box sx={tileGridSx}>
             {proShopCategories.map((label) => (
-                <CategoryTile key={label} label={label} image={categoryPhoto(label)} />
+                <CategoryTile
+                    key={label}
+                    label={label}
+                    image={categoryPhoto(label)}
+                    onClick={onSelect ? () => onSelect(label) : undefined}
+                />
             ))}
         </Box>
     </Box>

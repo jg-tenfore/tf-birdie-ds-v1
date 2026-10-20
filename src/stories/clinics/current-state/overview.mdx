@@ -1,0 +1,51 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Clinics/Current state/Overview" />
+
+# Clinics — what ships today
+
+Transcribed from `references/102026/`. Selling a clinic is a Pro Shop category
+like any other: tap **Clinics**, pick a clinic, pick its dates, search for the
+guest, SAVE — and the booking lands in the order as ordinary lines to pay for.
+
+**[End to end](?path=/story/flows-clinics-current-state-end-to-end--sell-a-clinic)**
+runs the whole path in one component. **Screens** holds each step on its own.
+
+## The path
+
+| # | Screen | What happens |
+| :-- | :-- | :-- |
+| 1 | Pro Shop | A **Clinics** tile in the grid, with no badge or count |
+| 2 | Clinic list | One card: name, type, and the number `10` |
+| 3 | Session picker | Ten dates as chips, plus a six-field customer search |
+| 4 | Session picker | SELECT ALL takes the eight that are not full |
+| 5 | Pro Shop order | Three lines land in the cart |
+| 6 | Payment | The ordinary tender screen, $74.97 |
+| 7 | Order complete | The receipt, and the four ways out |
+
+## What is wrong with it
+
+1. **The `10` is the maximum roster, not availability** — and nothing says
+   which. Weston: *"no indication of spots remaining before checkout. Users can
+   fill out full registration and only hit the limit at the very end."*
+2. **A full session is told apart by a word inside a chip** — `(FULL)` and a
+   shade of grey — while the eight bookable ones say nothing about how many
+   places they hold.
+3. **The order panel is empty on both clinic screens**, and takes a third of
+   the canvas with it.
+4. **No price appears anywhere** until after SAVE. The first figure of any kind
+   arrives on screen 5.
+5. **The clinic is named two ways in one sale**: its blurb in the order panel
+   (*Come learn the game!*), its name on the receipt.
+6. **Three lines appear where eight sessions were chosen**, at $0.00, $22.47 and
+   $44.94, with no dates on any of them. Nobody could explain the free line.
+7. **The customer search has no required field** and no result list in the
+   capture, so which combination of the six attaches a guest is unstated.
+
+Every one of those is reproduced here rather than corrected — with one
+exception, noted in `clinic-screens.tsx`: the device's radio overlaps the first
+character of a two-line date, and that overlap is fixed so the screen can be
+read.
+
+**[102026](?path=/docs/flows-clinics-102026-overview--docs)** is the response to
+points 1–4, in three versions.
