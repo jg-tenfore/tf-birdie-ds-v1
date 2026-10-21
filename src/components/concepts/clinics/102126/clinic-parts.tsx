@@ -7,6 +7,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
+import { customerName, customerValueFor, demoCustomer, type DemoCustomer } from "@/components/screens/clinics/demo-customer";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { touchTarget } from "@/theme/tokens";
 import {
@@ -399,18 +400,39 @@ export const BookingSummary = ({ clinic, chosen, party = 1 }: { clinic: CatalogC
 
 /* ------------------------------------------------------------- the guest */
 
-export interface Guest {
-    first: string;
-    last: string;
-    email: string;
-    phone: string;
-}
+/** The six fields the device asks for, in the order it asks for them. */
+const GUEST_FIELDS: { label: string; searchable: boolean }[] = [
+    { label: "First Name", searchable: true },
+    { label: "Last Name", searchable: true },
+    { label: "Email", searchable: true },
+    { label: "Phone", searchable: true },
+    { label: "Customer Birthday", searchable: false },
+    { label: "Golf Course Customer ID", searchable: false },
+];
 
-export const guestName = (guest: Guest): string => `${guest.first} ${guest.last}`.trim();
+/** The four a second player needs — the rest is on the record already. */
+const COMPACT_FIELDS = GUEST_FIELDS.slice(0, 4);
 
-/** One MD2 filled field — empty and searchable, or filled with a known value. */
-export const GuestField = ({ label, value, searchable = true }: { label: string; value?: string; searchable?: boolean }) => (
+export type Guest = DemoCustomer;
+
+export const guestName = customerName;
+
+/** One MD2 filled field — empty and tappable, or showing a found value. */
+export const GuestField = ({
+    label,
+    value,
+    searchable = true,
+    onFill,
+}: {
+    label: string;
+    value?: string;
+    searchable?: boolean;
+    onFill?: () => void;
+}) => (
     <Box
+        onClick={value ? undefined : onFill}
+        role={value || !onFill ? undefined : "button"}
+        aria-label={value ? `${label}: ${value}` : `${label} — tap to look up a customer`}
         sx={{
             flex: "1 1 360px",
             minWidth: 0,
@@ -422,27 +444,95 @@ export const GuestField = ({ label, value, searchable = true }: { label: string;
             bgcolor: appColors.fieldFill,
             borderBottom: "1px solid rgba(0,0,0,0.42)",
             borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
+            cursor: !value && onFill ? "pointer" : "default",
         }}
     >
         {searchable && !value && <SearchIcon sx={{ fontSize: 22, color: appColors.textSecondary }} />}
         <Box sx={{ minWidth: 0 }}>
             {value && <Typography sx={{ fontSize: 12, color: appColors.textSecondary, lineHeight: 1.2 }}>{label}</Typography>}
-            <Typography sx={{ fontSize: 18, color: value ? appColors.textPrimary : appColors.textSecondary }}>{value || label}</Typography>
+            <Typography sx={{ fontSize: 18, color: value ? appColors.textPrimary : appColors.textSecondary }} noWrap>
+                {value || label}
+            </Typography>
         </Box>
     </Box>
 );
 
-/** The six-field customer search, with whatever is already known filled in. */
-export const GuestForm = ({ guest }: { guest?: Guest }) => (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, maxWidth: 880 }}>
-        <GuestField label="First Name" value={guest?.first} />
-        <GuestField label="Last Name" value={guest?.last} />
-        <GuestField label="Email" value={guest?.email} />
-        <GuestField label="Phone" value={guest?.phone} />
-        <GuestField label="Customer Birthday" searchable={false} />
-        <GuestField label="Golf Course Customer ID" searchable={false} />
-    </Box>
-);
+/**
+ * The customer search, with whatever is already known filled in.
+ *
+ * **Tapping any field fills the record**, which is what a lookup does — nobody
+ * types a first name and gets a first name back. The empty form is the one
+ * state of this screen nobody needs to review, so it takes a single tap to
+ * leave it, and a CLEAR to go back.
+ */
+export const GuestForm = ({
+    guest,
+    customerIndex = 0,
+    compact = false,
+    onFound,
+}: {
+    /** A guest carried in from outside — the recall, in Option A. */
+    guest?: Guest;
+    /** Which demo record a tap finds, so a party reads as different people. */
+    customerIndex?: number;
+    /** Four fields rather than six, for the second and later players. */
+    compact?: boolean;
+    /** Lets a parent mirror what the form found, for its own heading. */
+    onFound?: (guest: Guest | undefined) => void;
+}) => {
+    const [found, setFound] = useState<Guest | undefined>(guest);
+
+    /*
+     * Adjusting state when a prop changes, the way React documents it: compare
+     * against the last value during render rather than in an effect. Option A's
+     * SOMEONE ELSE empties the form by clearing the prop, and the recall refills
+     * it the same way.
+     */
+    const [lastGuest, setLastGuest] = useState(guest);
+
+    if (guest !== lastGuest) {
+        setLastGuest(guest);
+        setFound(guest);
+    }
+
+    const fields = compact ? COMPACT_FIELDS : GUEST_FIELDS;
+
+    return (
+        <Box sx={{ maxWidth: 880 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                {fields.map((field) => (
+                    <GuestField
+                        key={field.label}
+                        label={field.label}
+                        searchable={field.searchable}
+                        value={found ? customerValueFor(found, field.label) : undefined}
+                        onFill={() => {
+                            const record = demoCustomer(customerIndex);
+                            setFound(record);
+                            onFound?.(record);
+                        }}
+                    />
+                ))}
+            </Box>
+
+            {found && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 1.5 }}>
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>Found {guestName(found)}</Typography>
+                    <Typography
+                        onClick={() => {
+                            setFound(undefined);
+                            onFound?.(undefined);
+                        }}
+                        role="button"
+                        sx={{ fontSize: 14, letterSpacing: "0.06em", color: appColors.textSecondary, cursor: "pointer" }}
+                    >
+                        CLEAR
+                    </Typography>
+                </Box>
+            )}
+        </Box>
+    );
+};
 
 /** A labelled band inside a step. */
 export const StepSection = ({ label, children, sx }: { label: string; children: ReactNode; sx?: object }) => (

@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import GroupIcon from "@mui/icons-material/Group";
@@ -5,7 +7,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { ClinicStepper } from "../102026/clinic-stepper";
 import { fitsParty, openSessions, usd, type CatalogClinic } from "./clinic-catalog";
-import { BookingSummary, ClinicHeader, GuestField, SessionTable, StepSection, guestName, type Guest } from "./clinic-parts";
+import { BookingSummary, ClinicHeader, GuestForm, SessionTable, StepSection, guestName, type Guest } from "./clinic-parts";
 
 /**
  * **Option B — the party, up front.**
@@ -110,38 +112,55 @@ const PartyPicker = ({ clinic, party, onParty }: { clinic: CatalogClinic; party:
     </Box>
 );
 
-/** One player's search row on step 3. */
-const PlayerCard = ({ index, guest }: { index: number; guest?: Guest }) => (
-    <Box sx={{ bgcolor: appColors.surface, borderRadius: `${appRadius.card}px`, px: 2.5, py: 2, mb: 1.5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minHeight: 32 }}>
-            <Box
-                sx={{
-                    width: 26,
-                    height: 26,
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: "50%",
-                    bgcolor: guest ? appColors.green : appColors.divider,
-                    color: guest ? "#fff" : appColors.textSecondary,
-                    fontSize: 14,
-                }}
-            >
-                {index + 1}
-            </Box>
-            <Typography sx={{ fontSize: 17, color: appColors.textPrimary }}>{guest ? guestName(guest) : `Player ${index + 1}`}</Typography>
-            {index === 0 && guest && (
-                <Typography sx={{ fontSize: 14, color: appColors.greenDark }}>carried over from the last booking</Typography>
-            )}
-        </Box>
+/**
+ * One player's search row on step 3.
+ *
+ * Each card looks up its own person — tap any field and a different family
+ * member fills in, so a party of four reads as four people rather than one
+ * name repeated.
+ */
+const PlayerCard = ({ index, guest }: { index: number; guest?: Guest }) => {
+    const [found, setFound] = useState<Guest | undefined>(guest);
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 1.5 }}>
-            <GuestField label="First Name" value={guest?.first} />
-            <GuestField label="Last Name" value={guest?.last} />
-            <GuestField label="Email" value={guest?.email} />
-            <GuestField label="Phone" value={guest?.phone} />
+    const [lastGuest, setLastGuest] = useState(guest);
+
+    // Reset when the recall changes, during render rather than in an effect.
+    if (guest !== lastGuest) {
+        setLastGuest(guest);
+        setFound(guest);
+    }
+
+    return (
+        <Box sx={{ bgcolor: appColors.surface, borderRadius: `${appRadius.card}px`, px: 2.5, py: 2, mb: 1.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minHeight: 32 }}>
+                <Box
+                    sx={{
+                        width: 26,
+                        height: 26,
+                        display: "grid",
+                        placeItems: "center",
+                        borderRadius: "50%",
+                        bgcolor: found ? appColors.green : appColors.divider,
+                        color: found ? "#fff" : appColors.textSecondary,
+                        fontSize: 14,
+                    }}
+                >
+                    {index + 1}
+                </Box>
+                <Typography sx={{ fontSize: 17, color: appColors.textPrimary }}>
+                    {found ? guestName(found) : `Player ${index + 1}`}
+                </Typography>
+                {index === 0 && guest && found === guest && (
+                    <Typography sx={{ fontSize: 14, color: appColors.greenDark }}>carried over from the last booking</Typography>
+                )}
+            </Box>
+
+            <Box sx={{ mt: 1.5 }}>
+                <GuestForm guest={guest} customerIndex={index} compact onFound={setFound} />
+            </Box>
         </Box>
-    </Box>
-);
+    );
+};
 
 export const ClinicBookingB = ({
     clinic,

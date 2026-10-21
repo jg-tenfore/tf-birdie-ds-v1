@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -5,6 +7,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
+import { customerName, customerValueFor, demoCustomer, type DemoCustomer } from "./demo-customer";
 import { customerFields, type Clinic, type ClinicSession } from "./clinic-data";
 
 /**
@@ -171,8 +174,22 @@ export const SelectAllButton = ({ onClick }: { onClick?: () => void }) => (
 );
 
 /** One MD2 filled field from the customer search. */
-const CustomerField = ({ label, searchable }: { label: string; searchable: boolean }) => (
+const CustomerField = ({
+    label,
+    searchable,
+    value,
+    onFill,
+}: {
+    label: string;
+    searchable: boolean;
+    /** What the found record puts here, if one has been found. */
+    value?: string;
+    onFill?: () => void;
+}) => (
     <Box
+        onClick={value ? undefined : onFill}
+        role={value || !onFill ? undefined : "button"}
+        aria-label={value ? `${label}: ${value}` : `${label} — tap to look up a customer`}
         sx={{
             flex: "1 1 400px",
             minWidth: 0,
@@ -184,10 +201,16 @@ const CustomerField = ({ label, searchable }: { label: string; searchable: boole
             bgcolor: appColors.fieldFill,
             borderBottom: "1px solid rgba(0,0,0,0.42)",
             borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
+            cursor: !value && onFill ? "pointer" : "default",
         }}
     >
-        {searchable && <SearchIcon sx={{ fontSize: 22, color: appColors.textSecondary }} />}
-        <Typography sx={{ fontSize: 18, color: appColors.textSecondary }}>{label}</Typography>
+        {searchable && !value && <SearchIcon sx={{ fontSize: 22, color: appColors.textSecondary }} />}
+        <Box sx={{ minWidth: 0 }}>
+            {value && <Typography sx={{ fontSize: 12, color: appColors.textSecondary, lineHeight: 1.2 }}>{label}</Typography>}
+            <Typography sx={{ fontSize: 18, color: value ? appColors.textPrimary : appColors.textSecondary }} noWrap>
+                {value || label}
+            </Typography>
+        </Box>
     </Box>
 );
 
@@ -199,13 +222,43 @@ const CustomerField = ({ label, searchable }: { label: string; searchable: boole
  * Nothing marks a required field and nothing says whether these search an
  * existing customer or create one.
  */
-export const ClinicCustomerSearch = () => (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, maxWidth: 880 }}>
-        {customerFields.map((field) => (
-            <CustomerField key={field.label} label={field.label} searchable={field.searchable} />
-        ))}
-    </Box>
-);
+export const ClinicCustomerSearch = ({ customerIndex = 0 }: { customerIndex?: number }) => {
+    /*
+     * Tapping any one of the six stands in for the lookup the device would do,
+     * and fills all of them — an empty form is the one state of this screen
+     * nobody needs to review.
+     */
+    const [found, setFound] = useState<DemoCustomer | null>(null);
+
+    return (
+        <Box sx={{ maxWidth: 880 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                {customerFields.map((field) => (
+                    <CustomerField
+                        key={field.label}
+                        label={field.label}
+                        searchable={field.searchable}
+                        value={found ? customerValueFor(found, field.label) : undefined}
+                        onFill={() => setFound(demoCustomer(customerIndex))}
+                    />
+                ))}
+            </Box>
+
+            {found && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 1.5 }}>
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>Found {customerName(found)}</Typography>
+                    <Typography
+                        onClick={() => setFound(null)}
+                        role="button"
+                        sx={{ fontSize: 14, letterSpacing: "0.06em", color: appColors.textSecondary, cursor: "pointer" }}
+                    >
+                        CLEAR
+                    </Typography>
+                </Box>
+            )}
+        </Box>
+    );
+};
 
 /**
  * The clinic screen: SELECT ALL, the sessions, then the customer search.

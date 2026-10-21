@@ -7,6 +7,7 @@ import { OrderLineRow, OrderPanel, OrderPanelEmpty, type OrderLineItem } from "@
 import { CheckoutBody } from "@/components/screens/checkout/checkout-panes";
 import { OrderComplete } from "@/components/screens/checkout/order-complete";
 import { clinicReceiptEmail } from "@/components/screens/clinics/clinic-data";
+import { demoCustomer } from "@/components/screens/clinics/demo-customer";
 import { ProShopCatalog } from "@/components/screens/pro-shop/pro-shop-catalog";
 import { ProShopActions } from "@/components/screens/pro-shop/pro-shop-order-parts";
 import { clinicById, usd, type CatalogClinic } from "./clinic-catalog";
@@ -28,13 +29,8 @@ import { ClinicSearchList, type Guest } from "./clinic-parts";
  * prop and everything either side of it is shared.
  */
 
-/** The customer a search would have found. The fields are not typable here. */
-export const DEMO_GUEST: Guest = {
-    first: "Justin",
-    last: "Girard",
-    email: "hello@girardjustin.com",
-    phone: "(555) 215-8844",
-};
+/** The customer a tap on any field finds. Shared with the Oct 20 screens. */
+export const DEMO_GUEST: Guest = demoCustomer(0);
 
 /** The device's own rates, read off its ticket: $67.41 → $5.55 tax, $2.01 fees. */
 export const totalsFor = (subtotal: number) => {

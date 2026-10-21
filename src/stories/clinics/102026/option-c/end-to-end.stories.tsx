@@ -57,7 +57,10 @@ export const SellAClinic: Story = {
             canAdvance={(step, selected) => (step === 0 ? true : selected.length > 0)}
             nextLabel={() => "NEXT · DATES"}
             renderSessions={({ selected, toggle, step, back }) => (
-                <ClinicBookingC selected={selected} step={step} onToggle={toggle} onStep={(index) => index === 0 && back()} />
+                /* `guest={null}` starts step 1 empty, so the run shows the
+                   lookup happening rather than a guest who was always there:
+                   tap the search field and the record fills in. */
+                <ClinicBookingC guest={null} selected={selected} step={step} onToggle={toggle} onStep={(index) => index === 0 && back()} />
             )}
             linesFor={linesFor}
             saveLabel={(selected) => (selected.length === 0 ? "ADD TO ORDER" : `ADD TO ORDER · ${usd(selected.length * SESSION_PRICE)}`)}
