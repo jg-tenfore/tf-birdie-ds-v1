@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CategoryIcon from "@mui/icons-material/Category";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import PersonIcon from "@mui/icons-material/Person";
 import ReplayIcon from "@mui/icons-material/Replay";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
@@ -70,19 +71,33 @@ export const OrderTotals = () => (
 export const ProShopActions = ({
     payLabel = "Pay $0.00",
     payEnabled = false,
+    showBack = false,
+    onBack,
     onPay,
 }: {
     payLabel?: string;
     payEnabled?: boolean;
+    /**
+     * Drilling into a category — Memberships, from `references/102226` — puts
+     * BACK at the head of the bar and drops Combos to make room. The grid
+     * itself has no BACK.
+     */
+    showBack?: boolean;
+    onBack?: () => void;
     /** Supplied by the prototypes; the as-is stories leave the bar inert. */
     onPay?: () => void;
 }) => (
     <>
+        {showBack && (
+            <ActionButton icon={<ChevronLeftIcon />} onClick={onBack}>
+                Back
+            </ActionButton>
+        )}
         <ActionButton icon={<CalendarMonthIcon />}>Tee Sheet</ActionButton>
         <ActionButton icon={<ReplayIcon />}>Reset</ActionButton>
         <ActionButton icon={<SaveAltIcon />}>Pop</ActionButton>
         <ActionButton icon={<PersonIcon />}>Anonymous</ActionButton>
-        <ActionButton icon={<CategoryIcon />}>Combos</ActionButton>
+        {!showBack && <ActionButton icon={<CategoryIcon />}>Combos</ActionButton>}
         <ActionButton icon={<ShoppingCartIcon />} tone={payEnabled ? "primary" : "disabled"} onClick={payEnabled ? onPay : undefined}>
             {payLabel}
         </ActionButton>

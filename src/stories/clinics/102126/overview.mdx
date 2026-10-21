@@ -1,0 +1,100 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Clinics/102126/Overview" />
+
+# Oct 21 — the shape is settled, the party is not
+
+[102026](?path=/docs/flows-clinics-102026-overview--docs) put three versions in
+front of Weston. He picked one and then changed the question.
+
+## What he settled
+
+| His note | What it does here |
+| :-- | :-- |
+| *"I kind of like the line, having them be line items instead of the boxes… there's like 30 boxes here"* | **Rows, not chips.** Option B's table won; both versions use it |
+| *"It makes sense time-wise as you're going, earliest to latest. You're not going left to right and then left to right"* | One column, in order, scrolled |
+| *"And then I do like the stepping. I really like that"* | The stepper stays, in both |
+| *"I like adding the little bars there… way easier to just see and quickly scan"* | The per-date fill meters stay |
+| *"64 of 100 places taken doesn't tell me anything… if you just said 8 dates are still open, that tells me a lot"* | **The roster bar is gone.** `8 dates still open` replaces it everywhere |
+| *"On this page we can probably remove all this — not really pertinent once you select the dates"* | The guest step lost the clinic stats above the form |
+| *"I don't think we need the 3 of 8 dates chosen down here. Or the total. We're showing it here"* | And the strip below it. The total is on the button |
+| *"Do like 20 — that's not unrealistic"* → *"a search would be great"* | **Twenty clinics** in the list, with a search over name and category |
+
+None of that is up for debate in this round. Both versions do all of it, and
+they are identical from the Pro Shop tile through the end of the dates table.
+
+## What he did not settle
+
+How more than one person gets registered.
+
+> *"I think you can only do one at a time right now… you only do one during the
+> flow, but you can add multiple to the cart and then pay for them."*
+>
+> *"I'm leaning towards being able to do multiple, because nine times out of
+> ten, let's say I register one person, I'm going to do the exact same thing."*
+>
+> *"My only hesitation — does that make it harder, because now you're checking
+> for two or three or five people? Does the validation get interesting?"*
+
+So that is the fork, and it is the only one.
+
+## The two
+
+| | **A — One at a time** | **B — Party up front** |
+| :-- | :-- | :-- |
+| Steps | **1 Dates · 2 Guest** | **1 Players · 2 Dates · 3 Who they are** |
+| A booking is | One person | One to six people, same dates |
+| Availability | A date with 1 place left is open | A date with 1 place left is greyed for a party of 2, and says why |
+| Registering four | Four trips, each one pre-filled | One trip |
+| New validation | None | Party size against every chosen date |
+| Build cost | Near zero — it is today's model, with recall | Real — the roster check now takes a number |
+| Risk | The fourth trip still annoys someone | The group rule is wrong and has to be unpicked |
+
+**A** is the idea Weston floated himself: *"once you add it, if you hit clinics
+again, it just saves all of your info. You selected these, you're just changing
+the customer."* Nothing about the data changes — one booking is still one
+person — but the second registration starts filled in, and the second clinic for
+the same guest needs no typing at all.
+
+**B** is the answer to his hesitation. Asking *how many* before *which dates*
+turns the validation he was worried about into a filter: the date that cannot
+seat the party is never offered, so there is no error to throw. Each party-size
+tile says how many dates it fits before you pick it.
+
+## Run them, don't read them
+
+- **A — [End to end](?path=/story/flows-clinics-102126-option-a-one-at-a-time-end-to-end--sell-a-clinic)**: book someone, then tap **Clinics again** — that is the whole argument.
+- **B — [End to end](?path=/story/flows-clinics-102126-option-b-party-up-front-end-to-end--sell-a-clinic)**: set the party to four on step 1 and watch step 2 shrink.
+
+- **Every customer field fills on tap.** The forms are not typable, so tapping
+  any one of them stands in for the lookup and fills the whole record — the
+  filled screen is the one worth reviewing, and an empty form is not. A CLEAR
+  sits beside each one. In Option B each player card finds a different person,
+  so a party of four reads as four families.
+
+Each option's **Screens** folder holds the same path one screen at a time.
+
+## Still open
+
+1. **Same dates for the whole party?** B assumes yes. Weston, on the
+   alternative: *"it just feels weird, like you'd start assigning… that should
+   be separate, right, in that case."* If separate dates per player turns out to
+   be common, the fix is a per-player dates step, and B is where it would go.
+2. **More than one clinic in a single trip?** Not built. Weston: *"I don't
+   know"* — and his instinct was that re-entering Clinics with your details
+   intact already covers it, which is what A does.
+3. **What the order line should say.** Both versions book **one line per date,
+   named and dated**, which is an improvement invented here rather than asked
+   for. Today the cart gets three lines reading *Come learn the game!* with no
+   dates on them — recorded under
+   [Current state](?path=/docs/flows-clinics-current-state-overview--docs),
+   step 5.
+
+## About the numbers
+
+Nineteen of the twenty clinics are invented, and so is every availability count
+— the device exposes no remaining figure, which is the original complaint.
+**Girls Summer Camp is real**: the same ten dates, the same two full sessions
+and the same $22.47 as the Oct 20 folder, so the new list can be read against
+the old screens. The spread on the rest is arithmetic, not random, so row 14
+means the same thing tomorrow.

@@ -1,9 +1,12 @@
+import { useState } from "react";
+
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import CheckIcon from "@mui/icons-material/Check";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 
+import { customerName, demoCustomer } from "@/components/screens/clinics/demo-customer";
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { touchTarget } from "@/theme/tokens";
 import { camp, clinicSummary, isNearlyFull, sessionDate, spotsLabel, usd, type SessionAvailability } from "./clinic-availability";
@@ -42,13 +45,30 @@ import { ClinicStepper } from "./clinic-stepper";
  * check at the end is the thing actually hurting.
  */
 
-const GUEST = { name: "Avery Nguyen", detail: "avery.nguyen@email.com · (801) 555-0148" };
+/** The customer a tap on the search field finds, from the shared roster. */
+const AVERY = demoCustomer(1);
+const GUEST = { name: customerName(AVERY), detail: `${AVERY.email} · ${AVERY.phone}` };
+
+export interface GuestRecord {
+    name: string;
+    detail: string;
+}
 /** A date this guest already holds — the clash the shipping flow cannot see. */
 const ALREADY_BOOKED = "10/8/26 2:00 PM";
 
 /* --------------------------------------------------------------- step 1 */
 
-export const GuestStep = ({ guest = GUEST }: { guest?: { name: string; detail: string } | null }) => (
+export const GuestStep = ({
+    guest = GUEST,
+    onFind,
+    onChange,
+}: {
+    guest?: GuestRecord | null;
+    /** Tapping the empty search field stands in for the lookup. */
+    onFind?: () => void;
+    /** Change empties it again. */
+    onChange?: () => void;
+}) => (
     <Box>
         <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 1 }}>1 · WHO IS THIS FOR</Typography>
 
@@ -73,13 +93,22 @@ export const GuestStep = ({ guest = GUEST }: { guest?: { name: string; detail: s
                     <Typography sx={{ fontSize: 17, color: appColors.textPrimary }}>{guest.name}</Typography>
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{guest.detail}</Typography>
                 </Box>
-                <Typography sx={{ fontSize: 15, color: appColors.greenDark }}>Change</Typography>
+                <Typography
+                    onClick={onChange}
+                    role={onChange ? "button" : undefined}
+                    sx={{ fontSize: 15, color: appColors.greenDark, cursor: onChange ? "pointer" : "default", px: 1 }}
+                >
+                    Change
+                </Typography>
             </Box>
         ) : (
             <Box sx={{ display: "flex", gap: 1.5 }}>
                 {/* One field, not six: every one of the shipping screen's inputs
                     is a different way of naming the same person. */}
                 <Box
+                    onClick={onFind}
+                    role={onFind ? "button" : undefined}
+                    aria-label="Search name, email, phone or member ID"
                     sx={{
                         flex: 1,
                         display: "flex",
@@ -90,6 +119,7 @@ export const GuestStep = ({ guest = GUEST }: { guest?: { name: string; detail: s
                         bgcolor: appColors.fieldFill,
                         borderBottom: "1px solid rgba(0,0,0,0.42)",
                         borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
+                        cursor: onFind ? "pointer" : "default",
                     }}
                 >
                     <SearchIcon sx={{ color: appColors.textSecondary }} />
@@ -193,19 +223,27 @@ const DateCard = ({ session, selected, onToggle }: { session: SessionAvailabilit
 /* ---------------------------------------------------------- the screen */
 
 export const ClinicBookingC = ({
-    guest = GUEST,
+    guest: guestProp,
     selected = [],
     step = 1,
     onToggle,
     onStep,
 }: {
-    guest?: { name: string; detail: string } | null;
+    /**
+     * A guest to show. Passing `null` starts the step empty instead and lets a
+     * tap on the search field find one — which is how the end-to-end run works,
+     * so the screen can be seen before and after the lookup.
+     */
+    guest?: GuestRecord | null;
     selected?: string[];
     /** 0 = the guest, 1 = the dates. The guest comes first here, by design. */
     step?: number;
     onToggle?: (label: string) => void;
     onStep?: (index: number) => void;
 }) => {
+    const [found, setFound] = useState<GuestRecord | null>(null);
+    const guest = guestProp === null ? found : (guestProp ?? GUEST);
+
     const chosen = camp.sessions.filter((session) => selected.includes(session.label));
     const total = chosen.reduce((sum, session) => sum + session.price, 0);
     const summary = clinicSummary(camp.sessions);
@@ -224,7 +262,7 @@ export const ClinicBookingC = ({
             <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
                 <Box sx={{ flex: 1, minWidth: 0, px: 3, py: 3 }}>
                     {step === 0 ? (
-                        <GuestStep guest={guest} />
+                        <GuestStep guest={guest} onFind={() => setFound(GUEST)} onChange={() => setFound(null)} />
                     ) : (
                         <Box>
                             <Box sx={{ display: "flex", alignItems: "baseline", gap: 2, mb: 1 }}>
