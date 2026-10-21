@@ -243,6 +243,18 @@ const preview: Preview = {
                                 "Option C — Guest first",
                                 ["Screens", "End to end"],
                             ],
+                            // Oct 21: Weston picked B's rows and the stepper,
+                            // so the remaining question is how more than one
+                            // person gets registered. Two answers, from
+                            // references/102126.
+                            "102126",
+                            [
+                                "Overview",
+                                "Option A — One at a time",
+                                ["Screens", "End to end"],
+                                "Option B — Party up front",
+                                ["Screens", "End to end"],
+                            ],
                         ],
                         "Rainchecks",
                         [
