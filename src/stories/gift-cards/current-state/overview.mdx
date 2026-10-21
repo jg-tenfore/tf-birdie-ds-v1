@@ -1,0 +1,70 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Gift Cards/Current state/Overview" />
+
+# Gift Cards — what ships today
+
+Transcribed from `references/102226/giftCards/`. Selling a gift card is a Pro
+Shop category like any other: tap **Gift Card**, fill one screen, SAVE, and the
+card lands in the order as a single line to pay for.
+
+**[End to end](?path=/story/flows-gift-cards-current-state-end-to-end--sell-a-purchased-gift-card)**
+runs the whole path in one component. **Screens** holds each step on its own.
+
+## The path
+
+| # | Screen | What happens |
+| :-- | :-- | :-- |
+| 1 | Pro Shop | A **Gift Card** tile in the grid |
+| 2 | Create a Gift Card | One canvas: amount, UPC, type, expiry, two customers, four categories |
+| 3 | Create a Gift Card | A phone search attaches the buyer |
+| 4 | Create a Gift Card | A name search offers six Westons; the TO block turns red |
+| 5 | Dialog | SAVE explains that the server will generate a UPC |
+| 6 | Payment | The ordinary tender screen, $200.00 |
+| 7 | Order complete | The receipt |
+
+## What is wrong with it
+
+1. **The biggest control on the screen has no label.** The amount is a white
+   box with no caption, no placeholder and no currency symbol. You learn what
+   it is by tapping it and watching a number keypad come up.
+2. **The expiry is already decided and nobody can read it.** `AUGUST 19 2122` —
+   ninety-six years out. Policy, sentinel or bug is not stated anywhere.
+3. **Eight search fields, none marked required**, and the TO block shows **red
+   error glyphs on Email and Phone while the search that will fill them is
+   still open**.
+4. **The search results are the database, unedited.** Four Weston Farnsworth
+   records differing only by a `+tag`; `Fake Name`, `buster douglas` and
+   `BLOCK Tournament` sharing one phone number. Nothing — no member number, no
+   last visit, no balance — tells them apart, and a card issued to the wrong
+   one is money moved to a stranger.
+5. **A bare `(tr456)` heads the result sheet** and appears nowhere else.
+6. **Four spend categories are ticked by default and never explained.**
+7. **`Same as From` is a dark button** where a secondary action goes, doing a
+   copy rather than a navigation.
+8. **SAVE is live from the first frame.** No amount, no buyer, no recipient.
+   The only gate is a dialog about a field the screen calls optional — and it
+   arrives *after* all the work, with **CANCEL in red and OK in green**.
+9. **The order line says `Gift Card` and nothing else.** No recipient, no
+   expiry, no code. SubTotal and Grand Total both read $200.00 — a gift card
+   is not taxed.
+
+Every one of those is reproduced here rather than corrected.
+
+## One thing that is not transcribed
+
+The type dropdown reads **`Purchased Gift Card`** on every capture and is never
+opened, so the second entry — **`Promotional Gift Card`**, issued rather than
+sold, landing in the order at $0.00 and settling with no tender — is
+**invented**. It is the first thing in this folder to correct once the real
+menu is known. See
+**[7 — Promotional type](?path=/story/flows-gift-cards-current-state-screens--promotional)**
+and the second end-to-end run.
+
+## Related
+
+- **[Gift Cards lookup](?path=/story/app-screens-14-giftcards--empty)** under
+  App Screens is the other half: the admin table for finding a card that
+  already exists. It has no issue flow and no reload — which is the gap Weston
+  named on Oct 21: *"I'd also like to build a feature to reload a gift card. We
+  don't have that currently."*

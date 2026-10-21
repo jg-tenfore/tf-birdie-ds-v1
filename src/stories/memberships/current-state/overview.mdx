@@ -1,0 +1,68 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Memberships/Current state/Overview" />
+
+# Memberships — what ships today
+
+Transcribed from `references/102226/memberships/`. Weston, on why this folder
+sits beside Clinics and Gift Cards:
+
+> *"Gift cards, clinics, and memberships all follow kind of a similar pattern
+> where you click on it and it brings you to a different screen — it lists them
+> all and then takes you through step by step."*
+
+**[End to end](?path=/story/flows-memberships-current-state-end-to-end--sell-a-membership)**
+runs the whole path in one component. **Screens** holds each step on its own.
+
+## The path
+
+| # | Screen | What happens |
+| :-- | :-- | :-- |
+| 1 | Pro Shop | A **Memberships** tile in the grid |
+| 2 | Catalogue | Eighteen memberships in three columns, under two group tiles |
+| 3 | Catalogue | Tapping `testing` filters the grid to two |
+| 4 | Membership form | Six searches and two numbers |
+| 5 | Membership form | A search attaches the customer |
+| 6 | Pro Shop order | One line lands in the cart at $0.32 |
+| 7 | Payment | The ordinary tender screen, $0.36 |
+
+## What is wrong with it
+
+1. **The price changes twice and nothing explains it.** `Austin Membership` is
+   **$1.00** on its tile, **$0.32** in the form, **$0.36** on the ticket. The
+   only thing on screen connecting them is a read-only sentence —
+   *First month type: Prorated* — so the arithmetic happens where nobody can
+   see it.
+2. **The two tiles at the top are filters drawn as products.** Same footprint,
+   a logo where the price goes, no caption. Tapping one replaces the grid *and
+   removes the tiles*, so the only way back out is a BACK button the grid above
+   does not have.
+3. **The catalogue has never been weeded.** `Beta Compare`, `July QA`,
+   `a new membership`, `Cheapos`, `Jeremy Weekday Mem`, and a group literally
+   called `testing` — test rows beside the real ones with no way to tell which
+   is which.
+4. **The prices do not describe anything.** `$0.00` on four, `$611.25` on *Free
+   Punches*, `$999.00` on *Limited Member*, and **-$490.20** on *Monthly
+   Credit* — a negative number in a screen whose only job is to take money.
+5. **No search, no sort, no grouping** beyond the two tiles. Eighteen rows
+   today; a real club's list is longer.
+6. **`Enter quantity to pay for now`** asks a billing question in a text box,
+   in the same column as the customer's phone number.
+7. **Golf Course Customer ID fills itself in grey** and stays grey, so the one
+   field holding a real answer is the one that reads as disabled.
+8. **Nothing is required and SAVE is live from the first frame** — including
+   `Member Number`, left empty through the whole capture.
+
+Every one of those is reproduced here rather than corrected, with one
+exception noted in `membership-screens.tsx`: the course wordmark on the first
+group tile is not in this repo, so it is set as type.
+
+## What it has in common with Clinics
+
+The same three-step shape — tile, list, form — and the same three failures:
+**no search over a list that needs one**, **a price that arrives later than the
+work**, and **a form with no required field**. Those are worth fixing once,
+across all three, rather than three times.
+
+See **[Clinics 102126](?path=/docs/flows-clinics-102126-overview--docs)** for
+where that argument has already got to.

@@ -256,6 +256,13 @@ const preview: Preview = {
                                 ["Screens", "End to end"],
                             ],
                         ],
+                        // The other two Pro Shop categories that follow the
+                        // same tile → list → form shape, from
+                        // references/102226.
+                        "Gift Cards",
+                        ["Current state", ["Overview", "Screens", "End to end"]],
+                        "Memberships",
+                        ["Current state", ["Overview", "Screens", "End to end"]],
                         "Rainchecks",
                         [
                             "Overview",
