@@ -45,22 +45,19 @@ export const Purchased: Story = {
 };
 
 /**
- * **A credit, granted rather than sold.**
+ * **A customer credit.**
  *
- * The same screen with `Customer Credit` chosen. The balance lands in the
- * order at **$0.00** and the sale completes without ever reaching the tender
- * screen — because nothing is owed.
+ * The same screen, the same $200.00, the same tender. Weston: *"No, it's just
+ * the type… it doesn't add anything. It's mostly for reporting purposes. They
+ * act the same."*
  *
- * Watch what the screen does *not* do on the way through: the amount box stays
- * live and the four spend categories stay ticked, so the operator fills in a
- * form identical to the one that takes $200 and no money moves. The only
- * difference between the two runs is one line of text.
- *
- * **The settlement behaviour here is a reading, not a record.** The Oct 22
- * capture shows the three names; what each does to the order is not in it.
+ * Run it beside the purchased card and nothing differs — which is the finding.
+ * The control that looks like it changes the transaction changes a report, and
+ * the counter standing here has no way to know that, in either direction: no
+ * way to see it is harmless, and no way to see it matters.
  */
 export const CustomerCredit: Story = {
-    name: "Grant a customer credit",
+    name: "Record a customer credit",
     render: () => <GiftCardJourney startType="Customer Credit" />,
 };
 
@@ -68,13 +65,15 @@ export const CustomerCredit: Story = {
  * **Winnings.**
  *
  * The third type, and the one that says most about the screen: a prize paid
- * out of a tournament is being entered on the same form as a Christmas gift
- * card, with a *Gift Card FROM* block at the top of it.
+ * out of a tournament is entered on the same form as a Christmas gift card,
+ * with a *Gift Card FROM* block at the top of it.
  *
- * Who the winnings are *from* is a question the screen insists on asking and
- * nobody can answer — the course, presumably, which is not a customer record.
+ * The two-party block is deliberate — Weston: *"the reason that's there is you
+ * do want to put the to and from if it's to somebody different."* That answers
+ * it for a gift. It does not answer it for a prize, which comes from the
+ * course rather than from a customer, and the block is still required.
  */
 export const Winnings: Story = {
-    name: "Pay out winnings",
+    name: "Record winnings",
     render: () => <GiftCardJourney startType="Winnings" />,
 };

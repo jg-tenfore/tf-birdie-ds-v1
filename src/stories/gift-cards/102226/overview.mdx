@@ -1,0 +1,96 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Gift Cards/102226/Overview" />
+
+# Oct 22 — clean it up, and add reload
+
+Two separate jobs from the same call. **Current state** sits beside this folder
+as the record of what ships today.
+
+## The cleanup
+
+> *"With gift cards, try and attempt to clean this up. Make it look better for
+> sure."* → *"The titles just seem very crammed, and then the 'same as from'
+> button is just…"*
+
+Five changes, all of them labelling or subtraction, shared by A and B:
+
+| | |
+| :-- | :-- |
+| **The amount gets a caption** | On the device the biggest control on screen has no label at all |
+| **FROM and TO become cards** | *Bought by* and *For*, instead of `Gift Card FROM ——— Golf Course Customer ID 0` crammed above its fields |
+| **`Same as From` stops being a dark button** | It sat where a primary action goes while doing a copy. Now a text action inside the card it fills, and only once there is a buyer to copy |
+| **The spend categories get a sentence** | Saying what unticking one does, which the device never says |
+| **The expiry says *set automatically*** | It is computed from today, and nobody chose it |
+
+And **SAVE is disabled until there is an amount**, where the device's is live
+on an empty form.
+
+The type dropdown is left alone on purpose. Weston confirmed all three entries
+behave identically — *"it's mostly for reporting purposes, they act the same"* —
+so the only honest label is the one already on it.
+
+## Reload — new functionality
+
+> *"I think we need another option… able to **reload** a gift card. You would be
+> searching for a customer name or UPC code, for the gift card or gift card ID.
+> You would click on it, **because they could have multiple**. And then you
+> would put the amount that you want to add to it."*
+
+And what it is not:
+
+> — *"So you're not adjusting the balance like a manual adjustment?"*
+> — *"Correct… it'll just be another **incoming order** that adds value to that
+> card."*
+
+So a reload is a **sale**: it lands in the cart and goes through the same
+tender as everything else. The balance moves because money moved, which is why
+this cannot be an editable number on a record.
+
+## The three
+
+| | **A — Mode switch** | **B — Two paths** | **C — Card first** |
+| :-- | :-- | :-- | :-- |
+| Where the choice lives | A segmented control on the screen | A question before the screen | There is no choice — it only reloads |
+| Taps to sell a card | Fewest | One more, every time | n/a |
+| Risk | Arriving to sell and finding a search box, because the switch was left on Reload | A tap nobody needed on the common path | Selling a new card lives somewhere else entirely |
+| Build | Lightest | Medium | Medium |
+| Answers *"do it in both places"* | Needs a second entry built | Needs a second entry built | **Already is that screen** |
+
+**B is the shape Weston reached for** — *"there's gift card, and there's an
+option to reload or purchase new."* **C is the shape his second ask implies**:
+*"I definitely think from the customer profile it could be accessible… there's
+a section that says gift cards"* → *"yeah, just do it in both places."* A
+version whose whole screen is *this customer's cards* is already that section.
+
+**A** is the cheapest thing that works, and worth seeing before paying for
+either of the others.
+
+## Run them
+
+- **[A — End to end](?path=/story/flows-gift-cards-102226-option-a-mode-switch-end-to-end--sell-and-reload)** — sell one, switch, reload one
+- **[B — End to end](?path=/story/flows-gift-cards-102226-option-b-two-paths-end-to-end--sell-and-reload)** — the question first, both times
+- **[C — End to end](?path=/story/flows-gift-cards-102226-option-c-card-first-end-to-end--reload-a-card)** — search, pick, add funds
+
+In every one, search `justin`: he holds **three** cards and one of them is
+empty, which is the case the feature exists for — *"oh, I'm at $25, can I make
+this to $100?"*
+
+## The rail
+
+On every screen, here as in clinics. Weston reversed the Oct 20 call after
+testing it: *"I was wrong… let's add the rail back then. To keep it
+consistent."*
+
+## About the numbers
+
+The five gift cards are invented. The two things that are not: **a customer can
+hold several**, and **a card is found by customer or by code**.
+
+## Still open
+
+- **Where selling a new card lives in Option C.** Nothing here answers it.
+- **Whether the customer-profile entry needs its own design.** C implies not;
+  A and B both need one built.
+- The other half of the same call is
+  [Clinics 102226](?path=/docs/flows-clinics-102226-overview--docs).

@@ -103,6 +103,25 @@ export const ClinicFlow = ({ renderBooking, steps, canAdvance, selectAllFor, nex
         }));
     });
 
+    /**
+     * **The rail, restored.**
+     *
+     * The Oct 20 round took the order panel off the clinic screens on Weston's
+     * note that it was unused. He reversed that on Oct 22 after testing it:
+     *
+     * > *"I was wrong. If you do have something in the cart, it will show there
+     * > in the rail while you're adding the clinic information… let's add the
+     * > rail back then. To keep it consistent."*
+     *
+     * It earns its place for the reason it was built: a registration that runs
+     * four screens deep should not hide what is already in the order, so the
+     * total at the end is never a surprise. The Oct 20 folder keeps the version
+     * without it, as the record of that pass.
+     */
+    const cartPanel = (
+        <OrderPanel>{lines.length > 0 ? lines.map((line) => <OrderLineRow key={line.id} line={line} />) : <OrderPanelEmpty />}</OrderPanel>
+    );
+
     const subtotal = lines.reduce((sum, line) => sum + Number(line.price.replace(/[^0-9.]/g, "")) * line.qty, 0);
     const totals = totalsFor(Number(subtotal.toFixed(2)));
     const draftTotal = selected.length * clinic.price * party;
@@ -163,11 +182,7 @@ export const ClinicFlow = ({ renderBooking, steps, canAdvance, selectAllFor, nex
                 title="Pro Shop Order"
                 active="proshop"
                 showCart
-                orderPanel={
-                    <OrderPanel>
-                        {hasOrder ? lines.map((line) => <OrderLineRow key={line.id} line={line} />) : <OrderPanelEmpty />}
-                    </OrderPanel>
-                }
+                orderPanel={cartPanel}
                 actionBar={
                     <ProShopActions
                         payLabel={hasOrder ? `Pay ${usd(totals.total)}` : "Pay $0.00"}
@@ -188,6 +203,7 @@ export const ClinicFlow = ({ renderBooking, steps, canAdvance, selectAllFor, nex
             <AppShell
                 title="Clinics"
                 active="proshop"
+                orderPanel={cartPanel}
                 actionBar={
                     <ActionButton icon={<ChevronLeftIcon />} onClick={() => setStage("proshop")}>
                         BACK
@@ -207,6 +223,7 @@ export const ClinicFlow = ({ renderBooking, steps, canAdvance, selectAllFor, nex
             <AppShell
                 title={clinic.name}
                 active="proshop"
+                orderPanel={cartPanel}
                 actionBar={
                     <>
                         <ActionButton

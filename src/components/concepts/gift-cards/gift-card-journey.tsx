@@ -12,7 +12,6 @@ import {
     giftCardFrom,
     giftCardTo,
     giftCardTypes,
-    issuedTypes,
     toSearchResults,
     type GiftCardParty,
     type GiftCardType,
@@ -39,13 +38,6 @@ import { ProShopActions } from "@/components/screens/pro-shop/pro-shop-order-par
  * moment anyone learns the optional barcode had a consequence.
  */
 
-/**
- * `Customer Credit` and `Winnings` grant a balance rather than sell one, so
- * nothing is owed. The device's own behaviour here is not in the captures —
- * only the three names are — so this is the reading, not the record.
- */
-const isIssued = (type: GiftCardType) => issuedTypes.includes(type);
-
 export const GiftCardJourney = ({ startType = giftCardTypes[0] }: { startType?: GiftCardType }) => {
     const [stage, setStage] = useState<"proshop" | "create" | "order" | "payment" | "complete">("proshop");
     const [type, setType] = useState<GiftCardType>(startType);
@@ -58,8 +50,8 @@ export const GiftCardJourney = ({ startType = giftCardTypes[0] }: { startType?: 
     const [dialog, setDialog] = useState(false);
     const [sold, setSold] = useState(false);
 
-    /* $0.00 on a credit or a winning: it is granted, not bought. */
-    const faceValue = isIssued(type) ? 0 : Number(amount || 0);
+    /* The type is a reporting tag, not a behaviour switch: all three sell. */
+    const faceValue = Number(amount || 0);
     const lines = sold ? [{ id: "gift-card", name: "Gift Card", qty: 1, price: `$${faceValue.toFixed(2)}` }] : [];
     /* A gift card is not taxed — the device's ticket prints one figure twice. */
     const total = faceValue;
@@ -112,15 +104,7 @@ export const GiftCardJourney = ({ startType = giftCardTypes[0] }: { startType?: 
                     <ProShopActions
                         payLabel={`Pay $${total.toFixed(2)}`}
                         payEnabled={hasOrder}
-                        onPay={
-                            !hasOrder
-                                ? undefined
-                                : // Nothing is owed on a granted balance, so the
-                                  // tender screen has no job: the sale completes.
-                                  total === 0
-                                  ? () => setStage("complete")
-                                  : () => setStage("payment")
-                        }
+                        onPay={hasOrder ? () => setStage("payment") : undefined}
                     />
                 }
             >
@@ -230,7 +214,7 @@ export const GiftCardJourney = ({ startType = giftCardTypes[0] }: { startType?: 
                 facility: "The Dunes of Delgado PROD",
                 orderNumber: "6655814",
                 lines: lines.map((line) => ({ id: line.id, name: line.name, qty: line.qty, total: faceValue })),
-                tender: total === 0 ? "No payment" : "Credit",
+                tender: "Credit",
                 paid: total,
                 cash: total,
                 change: 0,

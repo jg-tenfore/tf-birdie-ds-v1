@@ -63,27 +63,25 @@ Captured Oct 22, it holds **three** entries:
 | **Customer Credit** | The course owes somebody money and puts it on their account |
 | **Winnings** | Somebody won a prize |
 
-Only the first is a sale. The other two are a **ledger adjustment wearing a
-till screen's clothes** — same amount box, same two customer searches, same
-four spend categories, same green SAVE. Nothing on screen distinguishes selling
-someone $200 from granting them $200, and the control that decides which is a
-line of plain text halfway down the canvas, unlabelled until it is opened.
+**All three behave identically.** Weston, Oct 22: *"No, it's just the type…
+it doesn't add anything. It's mostly for reporting purposes. They act the
+same."* Same amount box, same two customer searches, same four spend
+categories, same green SAVE, same tender.
 
-Two things fall out of that, and both are worth settling before this screen is
-redesigned:
+So this control reads like a behaviour switch and is not one. It decides which
+bucket the sale lands in on a report, and that cuts both ways for the person
+standing at the till: **they cannot tell that picking the wrong one is
+harmless, and they cannot tell that it matters** to someone in the back office
+they will never meet. An unlabelled line of plain text is carrying the whole of
+that.
 
-1. **`Gift Card FROM` makes no sense for two of the three.** Winnings are not
-   *from* a customer; they are from the course. The screen asks anyway, and
-   marks the block's fields in error until something is picked.
-2. **A granted balance is money leaving the business with no tender behind
-   it.** On this screen it needs the same two taps as a sale, no second
-   confirmation, and no note field explaining why.
+The `Gift Card FROM` block is deliberate — *"the reason that's there is you do
+want to put the to and from if it's to somebody different."* That answers it
+for a gift. It does not answer it for Winnings, which come from the course
+rather than from a customer, and the block is still required.
 
-**What is still a reading rather than a record:** the Oct 22 capture shows the
-three names, not what each does to the order. Credit and Winnings are modelled
-here as landing at $0.00 and settling with no tender. See
-**[7 — The three types](?path=/story/flows-gift-cards-current-state-screens--types)**
-and the second and third end-to-end runs.
+See **[7 — The three types](?path=/story/flows-gift-cards-current-state-screens--types)**
+and one end-to-end run per type.
 
 ## Related
 
