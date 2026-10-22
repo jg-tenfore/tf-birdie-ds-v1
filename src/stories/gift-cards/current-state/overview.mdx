@@ -28,8 +28,10 @@ runs the whole path in one component. **Screens** holds each step on its own.
 1. **The biggest control on the screen has no label.** The amount is a white
    box with no caption, no placeholder and no currency symbol. You learn what
    it is by tapping it and watching a number keypad come up.
-2. **The expiry is already decided and nobody can read it.** `AUGUST 19 2122` —
-   ninety-six years out. Policy, sentinel or bug is not stated anywhere.
+2. **The expiry is already decided and nobody can read it.** `AUGUST 19 2122`
+   on Oct 21, `AUGUST 20 2122` on Oct 22 — so it is **computed from today**,
+   roughly ninety-six years out, by a formula nothing on screen explains. It is
+   filled in before the operator has entered an amount.
 3. **Eight search fields, none marked required**, and the TO block shows **red
    error glyphs on Email and Phone while the search that will fill them is
    still open**.
@@ -51,15 +53,37 @@ runs the whole path in one component. **Screens** holds each step on its own.
 
 Every one of those is reproduced here rather than corrected.
 
-## One thing that is not transcribed
+## The type dropdown is the real story
 
-The type dropdown reads **`Purchased Gift Card`** on every capture and is never
-opened, so the second entry — **`Promotional Gift Card`**, issued rather than
-sold, landing in the order at $0.00 and settling with no tender — is
-**invented**. It is the first thing in this folder to correct once the real
-menu is known. See
-**[7 — Promotional type](?path=/story/flows-gift-cards-current-state-screens--promotional)**
-and the second end-to-end run.
+Captured Oct 22, it holds **three** entries:
+
+| Type | What it is |
+| :-- | :-- |
+| **Purchased Gift Card** | Somebody pays for it |
+| **Customer Credit** | The course owes somebody money and puts it on their account |
+| **Winnings** | Somebody won a prize |
+
+Only the first is a sale. The other two are a **ledger adjustment wearing a
+till screen's clothes** — same amount box, same two customer searches, same
+four spend categories, same green SAVE. Nothing on screen distinguishes selling
+someone $200 from granting them $200, and the control that decides which is a
+line of plain text halfway down the canvas, unlabelled until it is opened.
+
+Two things fall out of that, and both are worth settling before this screen is
+redesigned:
+
+1. **`Gift Card FROM` makes no sense for two of the three.** Winnings are not
+   *from* a customer; they are from the course. The screen asks anyway, and
+   marks the block's fields in error until something is picked.
+2. **A granted balance is money leaving the business with no tender behind
+   it.** On this screen it needs the same two taps as a sale, no second
+   confirmation, and no note field explaining why.
+
+**What is still a reading rather than a record:** the Oct 22 capture shows the
+three names, not what each does to the order. Credit and Winnings are modelled
+here as landing at $0.00 and settling with no tender. See
+**[7 — The three types](?path=/story/flows-gift-cards-current-state-screens--types)**
+and the second and third end-to-end runs.
 
 ## Related
 

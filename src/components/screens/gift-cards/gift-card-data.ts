@@ -42,20 +42,40 @@ export interface GiftCardParty {
 }
 
 /**
- * **The two types in the dropdown.**
+ * **The three types in the dropdown**, from the Oct 22 capture.
  *
- * The captures never open it — every screen reads `Purchased Gift Card` — so
- * the second name and its behaviour are **invented** and need confirming:
- * a promotional card is issued rather than sold, so it lands in the order at
- * $0.00 and the sale settles without a tender. If the real second type is
- * something else, this is the one thing in the folder to correct first.
+ * This screen is not only a till. `Purchased Gift Card` is the one that takes
+ * money; the other two put a balance on a customer's account for a reason that
+ * has nothing to do with a sale — a credit the course owes them, or a prize
+ * they won. All three are drawn with the same amount box, the same two customer
+ * searches and the same green SAVE, so **nothing on screen distinguishes
+ * selling $200 from granting $200.**
+ *
+ * What the capture shows is the list. What it does not show is what each one
+ * does to the order, so that part is still a reading rather than a record:
+ * `Customer Credit` and `Winnings` are modelled here as **issued rather than
+ * sold** — they land at $0.00 and the sale settles with no tender. Worth
+ * confirming before anyone builds from it.
  */
-export const giftCardTypes = ["Purchased Gift Card", "Promotional Gift Card"] as const;
+export const giftCardTypes = ["Purchased Gift Card", "Customer Credit", "Winnings"] as const;
 
 export type GiftCardType = (typeof giftCardTypes)[number];
 
-/** Ninety-six years out, and the device's own default. */
-export const defaultExpiration = "AUGUST 19 2122";
+/** The two types that grant a balance rather than sell one. */
+export const issuedTypes: GiftCardType[] = ["Customer Credit", "Winnings"];
+
+/**
+ * **The expiry is computed, not fixed.**
+ *
+ * The Oct 21 captures read `AUGUST 19 2122`; the Oct 22 one reads
+ * `AUGUST 20 2122`. It moves a day when the clock does, so it is derived from
+ * today rather than being a stored sentinel — roughly ninety-six years out, by
+ * a formula nothing on screen explains.
+ *
+ * Either way it is nobody's intent, and it is already filled in before the
+ * operator has entered an amount.
+ */
+export const defaultExpiration = "AUGUST 20 2122";
 
 /** All four on, every capture, with nothing on screen about what they gate. */
 export const spendCategories = ["Merchandise", "Food and Beverage", "Tee Fees", "Alcohol"];

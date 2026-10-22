@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { GiftCardJourney } from "@/components/concepts/gift-cards/gift-card-journey";
-import { giftCardTypes } from "@/components/screens/gift-cards/gift-card-data";
 
 /**
  * **Selling a gift card, start to finish — as it ships.**
@@ -46,18 +45,36 @@ export const Purchased: Story = {
 };
 
 /**
- * **The second type, issued rather than sold.**
+ * **A credit, granted rather than sold.**
  *
- * The same screen with `Promotional Gift Card` chosen in the dropdown. The
- * card lands in the order at **$0.00** and the sale completes without ever
- * reaching the tender screen.
+ * The same screen with `Customer Credit` chosen. The balance lands in the
+ * order at **$0.00** and the sale completes without ever reaching the tender
+ * screen — because nothing is owed.
  *
- * **This behaviour is invented.** The captures never open the type menu, so
- * the second entry's name and what it does are a reasonable guess that needs
- * confirming before anyone builds from it — the amount box, in particular,
- * should probably be disabled here rather than ignored.
+ * Watch what the screen does *not* do on the way through: the amount box stays
+ * live and the four spend categories stay ticked, so the operator fills in a
+ * form identical to the one that takes $200 and no money moves. The only
+ * difference between the two runs is one line of text.
+ *
+ * **The settlement behaviour here is a reading, not a record.** The Oct 22
+ * capture shows the three names; what each does to the order is not in it.
  */
-export const PromotionalRun: Story = {
-    name: "Issue a promotional gift card",
-    render: () => <GiftCardJourney startType={giftCardTypes[1]} />,
+export const CustomerCredit: Story = {
+    name: "Grant a customer credit",
+    render: () => <GiftCardJourney startType="Customer Credit" />,
+};
+
+/**
+ * **Winnings.**
+ *
+ * The third type, and the one that says most about the screen: a prize paid
+ * out of a tournament is being entered on the same form as a Christmas gift
+ * card, with a *Gift Card FROM* block at the top of it.
+ *
+ * Who the winnings are *from* is a question the screen insists on asking and
+ * nobody can answer — the course, presumably, which is not a customer record.
+ */
+export const Winnings: Story = {
+    name: "Pay out winnings",
+    render: () => <GiftCardJourney startType="Winnings" />,
 };
