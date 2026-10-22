@@ -213,16 +213,17 @@ export const Upc: Story = {
  * Three types, captured Oct 22: **Purchased Gift Card**, **Customer Credit**
  * and **Winnings**.
  *
- * That list changes what this screen is. Only the first one takes money — the
- * other two put a balance on a customer's account for a reason that has
- * nothing to do with a sale: a credit the course owes them, or a prize they
- * won. A till screen and a ledger screen, wearing the same clothes.
+ * They behave identically. Weston: *"No, it's just the type… it doesn't add
+ * anything. It's mostly for reporting purposes. **They act the same.**"*
  *
- * And they are *exactly* the same clothes. Same amount box, same two customer
- * searches, same four spend categories, same green SAVE. **Nothing on screen
- * distinguishes selling someone $200 from granting them $200**, and the type
- * that decides which is a line of plain text halfway down the canvas with no
- * label beside it until you open it.
+ * So the control reads like a behaviour switch and is not one — it decides
+ * which bucket the sale lands in on a report nobody standing here will ever
+ * see. Same amount box, same two customer searches, same four spend
+ * categories, same green SAVE, whichever is picked.
+ *
+ * That cuts both ways, and both are worth designing for: the counter cannot
+ * tell that picking the wrong one is harmless, and cannot tell that it matters
+ * to someone in the back office either.
  *
  * Tap the dropdown to switch between the three.
  */

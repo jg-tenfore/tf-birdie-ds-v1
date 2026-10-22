@@ -1,0 +1,107 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Clinics/102226/Overview" />
+
+# Oct 22 — one registration, not one booking
+
+[102126](?path=/docs/flows-clinics-102126-overview--docs) asked *how many
+players* and sold them all the same dates in one clinic. Weston came back with
+the whole job.
+
+## The flow he described
+
+> *"Click on clinics and you'd first be asked how many players. Right off the
+> get-go… and then you collect their information. We figure out who they are…
+> and then you step through it for each person you're registering for."*
+
+> *"What if I want to do the putting lab and the junior golf academy? I want
+> them to do both. So if you could select both — it's more of like a
+> multi-select."*
+
+> *"And then maybe we add a 'same as Justin' and it just selects it and skips
+> those steps… but then he actually can't do Tuesdays because he has baseball,
+> so I'm going to put him on Wednesday."*
+
+> *"Then we could have this confirmation screen — you're registering Justin for
+> these, Weston for these, for this amount. Hit add to cart. And maybe there's
+> edit buttons."*
+
+So: **several players, each in several clinics, each on their own dates**,
+assembled in one pass. All three versions do all of that, and they are
+identical until the dates.
+
+## Three other things he settled
+
+| | |
+| :-- | :-- |
+| **The rail comes back** | *"I was wrong. If you do have something in the cart, it will show there in the rail… let's add the rail back then. To keep it consistent."* It is on every screen here, and has been restored in 102126 |
+| **It ends at the cart, not the card** | *"Adding it to the cart and not skipping gives us the most flexibility… is there that 10% where the course comes and complains because they needed to add a dozen golf balls and now it's two transactions?"* |
+| **Quantity discounts get called out** | *"You can set up a discount… if you buy 4, you get them 25% off. All 4 of them."* → *"On this confirmation screen we may want to just call that out — hey, add one more and get 25% off."* |
+
+## The one question he handed back
+
+> *"And then it would take you to selecting the dates. That's one question, and
+> I would leave this open to you, because there could be a list this long. So
+> maybe it says, this is for Justin — and then **do we do each clinic by
+> itself, or is it like all on this page?**"*
+
+That is the only thing A, B and C disagree about.
+
+| | **A — Clinic by clinic** | **B — One page per player** | **C — Confirm first** |
+| :-- | :-- | :-- | :-- |
+| After the multi-select | A dates page per clinic | Every clinic stacked on one page | Same as B, for the first player only |
+| Players 2 onward | Step through the same pages | Step through the same pages | **Rows on the summary** — copy, or open in place |
+| Pages for 2 players × 2 clinics | **10** | **6** | **5** |
+| Reads well when | Long date lists, one clinic at a time | Two or three clinics each | The second player is mostly the same as the first |
+| The cost | Step fatigue | A long scroll, totals below the fold | The summary does two jobs at once |
+
+**A** is his literal description. **B** is the other answer to his question.
+**C** takes his own shortcut — *"it just skips those steps"* — and removes the
+steps for everybody after the first player.
+
+## Run them, don't read them
+
+Register **two players**, give the first one two clinics, then watch what each
+version asks you to do for the second:
+
+- **[A — End to end](?path=/story/flows-clinics-102226-option-a-clinic-by-clinic-end-to-end--register-a-family)**
+- **[B — End to end](?path=/story/flows-clinics-102226-option-b-one-page-per-player-end-to-end--register-a-family)**
+- **[C — End to end](?path=/story/flows-clinics-102226-option-c-confirm-first-end-to-end--register-a-family)**
+
+## Availability is now per player
+
+102126 asked the party size and greyed any date that could not seat all of
+them. That rule cannot survive a flow where players take *different* dates, so
+it is replaced: **each date's count comes down as players are assigned to it**,
+inside this registration, before anyone reaches the till. Put two of a family
+on a date with two places and the row reads none left.
+
+It is the Oct 20 complaint, kept honest: *"users can fill out full registration
+and only hit the limit at the very end."*
+
+## The cart
+
+**One line per player per date**, named and dated —
+`Justin — Junior Golf Academy — 10/7/26 10:30 AM`. A discount earned on a
+clinic is spread evenly across that clinic's lines, so every line shows what it
+actually cost. The shipping flow drops three lines reading *Come learn the
+game!* with no dates and no guest on them.
+
+## About the numbers
+
+The availability counts and the twenty-clinic catalogue carry over from
+[102126](?path=/docs/flows-clinics-102126-overview--docs) and are invented
+there. The **discounts are invented too** — three clinics carry a rule, at 4 or
+5 dates for 15–25% off.
+
+One thing to correct when it matters: the device configures a discount on the
+**instance**, not the clinic — *"I think you said it on the clinic level. Oh,
+that was the instance."* These versions hang it on the clinic, which is enough
+to show the arithmetic and the nudge but is not where it really lives.
+
+## Still open
+
+- **Reload for gift cards** was the other half of the same call, and lives in
+  [Gift Cards 102226](?path=/docs/flows-gift-cards-102226-overview--docs).
+- **Does a player ever need two different clinics on the same date?** Nothing
+  stops it here, and nothing warns about it either.

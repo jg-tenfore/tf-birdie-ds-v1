@@ -44,25 +44,24 @@ export interface GiftCardParty {
 /**
  * **The three types in the dropdown**, from the Oct 22 capture.
  *
- * This screen is not only a till. `Purchased Gift Card` is the one that takes
- * money; the other two put a balance on a customer's account for a reason that
- * has nothing to do with a sale — a credit the course owes them, or a prize
- * they won. All three are drawn with the same amount box, the same two customer
- * searches and the same green SAVE, so **nothing on screen distinguishes
- * selling $200 from granting $200.**
+ * Weston, asked whether the three behave differently:
  *
- * What the capture shows is the list. What it does not show is what each one
- * does to the order, so that part is still a reading rather than a record:
- * `Customer Credit` and `Winnings` are modelled here as **issued rather than
- * sold** — they land at $0.00 and the sale settles with no tender. Worth
- * confirming before anyone builds from it.
+ * > *"No, it's just the type… it doesn't add anything… it's mostly for
+ * > reporting purposes. **They act the same.**"*
+ *
+ * So this control changes one thing: which bucket the sale lands in on a
+ * report. All three take money, all three use the same amount box, the same
+ * two customer searches and the same green SAVE.
+ *
+ * Which is worth stating plainly, because it reads like a behaviour switch and
+ * is not one. A counter looking at this screen has no way to know that picking
+ * `Winnings` instead of `Purchased Gift Card` changes nothing they can see —
+ * and no way to know it matters to someone in the back office who will never
+ * stand here.
  */
 export const giftCardTypes = ["Purchased Gift Card", "Customer Credit", "Winnings"] as const;
 
 export type GiftCardType = (typeof giftCardTypes)[number];
-
-/** The two types that grant a balance rather than sell one. */
-export const issuedTypes: GiftCardType[] = ["Customer Credit", "Winnings"];
 
 /**
  * **The expiry is computed, not fixed.**

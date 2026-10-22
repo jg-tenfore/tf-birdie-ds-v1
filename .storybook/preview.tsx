@@ -255,12 +255,40 @@ const preview: Preview = {
                                 "Option B — Party up front",
                                 ["Screens", "End to end"],
                             ],
+                            // Oct 22: one registration covering several
+                            // players in several clinics. The versions differ
+                            // only in how the dates are picked.
+                            "102226",
+                            [
+                                "Overview",
+                                "Option A — Clinic by clinic",
+                                ["Screens", "End to end"],
+                                "Option B — One page per player",
+                                ["Screens", "End to end"],
+                                "Option C — Confirm first",
+                                ["Screens", "End to end"],
+                            ],
                         ],
                         // The other two Pro Shop categories that follow the
                         // same tile → list → form shape, from
                         // references/102226.
                         "Gift Cards",
-                        ["Current state", ["Overview", "Screens", "End to end"]],
+                        [
+                            "Current state",
+                            ["Overview", "Screens", "End to end"],
+                            // Oct 22: clean the create screen up, and add the
+                            // reload Weston asked for.
+                            "102226",
+                            [
+                                "Overview",
+                                "Option A — Mode switch",
+                                ["Screens", "End to end"],
+                                "Option B — Two paths",
+                                ["Screens", "End to end"],
+                                "Option C — Card first",
+                                ["Screens", "End to end"],
+                            ],
+                        ],
                         "Memberships",
                         ["Current state", ["Overview", "Screens", "End to end"]],
                         "Rainchecks",
