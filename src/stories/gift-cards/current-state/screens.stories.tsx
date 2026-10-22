@@ -208,23 +208,32 @@ export const Upc: Story = {
 };
 
 /**
- * **The second type in the dropdown.**
+ * **The dropdown, open.**
  *
- * The captures never open the type menu — every screen reads `Purchased Gift
- * Card` — so this second entry is **invented**: a promotional card is issued
- * rather than sold, lands in the order at $0.00 and settles with no tender.
+ * Three types, captured Oct 22: **Purchased Gift Card**, **Customer Credit**
+ * and **Winnings**.
  *
- * If the real second type is something else, this is the first thing in the
- * folder to correct. Tap the dropdown to switch it.
+ * That list changes what this screen is. Only the first one takes money — the
+ * other two put a balance on a customer's account for a reason that has
+ * nothing to do with a sale: a credit the course owes them, or a prize they
+ * won. A till screen and a ledger screen, wearing the same clothes.
+ *
+ * And they are *exactly* the same clothes. Same amount box, same two customer
+ * searches, same four spend categories, same green SAVE. **Nothing on screen
+ * distinguishes selling someone $200 from granting them $200**, and the type
+ * that decides which is a line of plain text halfway down the canvas with no
+ * label beside it until you open it.
+ *
+ * Tap the dropdown to switch between the three.
  */
-export const Promotional: Story = {
-    name: "7 — Promotional type (unverified)",
-    render: function PromotionalStory() {
+export const Types: Story = {
+    name: "7 — The three types",
+    render: function TypesStory() {
         const [type, setType] = useState<(typeof giftCardTypes)[number]>(giftCardTypes[1]);
 
         return (
             <Shell>
-                <CreateGiftCard amount="0.00" type={type} from={giftCardFrom} to={giftCardTo} onType={setType} />
+                <CreateGiftCard amount={giftCardAmount} type={type} from={giftCardFrom} to={giftCardTo} onType={setType} />
             </Shell>
         );
     },
