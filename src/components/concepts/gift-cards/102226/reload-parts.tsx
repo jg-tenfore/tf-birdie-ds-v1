@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckIcon from "@mui/icons-material/Check";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
@@ -170,62 +171,92 @@ export const CardResults = ({
  * *"oh, I'm at $25, can I make this to $100?"* — which is a target balance, not
  * an amount to add, and the two are easy to confuse at a till.
  */
-export const ReloadAmount = ({ card, amount, onAmount }: { card: GiftCardRecord; amount: number; onAmount?: (value: number) => void }) => (
-    <Box>
-        <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 1 }}>ADD TO THIS CARD</Typography>
+export const ReloadAmount = ({ card, amount, onAmount }: { card: GiftCardRecord; amount: number; onAmount?: (value: number) => void }) => {
+    const [draft, setDraft] = useState(String(amount));
+    const valid = /^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(draft) && Number.isFinite(Number(draft)) && Number(draft) > 0;
+    const invalid = draft !== "" && !valid;
 
-        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
-            {reloadPresets.map((preset) => {
-                const active = preset === amount;
+    return (
+        <Box>
+            <Typography sx={{ fontSize: 13, letterSpacing: "0.08em", color: appColors.textSecondary, mb: 1 }}>ADD TO THIS CARD</Typography>
 
-                return (
-                    <Box
-                        key={preset}
-                        onClick={() => onAmount?.(preset)}
-                        role="radio"
-                        aria-checked={active}
-                        aria-label={`Add ${usd(preset)}`}
-                        sx={{
-                            minWidth: 128,
-                            minHeight: 72,
-                            display: "grid",
-                            placeItems: "center",
-                            cursor: "pointer",
-                            borderRadius: `${appRadius.card}px`,
-                            bgcolor: active ? appColors.green : appColors.surface,
-                            border: "1px solid",
-                            borderColor: active ? appColors.green : appColors.divider,
-                        }}
-                    >
-                        <Typography sx={{ fontSize: 22, fontWeight: 500, color: active ? "#fff" : appColors.textPrimary }}>
-                            {usd(preset)}
-                        </Typography>
-                    </Box>
-                );
-            })}
+            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
+                <TextField
+                    label="Custom amount ($)"
+                    variant="filled"
+                    value={draft}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setDraft(value);
+                        const isValid =
+                            /^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(value) && Number.isFinite(Number(value)) && Number(value) > 0;
+                        onAmount?.(isValid ? Number(value) : 0);
+                    }}
+                    error={invalid}
+                    helperText={invalid ? "Enter a positive amount with up to 2 decimal places." : "Type an amount, including cents."}
+                    slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                    sx={{
+                        width: 220,
+                        "& .MuiFilledInput-root": { minHeight: 72 },
+                        "& input": { fontSize: 22 },
+                    }}
+                />
+                {reloadPresets.map((preset) => {
+                    const active = preset === amount;
+
+                    return (
+                        <Box
+                            key={preset}
+                            onClick={() => {
+                                setDraft(preset.toFixed(2));
+                                onAmount?.(preset);
+                            }}
+                            role="radio"
+                            aria-checked={active}
+                            aria-label={`Add ${usd(preset)}`}
+                            sx={{
+                                minWidth: 104,
+                                minHeight: 72,
+                                alignSelf: "flex-start",
+                                display: "grid",
+                                placeItems: "center",
+                                cursor: "pointer",
+                                borderRadius: `${appRadius.card}px`,
+                                bgcolor: active ? appColors.green : appColors.surface,
+                                border: "1px solid",
+                                borderColor: active ? appColors.green : appColors.divider,
+                            }}
+                        >
+                            <Typography sx={{ fontSize: 22, fontWeight: 500, color: active ? "#fff" : appColors.textPrimary }}>
+                                {usd(preset)}
+                            </Typography>
+                        </Box>
+                    );
+                })}
+            </Box>
+
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    minHeight: 72,
+                    px: 2.5,
+                    bgcolor: appColors.surface,
+                    borderRadius: `${appRadius.card}px`,
+                }}
+            >
+                <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>Balance now</Typography>
+                <Typography sx={{ fontSize: 19, color: appColors.textPrimary }}>{usd(card.balance)}</Typography>
+                <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>+</Typography>
+                <Typography sx={{ fontSize: 19, color: appColors.textPrimary }}>{usd(amount)}</Typography>
+                <Typography sx={{ flex: 1, minWidth: 0, fontSize: 19, color: appColors.textSecondary }}>=</Typography>
+                <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>After this sale</Typography>
+                <Typography sx={{ fontSize: 24, fontWeight: 500, color: appColors.greenDark }}>{usd(card.balance + amount)}</Typography>
+            </Box>
         </Box>
-
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                minHeight: 72,
-                px: 2.5,
-                bgcolor: appColors.surface,
-                borderRadius: `${appRadius.card}px`,
-            }}
-        >
-            <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>Balance now</Typography>
-            <Typography sx={{ fontSize: 19, color: appColors.textPrimary }}>{usd(card.balance)}</Typography>
-            <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>+</Typography>
-            <Typography sx={{ fontSize: 19, color: appColors.textPrimary }}>{usd(amount)}</Typography>
-            <Typography sx={{ flex: 1, minWidth: 0, fontSize: 19, color: appColors.textSecondary }}>=</Typography>
-            <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>After this sale</Typography>
-            <Typography sx={{ fontSize: 24, fontWeight: 500, color: appColors.greenDark }}>{usd(card.balance + amount)}</Typography>
-        </Box>
-    </Box>
-);
+    );
+};
 
 /** The whole reload, in one block — used by every version at some size. */
 export const ReloadPane = ({
