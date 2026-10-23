@@ -47,6 +47,11 @@ So a reload is a **sale**: it lands in the cart and goes through the same
 tender as everything else. The balance moves because money moved, which is why
 this cannot be an editable number on a record.
 
+**Custom reload amounts work in A, B, and C.** After selecting a card, type
+the amount to add in **Custom amount ($)**, including cents, or use a quick
+amount. The balance preview, ADD action, cart, and payment all use that amount.
+An empty, zero, negative, or invalid amount keeps ADD disabled.
+
 ## The three
 
 | | **A — Mode switch** | **B — Two paths** | **C — Card first** |
@@ -75,6 +80,11 @@ either of the others.
 In every one, search `justin`: he holds **three** cards and one of them is
 empty, which is the case the feature exists for — *"oh, I'm at $25, can I make
 this to $100?"*
+
+Try that edge case in **each option**: select the card ending **8890** with
+**$25.00** on it, then type **75** in **Custom amount ($)**. The preview shows
+**$25.00 + $75.00 = $100.00**. Add it and pay for the **$75.00** reload. For a
+reload with cents, try **37.45**; the resulting balance is **$62.45**.
 
 ## The rail
 
