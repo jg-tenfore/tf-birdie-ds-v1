@@ -94,6 +94,20 @@ export default defineConfig({
             input: {
                 index: resolve(repoRoot, "app/index.html"),
                 mobile: resolve(repoRoot, "app/mobile.html"),
+                /**
+                 * **V2**, from Oct 30. A full copy of the V1 tree under
+                 * `app/src-v2/`, so V1 is frozen at the shape Weston has been
+                 * reviewing and V2 is free to move: the bay sheet enhancements
+                 * from the PRD, and the design concepts that until now only
+                 * existed in Storybook.
+                 *
+                 * Two more entries rather than a second Vite project: they
+                 * share the replica components, the theme and the catalogue
+                 * with V1, and a separate build would duplicate all of it and
+                 * let the two drift apart silently.
+                 */
+                v2: resolve(repoRoot, "app/v2.html"),
+                v2mobile: resolve(repoRoot, "app/v2-mobile.html"),
             },
         },
     },
