@@ -1,334 +1,151 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import ButtonBase from "@mui/material/ButtonBase";
-import Checkbox from "@mui/material/Checkbox";
-import Dialog from "@mui/material/Dialog";
-import InputBase from "@mui/material/InputBase";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import CheckIcon from "@mui/icons-material/Check";
-import SearchIcon from "@mui/icons-material/Search";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useNavigate } from "react-router-dom";
 
 import { ActionButton } from "@/components/app-chrome/app-shell";
-import { CustomerLookupResults } from "@/components/screens/operations/customer-lookup";
-import { searchCustomers, type Customer } from "@/data/crm";
-import { appColors } from "@/theme/app-replica-tokens";
+import { CleanCreate, buyer, recipient } from "@/components/concepts/gift-cards/102226/clean-create";
+import { ModeChooser, OptionB } from "@/components/concepts/gift-cards/102226/options";
+import { amountOnTap, type GiftCardApi, type GiftCardMode } from "@/components/concepts/gift-cards/102226/gift-card-flow";
+import { usd, type GiftCardRecord } from "@/components/concepts/gift-cards/102226/reload-data";
+import { giftCardTypes, type GiftCardType } from "@/components/screens/gift-cards/gift-card-data";
+import type { DemoCustomer } from "@/components/screens/clinics/demo-customer";
 import { LiveOrderPanel, Shell } from "../pos-shell";
-import { useActions, useStore } from "../store";
+import { useActions } from "../store";
 
 /**
- * Create a Gift Card, from `references/072926/createGiftCard/`.
+ * **Gift cards — V2**, built on Option B from the Oct 22 round.
  *
- * Reached by tapping the **Gift Card** tile in the Pro Shop, and it is the clearest
- * example of the convention that tile carries: a category tile is a destination,
- * not necessarily a list. A gift card has no price until somebody types one and no
- * meaning until it has a sender and a recipient, so it gets configured before it
- * can join the order at all.
+ * V1's version of this screen is still in `app/src/screens/create-gift-card.tsx`,
+ * untouched: one canvas with an unlabelled amount box, `Gift Card FROM ———
+ * Golf Course Customer ID 0` crammed above its fields, and a SAVE that is live
+ * on an empty form.
  *
- * Two parties, four lookups each. FROM is who paid; TO is whose card it becomes,
- * and only TO gets a Golf Course Customer ID once matched — the purchaser stays
- * anonymous unless they happen to be a member too.
+ * What changed, and why:
  *
- * The four spend categories start **all checked**, which means the default gift
- * card is good for anything including alcohol. Worth a decision rather than a
- * default.
+ * - **The entry splits first.** Weston: *"there's gift card, and there's an
+ *   option to reload or purchase new, or something like that."* So tapping the
+ *   tile asks one question before opening anything, and neither screen can be
+ *   mistaken for the other.
+ * - **Reload is new functionality.** Find a card by customer or code, pick one
+ *   of the several they may hold, add funds. It is a sale, not an adjustment —
+ *   *"it'll just be another incoming order that adds value to that card"* — so
+ *   it lands in the order and goes through the ordinary tender.
+ * - **The create screen is cleaned up**: the amount gets a caption, FROM and TO
+ *   become cards with plain headings, `Same as From` stops being a dark button,
+ *   the categories get a sentence, and SAVE is dead until there is an amount.
+ *
+ * Every part of it is the component the **Flows / Gift Cards / 102226**
+ * category documents, so the specification and this screen cannot drift.
  */
-
-/** Spend restrictions. All on by default, as the device has them. */
-const SPEND = ["Merchandise", "Food and Beverage", "Tee Fees", "Alcohol"] as const;
-
-const GIFT_CARD_TYPES = ["Purchased Gift Card", "Winnings", "Promotional", "Replacement"] as const;
-
-/** A party's four fields, each of which searches the customer database. */
-const PartyFields = ({
-    party,
-    onPick,
-    onChange,
-    customers,
-}: {
-    party: { first: string; last: string; email: string; phone: string };
-    onPick: (c: Customer) => void;
-    onChange: (next: Partial<{ first: string; last: string; email: string; phone: string }>) => void;
-    customers: Customer[];
-}) => {
-    const [focused, setFocused] = useState<string | null>(null);
-    const query = focused ? (party[focused as keyof typeof party] ?? "") : "";
-    const hits = useMemo(() => searchCustomers(query, 5, customers), [query, customers]);
-
-    const field = (key: keyof typeof party, label: string) => (
-        <Box sx={{ position: "relative" }}>
-            <Stack
-                direction="row"
-                sx={{
-                    alignItems: "center",
-                    gap: 1.5,
-                    bgcolor: appColors.fieldFill,
-                    borderBottom: `1px solid ${appColors.textSecondary}`,
-                    px: 2,
-                    minHeight: 76,
-                }}
-            >
-                <SearchIcon sx={{ color: appColors.textSecondary }} />
-                <Stack sx={{ flex: 1, minWidth: 0 }}>
-                    {party[key] && <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{label}</Typography>}
-                    <InputBase
-                        value={party[key]}
-                        onFocus={() => setFocused(key)}
-                        onBlur={() => window.setTimeout(() => setFocused(null), 150)}
-                        onChange={(e) => onChange({ [key]: e.target.value })}
-                        placeholder={party[key] ? undefined : label}
-                        sx={{
-                            "& input": {
-                                fontSize: 21,
-                                p: 0,
-                                "&::placeholder": { color: appColors.textSecondary, opacity: 1 },
-                            },
-                        }}
-                    />
-                </Stack>
-            </Stack>
-
-            {focused === key && query.trim().length >= 2 && hits.length > 0 && (
-                <Box sx={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 30 }}>
-                    <CustomerLookupResults results={hits} onPick={onPick} />
-                </Box>
-            )}
-        </Box>
-    );
-
-    return (
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 2, rowGap: 1.5 }}>
-            {field("first", "First Name")}
-            {field("last", "Last Name")}
-            {field("email", "Email")}
-            {field("phone", "Phone")}
-        </Box>
-    );
-};
-
-const emptyParty = { first: "", last: "", email: "", phone: "" };
-
 export const CreateGiftCardScreen = () => {
     const navigate = useNavigate();
-    const { state } = useStore();
     const { addItem } = useActions();
 
-    const [amount, setAmount] = useState("");
-    const [upc, setUpc] = useState("");
-    const [type, setType] = useState<string>(GIFT_CARD_TYPES[0]);
-    const [typeOpen, setTypeOpen] = useState(false);
-    const [from, setFrom] = useState(emptyParty);
-    const [to, setTo] = useState(emptyParty);
-    const [toId, setToId] = useState<string | null>(null);
-    const [fromId, setFromId] = useState<string | null>(null);
-    const [spend, setSpend] = useState<string[]>([...SPEND]);
-    const [confirmUpc, setConfirmUpc] = useState(false);
+    const [mode, setMode] = useState<GiftCardMode | undefined>(undefined);
+    const [amount, setAmount] = useState(0);
+    const [typeIndex, setTypeIndex] = useState(0);
+    const [from, setFrom] = useState<DemoCustomer | undefined>(undefined);
+    const [to, setTo] = useState<DemoCustomer | undefined>(undefined);
+    const [query, setQuery] = useState("");
+    const [card, setCard] = useState<GiftCardRecord | undefined>(undefined);
+    const [reload, setReload] = useState(100);
 
-    const value = Number(amount) || 0;
+    const type: GiftCardType = giftCardTypes[typeIndex];
+    const ready = mode === "new" ? amount > 0 : Boolean(card) && reload > 0;
 
-    const commit = () => {
-        addItem({ id: `giftcard-${Date.now().toString(36)}`, name: "Gift Card", price: value, taxable: false }, "Pro Shop");
+    /** The shape the shared components expect, over this screen's own state. */
+    const api: GiftCardApi = {
+        mode: mode ?? "new",
+        setMode: (next) => setMode(next),
+        amount,
+        setAmount,
+        type,
+        cycleType: () => setTypeIndex((prev) => (prev + 1) % giftCardTypes.length),
+        from,
+        to,
+        findFrom: () => setFrom(buyer()),
+        findTo: () => setTo(recipient()),
+        sameAsFrom: () => from && setTo(from),
+        query,
+        setQuery: (value) => {
+            setQuery(value);
+            setCard(undefined);
+        },
+        card,
+        setCard,
+        reload,
+        setReload,
+        ready,
+        commit: () => undefined,
+    };
+
+    /**
+     * Both paths end the same way: a line in the order, paid for as usual.
+     *
+     * `taxable: false` on both. A gift card is stored value rather than a sale
+     * — the tax lands when the card is spent — and a reload is the same money
+     * arriving by a different door. The reference device agrees: its gift card
+     * ticket prints SubTotal $200.00 and Grand Total $200.00.
+     *
+     * The ids are derived from the thing itself rather than the clock, because
+     * the store bumps the quantity when an id repeats — so selling two $100
+     * cards reads as one line of two, which is what a counter would expect.
+     */
+    const save = () => {
+        if (mode === "new") {
+            addItem({ id: `gc-${type}-${amount}`, name: `Gift Card — ${type}`, price: amount, taxable: false }, "Pro Shop");
+        } else if (card) {
+            addItem(
+                { id: `rl-${card.code}-${reload}`, name: `Gift Card reload — ${card.code}`, price: reload, taxable: false },
+                "Pro Shop",
+            );
+        }
+
         navigate("/proshop");
     };
 
-    const save = () => {
-        if (value <= 0) return;
-        // No UPC means the server mints one, and the device says so before it
-        // commits rather than after.
-        if (!upc.trim()) return setConfirmUpc(true);
-        commit();
-    };
-
-    const partyHeader = (label: string, id: string | null, name: string) => (
-        <Stack direction="row" sx={{ alignItems: "baseline", gap: 1.5, mt: 3, mb: 1.5 }}>
-            <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{label}</Typography>
-            <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{name || "--------"}</Typography>
-            <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>Golf Course Customer ID</Typography>
-            <Typography sx={{ fontSize: 19, color: appColors.textSecondary }}>{id ?? 0}</Typography>
-        </Stack>
-    );
+    const title = mode === undefined ? "Gift Cards" : mode === "new" ? "Create a Gift Card" : "Reload a Gift Card";
 
     return (
         <Shell
-            title="Create a Gift Card"
-            active="giftcards"
+            title={title}
+            active="proshop"
             orderPanel={<LiveOrderPanel />}
             actionBar={
                 <>
-                    <ActionButton icon={<ArrowBackIosNewIcon />} onClick={() => navigate("/proshop")}>
+                    <ActionButton
+                        icon={<ChevronLeftIcon />}
+                        onClick={() => (mode === undefined ? navigate("/proshop") : setMode(undefined))}
+                    >
                         Back
                     </ActionButton>
-                    <ActionButton icon={<CheckIcon />} tone={value > 0 ? "primary" : "disabled"} grow={2} onClick={save}>
-                        Save
-                    </ActionButton>
+                    {mode !== undefined && (
+                        <ActionButton tone="primary" disabled={!ready} onClick={ready ? save : undefined}>
+                            {mode === "new" ? (amount > 0 ? `Save · ${usd(amount)}` : "Save") : card ? `Add ${usd(reload)}` : "Add Funds"}
+                        </ActionButton>
+                    )}
                 </>
             }
         >
-            <Box sx={{ bgcolor: appColors.canvas, minHeight: "100%", p: 2 }}>
-                <Stack direction="row" spacing={2}>
-                    {/* The amount is the only required field and gets the loudest
-                        treatment: a white box with an orange focus ring. */}
-                    <Box sx={{ flex: 1 }}>
-                        <InputBase
-                            autoFocus
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                            placeholder="0.00"
-                            sx={{
-                                width: "100%",
-                                bgcolor: "#fff",
-                                border: `2px solid ${amount ? appColors.orange : appColors.divider}`,
-                                borderRadius: 1,
-                                "& input": { fontSize: 26, textAlign: "center", py: 2.5 },
-                            }}
-                        />
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                        <InputBase
-                            value={upc}
-                            onChange={(e) => setUpc(e.target.value)}
-                            placeholder="Enter UPC Code (optional)"
-                            sx={{
-                                width: "100%",
-                                bgcolor: appColors.fieldFill,
-                                borderBottom: `1px solid ${appColors.textSecondary}`,
-                                "& input": { fontSize: 21, py: 2.75, px: 2 },
-                            }}
-                        />
-                    </Box>
-                </Stack>
-
-                <Stack direction="row" sx={{ alignItems: "center", mt: 2, mb: 1 }}>
-                    <Stack direction="row" sx={{ flex: 1, alignItems: "center", gap: 2, position: "relative" }}>
-                        <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>Gift Card Type</Typography>
-                        <ButtonBase onClick={() => setTypeOpen((o) => !o)} sx={{ gap: 1 }}>
-                            <Typography sx={{ fontSize: 19 }}>{type}</Typography>
-                            <ArrowDropDownIcon />
-                        </ButtonBase>
-                        {typeOpen && (
-                            <Box
-                                sx={{
-                                    position: "absolute",
-                                    top: "100%",
-                                    left: 120,
-                                    zIndex: 30,
-                                    bgcolor: "#fff",
-                                    boxShadow: 6,
-                                    minWidth: 260,
-                                }}
-                            >
-                                {GIFT_CARD_TYPES.map((t) => (
-                                    <ButtonBase
-                                        key={t}
-                                        onClick={() => {
-                                            setType(t);
-                                            setTypeOpen(false);
-                                        }}
-                                        sx={{ display: "block", width: "100%", textAlign: "left", px: 2, py: 1.5, fontSize: 17 }}
-                                    >
-                                        {t}
-                                    </ButtonBase>
-                                ))}
-                            </Box>
-                        )}
-                    </Stack>
-
-                    <Stack direction="row" sx={{ alignItems: "center", gap: 2 }}>
-                        <Typography sx={{ fontSize: 17, color: appColors.textSecondary }}>Expiration Date</Typography>
-                        {/* A century out. The default is effectively "never", which
-                            is a policy decision hiding in a date field. */}
-                        <Box sx={{ bgcolor: appColors.slate, color: "#fff", px: 2.5, py: 1.5, fontSize: 15, letterSpacing: "0.06em" }}>
-                            MAY 28 2122
-                        </Box>
-                    </Stack>
-                </Stack>
-
-                {partyHeader("Gift Card FROM", fromId, `${from.first} ${from.last}`.trim())}
-                <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
-                    <Box sx={{ flex: 1 }}>
-                        <PartyFields
-                            party={from}
-                            customers={state.customers}
-                            onChange={(next) => setFrom((v) => ({ ...v, ...next }))}
-                            onPick={(c) => {
-                                setFrom({ first: c.firstName, last: c.lastName, email: c.email, phone: c.phone ?? "" });
-                                setFromId(c.courseId);
-                            }}
-                        />
-                    </Box>
-                </Stack>
-
-                {partyHeader("Gift Card TO", toId, `${to.first} ${to.last}`.trim())}
-                <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start", mb: 1 }}>
-                    <Box sx={{ flex: 1 }}>
-                        <PartyFields
-                            party={to}
-                            customers={state.customers}
-                            onChange={(next) => setTo((v) => ({ ...v, ...next }))}
-                            onPick={(c) => {
-                                setTo({ first: c.firstName, last: c.lastName, email: c.email, phone: c.phone ?? "" });
-                                setToId(c.courseId);
-                            }}
-                        />
-                    </Box>
-                </Stack>
-
-                <ButtonBase
-                    onClick={() => {
-                        setTo(from);
-                        setToId(fromId);
-                    }}
-                    sx={{ bgcolor: appColors.slate, color: "#fff", px: 4, py: 1.75, fontSize: 19, mb: 2 }}
-                >
-                    Same as From
-                </ButtonBase>
-
-                {/* All four on by default — the out-of-the-box gift card buys
-                    alcohol, which is a policy someone should choose rather than
-                    inherit. */}
-                <Stack direction="row" sx={{ justifyContent: "center", gap: 4, flexWrap: "wrap" }}>
-                    {SPEND.map((s) => (
-                        <Stack key={s} direction="row" sx={{ alignItems: "center", gap: 1 }}>
-                            <Checkbox
-                                checked={spend.includes(s)}
-                                onChange={(e) => setSpend((prev) => (e.target.checked ? [...prev, s] : prev.filter((x) => x !== s)))}
-                            />
-                            <Typography sx={{ fontSize: 19 }}>{s}</Typography>
-                        </Stack>
-                    ))}
-                </Stack>
-            </Box>
-
-            <Dialog
-                open={confirmUpc}
-                onClose={() => setConfirmUpc(false)}
-                slotProps={{ paper: { sx: { width: 560, borderRadius: 1, p: 3 } } }}
-            >
-                <Typography sx={{ fontSize: 22, mb: 1.5 }}>UPC was not provided</Typography>
-                <Typography sx={{ fontSize: 17, color: appColors.textSecondary, lineHeight: 1.45 }}>
-                    UPC was not provided, if you continue the server will assign a unique generated UPC code that will be printed on the
-                    customer receipt.
-                </Typography>
-                <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 2, mt: 3 }}>
-                    <Button onClick={() => setConfirmUpc(false)} sx={{ color: "#E53935", fontSize: 16 }}>
-                        CANCEL
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            setConfirmUpc(false);
-                            commit();
-                        }}
-                        sx={{ color: appColors.green, fontSize: 16 }}
-                    >
-                        OK
-                    </Button>
-                </Stack>
-            </Dialog>
+            {/* The question first, then the screen it chose. */}
+            {mode === undefined ? (
+                <ModeChooser onPick={setMode} />
+            ) : mode === "new" ? (
+                <CleanCreate
+                    amount={amount}
+                    onAmount={() => setAmount(amountOnTap)}
+                    type={type}
+                    onType={api.cycleType}
+                    from={from}
+                    to={to}
+                    onFindFrom={api.findFrom}
+                    onFindTo={api.findTo}
+                    onSameAsFrom={api.sameAsFrom}
+                />
+            ) : (
+                <OptionB api={api} />
+            )}
         </Shell>
     );
 };

@@ -342,7 +342,14 @@ export const Catalog = ({
                         return (
                             <ButtonBase
                                 key={c.label}
-                                onClick={() => (c.label === "Gift Card" ? navigate("/giftcards/new") : onDrill(c.label))}
+                                onClick={() => {
+                                    /* V2: three tiles are destinations now, not
+                                       product drills — each opens the flow the
+                                       design settled on. */
+                                    const route = TILE_ROUTES[c.label];
+                                    if (route) navigate(route);
+                                    else onDrill(c.label);
+                                }}
                                 sx={{
                                     flexDirection: "column",
                                     bgcolor: "#fff",
@@ -429,6 +436,13 @@ export const SellActionBar = ({
             </ActionButton>
         </>
     );
+};
+
+/** Pro Shop tiles that open a flow rather than drilling into products. */
+const TILE_ROUTES: Record<string, string | undefined> = {
+    "Gift Card": "/giftcards/new",
+    Clinics: "/clinics",
+    Memberships: "/memberships",
 };
 
 export const ProShopScreen = () => {

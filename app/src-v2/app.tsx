@@ -7,6 +7,9 @@ import { StoreProvider, useStore } from "./store";
 import { CombosScreen } from "./screens/combos";
 import { CreateRaincheckScreen } from "./screens/create-raincheck";
 import { CreateGiftCardScreen } from "./screens/create-gift-card";
+import { ClinicsScreen } from "./screens/clinics";
+import { MembershipsScreen } from "./screens/memberships";
+import { RefundsScreen } from "./screens/refunds";
 import { EventDetailScreen, EventsScreen } from "./screens/events";
 import { GiftCardsScreen } from "./screens/gift-cards";
 import { InventoryCountScreen, InventoryNewCountScreen, InventoryScreen } from "./screens/inventory";
@@ -67,6 +70,14 @@ const routes: [string, React.ReactNode][] = [
     ["/tablechart", <TableChartScreen />],
     ["/giftcards", <GiftCardsScreen />],
     ["/giftcards/new", <CreateGiftCardScreen />],
+    /*
+     * V2 only. None of these exist in V1: the clinic registration flow, the
+     * membership sale and the refund journey lived in Storybook as designs and
+     * had no way into the running application until now.
+     */
+    ["/clinics", <ClinicsScreen />],
+    ["/memberships", <MembershipsScreen />],
+    ["/refunds", <RefundsScreen />],
     ["/events", <EventsScreen />],
     ["/events/:id", <EventDetailScreen />],
     ["/inventory", <InventoryScreen />],
