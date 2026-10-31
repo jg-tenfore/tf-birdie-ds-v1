@@ -19,9 +19,12 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 ## Open the prototypes
 
-Two working applications over **one store** — the same reducer, the same cart, the same tee sheet.
-A sale rung up on either is the same object, which is what makes them comparable rather than merely
-similar.
+Four working applications over **one store** — the same reducer, the same cart, the same tee sheet.
+A sale rung up on any of them is the same object, which is what makes them comparable rather than
+merely similar.
+
+**V1 is frozen** at the shape it ships today. **V2** is where new work lands, so the two can be
+opened side by side and diffed screen for screen.
 
 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "16px 0 8px" }}>
     <a
@@ -38,7 +41,7 @@ similar.
             color: "inherit",
         }}
     >
-        <div style={{ fontSize: 17, fontWeight: 600 }}>Prototype — the counter terminal →</div>
+        <div style={{ fontSize: 17, fontWeight: 600 }}>V1 — the counter terminal →</div>
         <div style={{ fontSize: 14, color: "#667085", marginTop: 4 }}>1280×800 landscape. PIN 1234.</div>
     </a>
     <a
@@ -55,14 +58,66 @@ similar.
             color: "inherit",
         }}
     >
-        <div style={{ fontSize: 17, fontWeight: 600 }}>Prototype — the handheld →</div>
+        <div style={{ fontSize: 17, fontWeight: 600 }}>V1 — the handheld →</div>
         <div style={{ fontSize: 14, color: "#667085", marginTop: 4 }}>402×797 portrait. Same PIN, same store.</div>
     </a>
 </div>
 
+<div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "0 0 8px" }}>
+    <a
+        href="https://jg-tenfore.github.io/tf-birdie-ds-v1/prototype/v2.html"
+        target="_blank"
+        rel="noreferrer"
+        style={{
+            flex: "1 1 260px",
+            display: "block",
+            padding: "16px 18px",
+            border: "1px solid #5caf6e",
+            borderRadius: 8,
+            textDecoration: "none",
+            color: "inherit",
+        }}
+    >
+        <div style={{ fontSize: 17, fontWeight: 600 }}>V2 — the counter terminal →</div>
+        <div style={{ fontSize: 14, color: "#667085", marginTop: 4 }}>1280×800 landscape. The bay sheet, rebuilt.</div>
+    </a>
+    <a
+        href="https://jg-tenfore.github.io/tf-birdie-ds-v1/prototype/v2-mobile.html"
+        target="_blank"
+        rel="noreferrer"
+        style={{
+            flex: "1 1 260px",
+            display: "block",
+            padding: "16px 18px",
+            border: "1px solid #5caf6e",
+            borderRadius: 8,
+            textDecoration: "none",
+            color: "inherit",
+        }}
+    >
+        <div style={{ fontSize: 17, fontWeight: 600 }}>V2 — the handheld →</div>
+        <div style={{ fontSize: 14, color: "#667085", marginTop: 4 }}>The same V2 build at 402×797.</div>
+    </a>
+</div>
+
 <div style={{ fontSize: 13, color: "#98a2b3" }}>
-    Running locally? The terminal is <code>localhost:5180</code> and the handheld is{" "}
-    <code>localhost:5180/mobile.html</code> — one Vite server, two entries.
+    Running locally? One Vite server on <code>localhost:5180</code>, four entries: <code>/</code> and{" "}
+    <code>/mobile.html</code> for V1, <code>/v2.html</code> and <code>/v2-mobile.html</code> for V2.
+</div>
+
+### What is in V2 and not V1
+
+<div style={{ fontSize: 16, lineHeight: 1.6, color: "#475467", maxWidth: 760 }}>
+    So far, one thing: <strong>the bay sheet</strong>, rebuilt against the{" "}
+    <a href="/?path=/docs/bay-sheet-oct-30-overview--docs">Oct 30 PRD</a> — eight bays over a full day,
+    reservations that know whether they are checked in, paid, on a tab or repeating, a booking flow with
+    overlap and daily-limit guards, and blocks. Everything in that category is the same code V2 runs, so
+    the specification and the running thing cannot drift.
+</div>
+
+<div style={{ fontSize: 16, lineHeight: 1.6, color: "#667085", maxWidth: 760, marginTop: 12 }}>
+    Still to come: the design concepts that today exist only in Storybook — the clinic registration
+    flow, gift cards with reload, memberships, and refunds.
 </div>
 
 ## What this is
