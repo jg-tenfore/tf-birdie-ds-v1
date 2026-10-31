@@ -1,0 +1,99 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Bay Sheet Oct 30/Overview" />
+
+# Bay Sheet — Oct 30
+
+Everything in this category answers one document:
+**[PRD — Bay Sheet Enhancements](https://linear.app/tenfore/document/prd-bay-sheet-enhancements-d75cb6a50d85)**,
+written by Weston on Oct 30.
+
+> *"Staff need one screen to see every bay's schedule, book and edit
+> reservations, and charge customers, the same way they run the tee sheet
+> today."*
+
+It is built in step with **[Prototype V2](/prototype/v2.html)** — the same
+components run in both, so nothing here is a picture of something that does not
+work.
+
+## Where the shipping sheet stops
+
+The bay sheet already exists. It draws six bays over four hours and knows four
+things about a reservation: who, how long, how many, and what it costs. The PRD
+asks it to know nine more — checked in, paid, whether a tab is open, the note,
+whether it repeats, whether it was cancelled or no-showed, which punch card
+paid for it, and whether booking it puts the golfer over their daily limit.
+
+## The 33 requirements, and where each one lives
+
+| # | Requirement | Where to see it |
+| :-- | :-- | :-- |
+| 1 | As many bays as possible without scrolling | **[1 — The day](?path=/story/bay-sheet-oct-30-screens--sheet)** · eight bays, time scrolls |
+| 2 | Player, duration, party, checked-in, paid | **[Reservation chip](?path=/story/bay-sheet-oct-30-components--chips)** |
+| 3 | An indicator for an open tab | Same chip — the receipt mark |
+| 4 | Notes show on the sheet | Same chip — text when tall enough, a glyph when not |
+| 5 | Clicking blank time opens booking | **[2 — Book a bay](?path=/story/bay-sheet-oct-30-screens--booking)** |
+| 6 | Search and select a customer | Booking dialog, first question |
+| 7 | The right fee for that customer | Fee panel — member/guest, peak after 4pm |
+| 8 | A punch card can cover the fee | Fee panel — and the shortfall when it cannot |
+| 9 | A note on the reservation | Booking dialog |
+| 10 | Double bookings and overlaps prevented | **[3 — Overlap is refused](?path=/story/bay-sheet-oct-30-screens--conflict)** |
+| 11 | A confirmation email on booking | Stated on the toggle |
+| 12 | A "Don't send confirmation" toggle | Booking dialog, last control |
+| 13 | Repeat daily / weekly / bi-weekly / monthly | **[Repeat picker](?path=/story/bay-sheet-oct-30-components--controls)** |
+| 14 | Editing a repeat changes one occurrence | **[5 — Reservation details](?path=/story/bay-sheet-oct-30-screens--details)**, said above the fields |
+| 15 | Cancel one occurrence, or clear the series | Same modal, two separate buttons |
+| 16–18 | Daily limit, warning, override | **[4 — Over the daily limit](?path=/story/bay-sheet-oct-30-screens--limit)** |
+| 19–21 | Details modal, everything editable | **[5 — Reservation details](?path=/story/bay-sheet-oct-30-screens--details)** |
+| 22 | Move to a different bay | Bay picker, in both dialogs |
+| 23 | Fee and punches recalculate | Change the duration and watch |
+| 24 | Open a tab from the reservation | **[6 — Open a tab](?path=/story/bay-sheet-oct-30-screens--tab)** |
+| 25–26 | Cancel, and mark a no-show | Details modal, bottom row |
+| 27 | Cancelled and no-show free the time | The chip turns to paper; the slot answers taps again |
+| 28 | Golfers cancel online | Not here — web, not Birdie |
+| 29 | No-shows count toward the limit | Stated on the limit warning |
+| 30 | Bay fee onto a tab | **[6 — Open a tab](?path=/story/bay-sheet-oct-30-screens--tab)** |
+| 31–33 | Blocks, repeating blocks, same rules | **[7 — Block a bay](?path=/story/bay-sheet-oct-30-screens--block)** |
+
+## Two decisions worth arguing with
+
+**The two guards are drawn differently on purpose.** An overlap is red and has
+no way past it — requirement 10 says prevent it. The daily limit is amber and
+has a switch in it — requirement 18 says staff can override it. One is physics,
+the other is policy, and a screen that drew them alike would teach staff to
+ignore both. See **[Conflict and limit warnings](?path=/story/bay-sheet-oct-30-components--guards)**.
+
+**The chip reads its own height.** Seven things have to fit in a column about
+149px wide, so only the name and the duration are words and everything else is
+a mark. A two-hour booking has room for its note as text; a thirty-minute one
+does not, and shows a glyph instead. The legend above the sheet teaches the
+marks, because they cannot teach themselves.
+
+## Weston's open questions, and what this build assumed
+
+The PRD ends with ten questions. None are answered here — these are the
+working assumptions, each one cheap to reverse.
+
+| His question | What this build does |
+| :-- | :-- |
+| What device, and how many bays fit without scrolling? | **Eight bays** at 1280 landscape, with the day scrolling. See also **[9 — Zoomed out](?path=/story/bay-sheet-oct-30-screens--zoomed-out)**, which fits all fourteen hours and shows what that costs |
+| Do repeats need an end date or a number of occurrences? | Neither yet. The picker says the cadence and the dialog says the question is open |
+| One confirmation email per series, or one per occurrence? | Not modelled |
+| Does the daily limit count reservations or minutes? Across all bays? Who can override? | **Reservations**, across all bays, anyone can override |
+| What if a punch card only covers part of the fee? | The shortfall is shown and still charged — never silently absorbed |
+| Paid, unpaid, or open tab while a tab is open? | **Its own state.** Paid and unpaid are the only two the shipping sheet can say, and the answer is plainly a third |
+| Can staff create a customer, or book a walk-in with no profile? | Neither door is wired |
+| Is there a cancellation fee? Are payments refunded and punches returned? | Not modelled |
+| Can a block cover existing reservations? Should it have a label? | **No** to the first, by running the same overlap check; **yes** to the second — a block cannot be saved without a reason |
+| Which parts need backend work? | Out of scope here, but the four that clearly do: recurrence, overlap checks, the daily limit, and the no-show status |
+
+## About the data
+
+The bays, the fee idea and the party/duration fields come from the reference
+device. **Everything else is invented** — the eight bay names, the customers,
+the rates, the punch cards, the daily limit of two, and the seeded day.
+
+That day is built to carry every state at once rather than to look plausible:
+two checked in, one with an open tab, one paid, one with a note long enough to
+crowd its chip, two weekly series, a cancellation and a no-show that have given
+their time back, and two blocks.

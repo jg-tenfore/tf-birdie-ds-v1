@@ -410,6 +410,12 @@ const preview: Preview = {
                     // design-system proposals.
                     "Sign in ∕ Sign up",
                     ["PIN Sign In", "Log in", "Sign up", "Forgot password", "Verification"],
+                    // Oct 30: the bay sheet enhancements, from Weston's PRD.
+                    // Its own category rather than a Flows folder because it is
+                    // a release of work against a spec, not a comparison of
+                    // options — and it is built in step with prototype V2.
+                    "Bay Sheet Oct 30",
+                    ["Overview", "Screens", "Components", "End to end"],
                     "*",
                 ],
             },
