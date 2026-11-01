@@ -81,7 +81,7 @@ paid for it, and whether booking it puts the golfer over their daily limit.
 
 | # | Requirement | Where to see it |
 | :-- | :-- | :-- |
-| 1 | As many bays as possible without scrolling | **[1 — The day](?path=/story/bay-sheet-oct-30-screens--sheet)** · eight bays, time scrolls |
+| 1 | As many bays as possible without scrolling | **[1 — The day](?path=/story/bay-sheet-oct-30-screens--sheet)** · eight of fifteen bays fit, the rest scroll sideways, and **[10 — Narrow the sheet](?path=/story/bay-sheet-oct-30-screens--narrowed)** removes the scroll |
 | 2 | Player, duration, party, checked-in, paid | **[ReservationChip](?path=/story/bay-sheet-oct-30-components--chips)** |
 | 3 | An indicator for an open tab | Same chip — the receipt mark |
 | 4 | Notes show on the sheet | Same chip — text when tall enough, a glyph when not |
@@ -118,10 +118,19 @@ ignore both. See **[ConflictWarning](?path=/story/bay-sheet-oct-30-components--c
 **[LimitWarning](?path=/story/bay-sheet-oct-30-components--limit)**.
 
 **The chip reads its own height.** Seven things have to fit in a column about
-149px wide, so only the name and the duration are words and everything else is
+150px wide, so only the name and the duration are words and everything else is
 a mark. A two-hour booking has room for its note as text; a thirty-minute one
 does not, and shows a glyph instead. The legend above the sheet teaches the
 marks, because they cannot teach themselves.
+
+**The sheet scrolls sideways rather than squeezing.** Nov 1: fifteen bays, of
+which eight fit a 1280 tablet. 150px is where a chip stops reading, so past
+that the sheet gets wider than the screen and the clock and the bay names ride
+`position: sticky` instead. The **[filter row](?path=/story/bay-sheet-oct-30-components--filter)**
+is the other half of the answer — choose the six bays you are running tonight
+and nothing scrolls at all. Its marks narrow rather than widen, and it keeps a
+count on the right, because a filtered sheet and a quiet day are the same
+picture.
 
 ## Weston's open questions, and what this build assumed
 
@@ -130,7 +139,7 @@ working assumptions, each one cheap to reverse.
 
 | His question | What this build does |
 | :-- | :-- |
-| What device, and how many bays fit without scrolling? | **Eight bays** at 1280 landscape, with the day scrolling. See also **[9 — Zoomed out](?path=/story/bay-sheet-oct-30-screens--zoomed-out)**, which fits all fourteen hours and shows what that costs |
+| What device, and how many bays fit without scrolling? | **Eight of fifteen** at 1280 landscape; the day scrolls down and the rest of the bays scroll across. The filter is how a house with fifteen bays gets a sheet that fits. See also **[9 — Zoomed out](?path=/story/bay-sheet-oct-30-screens--zoomed-out)**, which fits all fourteen hours and shows what that costs |
 | Do repeats need an end date or a number of occurrences? | Neither yet. The picker says the cadence and the dialog says the question is open |
 | One confirmation email per series, or one per occurrence? | Not modelled |
 | Does the daily limit count reservations or minutes? Across all bays? Who can override? | **Reservations**, across all bays, anyone can override |
@@ -144,7 +153,7 @@ working assumptions, each one cheap to reverse.
 ## About the data
 
 The bays, the fee idea and the party/duration fields come from the reference
-device. **Everything else is invented** — the eight bay names, the customers,
+device. **Everything else is invented** — the fifteen bay names, the customers,
 the rates, the punch cards, the daily limit of two, and the seeded day.
 
 That day is built to carry every state at once rather than to look plausible:

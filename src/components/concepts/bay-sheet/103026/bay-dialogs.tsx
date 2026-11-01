@@ -1,44 +1,67 @@
+import { useState } from "react";
+
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
+import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 
 import { appColors } from "@/theme/app-replica-tokens";
 import { touchTarget } from "@/theme/tokens";
 import {
+    SERIES_WEEKS,
     bayById,
+    bays,
     bookingsToday,
     conflictFor,
     feeFor,
     fmtDuration,
     fmtTime,
+    occurrencesOf,
     punchesNeeded,
     repeatLabels,
+    scheduleLabel,
     seriesOf,
     usd,
     type BayBlock,
     type BayCustomer,
     type RepeatFreq,
     type Reservation,
+    type ReservationStatus,
 } from "./bay-data";
 import {
     BayPicker,
     ConfirmationToggle,
+    ConflictBand,
     ConflictWarning,
     CustomerPicker,
     DangerActions,
     DialogHeader,
+    FIELD_BORDER,
     FIELD_RADIUS,
     FeePanel,
-    InlineActionCard,
     LimitWarning,
+    ListRow,
     NoteField,
+    OccasionRail,
+    OrderLine,
+    ROW_PAD,
+    ROW_RULE,
+    RemoveGroup,
     RepeatPicker,
+    RowSelect,
+    RowStepper,
+    Section,
+    SectionRule,
     SectionTitle,
+    StatusSegments,
     StepperField,
     TextInputField,
+    useDirty,
 } from "./bay-form-parts";
-import { StatusPill } from "./bay-sheet-parts";
 
 /**
  * **The three dialogs the PRD asks for**: book one, open one, block one.
@@ -81,6 +104,9 @@ export const DialogFrame = ({
     subtitle,
     width = 820,
     tall = true,
+    padX = 3,
+    padY = 3,
+    closeKey = false,
     footer,
     children,
 }: {
@@ -90,6 +116,11 @@ export const DialogFrame = ({
     subtitle?: string;
     width?: number;
     tall?: boolean;
+    /** Body padding, in theme units. The reservation dialog runs tighter. */
+    padX?: number;
+    padY?: number;
+    /** Show the header's close key. Off for dialogs whose only way out is the footer. */
+    closeKey?: boolean;
     footer: React.ReactNode;
     children: React.ReactNode;
 }) => (
@@ -103,7 +134,7 @@ export const DialogFrame = ({
                     width,
                     maxWidth: "96vw",
                     height: tall ? "min(92vh, 980px)" : "auto",
-                    maxHeight: "92vh",
+                    maxHeight: "96vh",
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: `${FIELD_RADIUS + 2}px`,
@@ -111,9 +142,9 @@ export const DialogFrame = ({
             },
         }}
     >
-        <DialogHeader title={title} subtitle={subtitle} />
+        <DialogHeader title={title} subtitle={subtitle} onClose={closeKey ? onClose : undefined} />
 
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 3, py: 3, bgcolor: appColors.canvas }}>{children}</Box>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: padX, py: padY, bgcolor: appColors.canvas }}>{children}</Box>
 
         <Box
             sx={{
@@ -346,17 +377,112 @@ export const BookingDialog = ({
 /* -------------------------------------------------- 2. reservation details */
 
 /**
- * **The reservation**, requirements 19 through 30.
+ * The guard, for a close with unsaved edits behind it.
  *
- * Everything on it is editable in place, because requirement 21 asks for that
- * and because a modal that shows you a wrong duration and makes you cancel to
- * fix it is the thing the PRD is replacing.
- *
- * The three destructive actions sit together near the bottom of the body under
- * their own heading — no-show, cancel, and, for a repeating booking, clear the
- * whole series. They are not in the footer: a footer of five keys, four of
- * them red, taught staff to read none of them.
+ * Three ways out, in the order a tablet thumb should meet them: save and go,
+ * go without saving, or stay. *Keep editing* is the safe one and so it is the
+ * one the escape key and a backdrop tap land on — dismissing a warning about
+ * losing work must never be the thing that loses it.
  */
+export const UnsavedPrompt = ({
+    open,
+    onSave,
+    onDiscard,
+    onKeepEditing,
+}: {
+    open: boolean;
+    onSave: () => void;
+    onDiscard: () => void;
+    onKeepEditing: () => void;
+}) => (
+    <Dialog
+        open={open}
+        onClose={onKeepEditing}
+        maxWidth={false}
+        slotProps={{ paper: { sx: { width: 420, maxWidth: "92vw", borderRadius: `${FIELD_RADIUS + 2}px`, p: 3 } } }}
+    >
+        <Typography sx={{ fontSize: 20, color: appColors.textPrimary, mb: 0.75 }}>Save your changes?</Typography>
+        <Typography sx={{ fontSize: 15.5, lineHeight: 1.45, color: appColors.textSecondary, mb: 2.5 }}>
+            This booking has edits that have not been saved. Closing now loses them.
+        </Typography>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+            <FooterButton tone="primary" onClick={onSave}>
+                SAVE CHANGES
+            </FooterButton>
+            <Box sx={{ display: "flex", gap: 1.25 }}>
+                <FooterButton onClick={onKeepEditing}>KEEP EDITING</FooterButton>
+                <ButtonBase
+                    onClick={onDiscard}
+                    sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        minHeight: 52,
+                        px: 2,
+                        borderRadius: `${FIELD_RADIUS}px`,
+                        border: "1px solid",
+                        borderColor: appColors.red,
+                        bgcolor: appColors.surface,
+                        color: appColors.red,
+                        fontSize: 16,
+                        letterSpacing: "0.04em",
+                        "&:hover": { bgcolor: "#FDECEA" },
+                    }}
+                >
+                    DISCARD
+                </ButtonBase>
+            </Box>
+        </Box>
+    </Dialog>
+);
+
+/** A change to the bay, the duration or the customer re-prices the booking. */
+const useReservationEdits = (reservation: Reservation, onChange: (reservation: Reservation) => void) => {
+    const set = <K extends keyof Reservation>(key: K, value: Reservation[K]) => {
+        const next = { ...reservation, [key]: value };
+
+        /* Requirement 23 — the fee and the punch count follow the booking. */
+        next.fee = feeFor(next.customer.tier, next.start, next.duration);
+        if (next.punchesUsed !== undefined) next.punchesUsed = punchesNeeded(next.duration);
+
+        onChange(next);
+    };
+
+    const setPunch = (value: boolean) => onChange({ ...reservation, punchesUsed: value ? punchesNeeded(reservation.duration) : undefined });
+
+    return { set, setPunch };
+};
+
+/**
+ * **The reservation dialog** — what opens when staff tap a booking on the
+ * sheet. Picked out of the Nov 1 round as "version D".
+ *
+ * Everything is one divided list under headings that sit *outside* their
+ * card, which is how the body came down from 1,430px to something a tablet
+ * can hold. Reading down it: the status as a labelled three-way toggle; the
+ * booking itself; the order, with the arithmetic shown and a series total
+ * when it repeats; a standalone key to start a tab; the note with its
+ * occasion rail; and the removal keys at the foot.
+ *
+ * Every way out — the header's close key, the footer's CANCEL, escape and a
+ * backdrop tap — runs through one guard, so an edit cannot be dropped
+ * silently.
+ */
+export interface ReservationDialogProps {
+    open?: boolean;
+    reservation: Reservation;
+    reservations: Reservation[];
+    blocks: BayBlock[];
+    onChange: (reservation: Reservation) => void;
+    onSave?: () => void;
+    /** Booked, checked in or a no-show — the segmented control at the top. */
+    onStatus?: (status: ReservationStatus) => void;
+    onCancelReservation?: () => void;
+    onClearSeries?: () => void;
+    onOpenTab?: () => void;
+    onClose?: () => void;
+}
+
 export const ReservationDialog = ({
     open = true,
     reservation,
@@ -364,49 +490,55 @@ export const ReservationDialog = ({
     blocks,
     onChange,
     onSave,
+    onStatus,
     onCancelReservation,
-    onNoShow,
     onClearSeries,
     onOpenTab,
     onClose,
-}: {
-    open?: boolean;
-    reservation: Reservation;
-    reservations: Reservation[];
-    blocks: BayBlock[];
-    onChange: (reservation: Reservation) => void;
-    onSave?: () => void;
-    onCancelReservation?: () => void;
-    onNoShow?: () => void;
-    onClearSeries?: () => void;
-    onOpenTab?: () => void;
-    onClose?: () => void;
-}) => {
-    const set = <K extends keyof Reservation>(key: K, value: Reservation[K]) => {
-        const next = { ...reservation, [key]: value };
-
-        /* Requirement 23: the fee recalculates when duration, customer or bay
-           changes, and so does the punch usage. */
-        next.fee = feeFor(next.customer.tier, next.start, next.duration);
-        if (next.punchesUsed !== undefined) next.punchesUsed = punchesNeeded(next.duration);
-
-        onChange(next);
-    };
-
+}: ReservationDialogProps) => {
+    const { set, setPunch } = useReservationEdits(reservation, onChange);
     const conflict = conflictFor(reservations, blocks, reservation);
     const series = seriesOf(reservations, reservation.seriesId);
-    const freed = reservation.status === "cancelled" || reservation.status === "noShow";
     const repeating = reservation.repeat !== "none";
+    const freed = reservation.status === "cancelled" || reservation.status === "noShow";
+
+    const usePunch = reservation.punchesUsed !== undefined;
+    const needed = punchesNeeded(reservation.duration);
+    const available = reservation.customer.punchesLeft ?? 0;
+    const covered = Math.min(needed, available);
+    const credit = usePunch ? Number((reservation.fee.amount * (covered / needed)).toFixed(2)) : 0;
+    const owed = Number((reservation.fee.amount - credit).toFixed(2));
+
+    /* Requirement 23 reaches the order too: change the cadence and the series
+       re-prices, because what staff quote for a standing booking is the run of
+       it, not the one visit in front of them. */
+    const visits = occurrencesOf(reservation.repeat);
+    const visitsCovered = usePunch ? Math.min(visits, Math.floor(available / needed)) : 0;
+    const seriesOwed = Number((reservation.fee.amount * (visits - visitsCovered)).toFixed(2));
+
+    /* Every way out of the dialog goes through here, so none of them can drop
+       an edit silently: the X, the footer's CANCEL, escape, and the backdrop. */
+    const { pristine, dirty } = useDirty(reservation);
+    const [confirming, setConfirming] = useState(false);
+    const [pickingGuest, setPickingGuest] = useState(false);
+    const attemptClose = () => (dirty ? setConfirming(true) : onClose?.());
 
     return (
         <DialogFrame
             open={open}
-            onClose={onClose}
+            onClose={attemptClose}
+            closeKey
+            width={640}
+            tall={false}
+            padX={2.5}
+            padY={1.25}
             title={reservation.customer.name}
-            subtitle={`${bayById(reservation.bayId).name} · ${fmtTime(reservation.start)} – ${fmtTime(reservation.start + reservation.duration)}`}
+            subtitle={`${bayById(reservation.bayId).name} · ${fmtTime(reservation.start)} – ${fmtTime(
+                reservation.start + reservation.duration,
+            )}${repeating ? ` · ${series.length} in the series, edits hit this one` : ""}`}
             footer={
                 <>
-                    <FooterButton grow={0} onClick={onClose}>
+                    <FooterButton grow={0} onClick={attemptClose}>
                         CANCEL
                     </FooterButton>
                     <FooterButton tone="primary" grow={1} disabled={Boolean(conflict)} onClick={onSave}>
@@ -415,100 +547,270 @@ export const ReservationDialog = ({
                 </>
             }
         >
-            <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1.5, mb: 3 }}>
-                <StatusPill reservation={reservation} />
-                {reservation.tabOpen && (
-                    <Typography sx={{ fontSize: 15, color: "#A9661F" }}>Tab open — closes at the end of the session</Typography>
-                )}
-                {repeating && (
-                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
-                        {repeatLabels[reservation.repeat]} · {series.length} in this series
-                    </Typography>
-                )}
+            {conflict && <ConflictBand conflict={conflict} />}
+
+            {/* The segmented control is back, and labelled. Status is the one
+                question the dialog answers at a glance, so it goes first and
+                it stays legible without being opened. */}
+            <Box sx={{ mb: 2 }}>
+                <SectionRule>Reservation status</SectionRule>
+                <StatusSegments status={reservation.status} onStatus={onStatus} fill />
             </Box>
 
-            {conflict && (
-                <Box sx={{ mb: 3 }}>
-                    <ConflictWarning conflict={conflict} />
-                </Box>
-            )}
+            <Section label="Reservation">
+                {/* Requirement 7: the tier decides the fee, so who the booking
+                    is for is a priced field, not a caption. It was settable
+                    only at booking time until now — this row is where a
+                    mis-picked guest gets fixed. */}
+                <ListRow label="Guest" hint={`${reservation.customer.tier} · ${reservation.customer.phone}`} padY={ROW_PAD}>
+                    <ButtonBase
+                        onClick={() => setPickingGuest(true)}
+                        sx={{
+                            gap: 0.75,
+                            minHeight: touchTarget.min,
+                            px: 1.5,
+                            borderRadius: `${FIELD_RADIUS}px`,
+                            color: appColors.textPrimary,
+                            fontSize: 17,
+                            "&:hover": { bgcolor: appColors.canvasAlt },
+                        }}
+                    >
+                        {reservation.customer.name}
+                        <ChevronRightIcon sx={{ fontSize: 20, color: appColors.textSecondary }} />
+                    </ButtonBase>
+                </ListRow>
 
-            <Group
-                title="Bay and time"
-                hint={
-                    repeating
-                        ? /* Requirement 14, said out loud, because it is the rule most
-                             likely to surprise somebody editing a standing booking. */
-                          "Changes here apply to this occurrence only — the rest of the series is untouched."
-                        : "Changing the bay or the duration re-runs the overlap check, the fee and the punch count."
+                <ListRow label="Bay" padY={ROW_PAD}>
+                    <RowSelect
+                        ariaLabel="Bay"
+                        value={reservation.bayId}
+                        onChange={(bayId) => set("bayId", bayId)}
+                        options={bays.map((bay) => ({ value: bay.id, label: bay.name, dot: bay.color }))}
+                    />
+                </ListRow>
+
+                <ListRow label="How long" padY={ROW_PAD}>
+                    <RowStepper
+                        value={reservation.duration}
+                        onChange={(value) => set("duration", value)}
+                        step={30}
+                        min={30}
+                        max={300}
+                        format={fmtDuration}
+                        unit="minutes"
+                    />
+                </ListRow>
+
+                <ListRow label="Party size" padY={ROW_PAD}>
+                    <RowStepper value={reservation.party} onChange={(value) => set("party", value)} min={1} max={12} unit="players" />
+                </ListRow>
+
+                <ListRow label="Repeats" padY={ROW_PAD} last>
+                    <RowSelect
+                        ariaLabel="Repeats"
+                        value={reservation.repeat}
+                        onChange={(value) => set("repeat", value as RepeatFreq)}
+                        options={(Object.keys(repeatLabels) as RepeatFreq[]).map((freq) => ({ value: freq, label: repeatLabels[freq] }))}
+                    />
+                </ListRow>
+            </Section>
+
+            <Section
+                label="Order"
+                aside={
+                    <Typography sx={{ flexShrink: 0, fontSize: 18, fontWeight: 600, color: appColors.textPrimary }}>
+                        <Box component="span" sx={{ fontSize: 13, fontWeight: 400, color: appColors.textSecondary, mr: 0.75 }}>
+                            {reservation.paid ? "Paid" : repeating ? "Due today" : "Due"}
+                        </Box>
+                        {usd(owed)}
+                    </Typography>
                 }
             >
-                <BayPicker value={reservation.bayId} onChange={(bayId) => set("bayId", bayId)} />
-                <StepperField
-                    label="How long"
-                    value={reservation.duration}
-                    onChange={(value) => set("duration", value)}
-                    step={30}
-                    min={30}
-                    max={300}
-                    format={fmtDuration}
-                    ariaLabel="minutes"
-                />
-                <StepperField
-                    label="Party size"
-                    value={reservation.party}
-                    onChange={(value) => set("party", value)}
-                    min={1}
-                    max={12}
-                    ariaLabel="players"
-                />
-            </Group>
+                {/* The cadence, spelled out where the money is. A repeat is a
+                    schedule and a bill at the same time, and the dropdown
+                    three rows up only ever showed the first half of that. */}
+                {repeating && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.25,
+                            px: 2,
+                            py: 1,
+                            bgcolor: appColors.canvasAlt,
+                            borderBottom: "1px solid",
+                            borderColor: ROW_RULE,
+                        }}
+                    >
+                        <EventRepeatIcon sx={{ fontSize: 18, color: appColors.textSecondary }} />
+                        <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
+                            {scheduleLabel(reservation.repeat, reservation.start)} · {visits} visits booked out {SERIES_WEEKS} weeks
+                        </Typography>
+                    </Box>
+                )}
 
-            <Group title="Notes" hint={NOTE_HINT}>
-                <NoteField value={reservation.note ?? ""} onChange={(value) => set("note", value)} />
-            </Group>
-
-            <Group title="Fee">
-                <FeePanel
-                    fee={reservation.fee}
-                    duration={reservation.duration}
-                    customer={reservation.customer}
-                    usePunch={reservation.punchesUsed !== undefined}
-                    onUsePunch={(value) =>
-                        onChange({ ...reservation, punchesUsed: value ? punchesNeeded(reservation.duration) : undefined })
-                    }
+                <OrderLine
+                    name={reservation.fee.name}
+                    detail={`${usd(reservation.fee.hourly)}/hr × ${fmtDuration(reservation.duration)} · ${reservation.party} ${
+                        reservation.party === 1 ? "player" : "players"
+                    }${repeating ? " · per visit" : ""}`}
+                    amount={usd(reservation.fee.amount)}
+                    last={!reservation.customer.punchCardName && !repeating}
                 />
 
-                {/* Requirement 30 — the fee moves to a tab so food and drink can
-                    join it and the whole thing closes at the end. */}
-                {!reservation.tabOpen && !freed && (
-                    <InlineActionCard
-                        title="Open a tab"
-                        description="Moves the bay fee onto a tab so they can add food and drinks and settle at the end."
-                        actionLabel="OPEN TAB"
-                        onAction={onOpenTab}
+                {reservation.customer.punchCardName && (
+                    <OrderLine
+                        name={reservation.customer.punchCardName}
+                        detail={
+                            available === 0
+                                ? "No punches left on this card"
+                                : repeating
+                                  ? `${available} left · covers ${Math.min(visits, Math.floor(available / needed))} of ${visits} visits`
+                                  : `${available} left · covers ${covered} of ${needed} ${needed === 1 ? "punch" : "punches"}`
+                        }
+                        amount={usePunch && credit > 0 ? `−${usd(credit)}` : undefined}
+                        credit
+                        last={!repeating}
+                    >
+                        <Switch
+                            checked={usePunch && available > 0}
+                            disabled={available === 0}
+                            onChange={(event) => setPunch(event.target.checked)}
+                            slotProps={{ input: { "aria-label": "Apply punch card" } }}
+                        />
+                    </OrderLine>
+                )}
+
+                {/* What the standing booking actually costs, over a horizon the
+                    line states rather than assumes. */}
+                {repeating && (
+                    <OrderLine
+                        name="Series total"
+                        detail={
+                            visitsCovered > 0
+                                ? `${visits} visits × ${usd(reservation.fee.amount)}, less ${visitsCovered} on the card`
+                                : `${visits} visits × ${usd(reservation.fee.amount)} over ${SERIES_WEEKS} weeks`
+                        }
+                        amount={usd(seriesOwed)}
+                        last
                     />
                 )}
-            </Group>
+            </Section>
 
-            {!freed && (
-                <Group
-                    title="Remove this reservation"
-                    hint={
-                        repeating
-                            ? "A no-show still counts toward the daily limit; a cancellation does not. Clearing the series cancels every occurrence."
-                            : "A no-show still counts toward the daily limit; a cancellation does not. Either one gives the bay time back."
-                    }
+            {/* Requirement 30, standing on its own — a second act, not a field. */}
+            {!freed &&
+                (reservation.tabOpen ? (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.25,
+                            minHeight: touchTarget.comfortable,
+                            px: 2,
+                            mb: 2,
+                            borderRadius: `${FIELD_RADIUS}px`,
+                            border: "1px solid",
+                            borderColor: FIELD_BORDER,
+                            bgcolor: appColors.surface,
+                        }}
+                    >
+                        <ReceiptLongIcon sx={{ fontSize: 20, color: appColors.greenDark }} />
+                        <Typography sx={{ fontSize: 15.5, color: appColors.textPrimary }}>
+                            Tab open — food and drinks go on this booking
+                        </Typography>
+                    </Box>
+                ) : (
+                    <ButtonBase
+                        onClick={onOpenTab}
+                        sx={{
+                            width: "100%",
+                            minHeight: touchTarget.comfortable,
+                            gap: 1.25,
+                            mb: 2,
+                            borderRadius: `${FIELD_RADIUS}px`,
+                            border: "1px solid",
+                            borderColor: appColors.slate,
+                            bgcolor: appColors.surface,
+                            color: appColors.slate,
+                            fontSize: 14.5,
+                            letterSpacing: "0.04em",
+                            "&:hover": { bgcolor: appColors.canvasAlt },
+                        }}
+                    >
+                        <ReceiptLongIcon sx={{ fontSize: 20 }} />
+                        START A TAB
+                    </ButtonBase>
+                ))}
+
+            {/* The note keeps company with the removal keys at the foot: both are
+                things you do to a booking once the booking itself is settled. */}
+            <Section label="Note — shows on the bay sheet">
+                <Typography
+                    sx={{ px: 2, pt: 1.25, fontSize: 12, letterSpacing: "0.08em", fontWeight: 600, color: appColors.textSecondary }}
                 >
-                    <DangerActions
-                        actions={[
-                            { label: "MARK NO-SHOW", onClick: onNoShow },
-                            { label: repeating ? "CANCEL THIS ONE" : "CANCEL BOOKING", onClick: onCancelReservation },
-                            ...(repeating ? [{ label: "CLEAR SERIES", onClick: onClearSeries }] : []),
-                        ]}
-                    />
-                </Group>
-            )}
+                    OCCASION — OPTIONAL
+                </Typography>
+                <OccasionRail value={reservation.occasion} onChange={(value) => set("occasion", value)} />
+
+                <Box
+                    component="textarea"
+                    value={reservation.note ?? ""}
+                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => set("note", event.target.value)}
+                    placeholder="Anything the staff should know — who is paying, a club fitting, a group running late"
+                    aria-label="Note"
+                    rows={6}
+                    sx={{
+                        display: "block",
+                        width: "100%",
+                        resize: "vertical",
+                        px: 2,
+                        py: 1.5,
+                        border: "none",
+                        outline: "none",
+                        bgcolor: "transparent",
+                        fontFamily: "inherit",
+                        fontSize: 16,
+                        lineHeight: 1.5,
+                        color: appColors.textPrimary,
+                        "&::placeholder": { color: appColors.textSecondary },
+                    }}
+                />
+            </Section>
+
+            {!freed && <RemoveGroup repeating={repeating} onCancelReservation={onCancelReservation} onClearSeries={onClearSeries} />}
+
+            {/* Changing the guest re-prices the booking through the same path
+                every other edit takes, so the order updates as it closes. */}
+            <Dialog
+                open={pickingGuest}
+                onClose={() => setPickingGuest(false)}
+                maxWidth={false}
+                slotProps={{ paper: { sx: { width: 560, maxWidth: "92vw", borderRadius: `${FIELD_RADIUS + 2}px`, p: 3 } } }}
+            >
+                <Typography sx={{ fontSize: 20, color: appColors.textPrimary, mb: 2 }}>Who is this booking for?</Typography>
+                <CustomerPicker
+                    customer={reservation.customer}
+                    onPick={(picked) => {
+                        set("customer", picked);
+                        setPickingGuest(false);
+                    }}
+                />
+            </Dialog>
+
+            <UnsavedPrompt
+                open={confirming}
+                onKeepEditing={() => setConfirming(false)}
+                onSave={() => {
+                    setConfirming(false);
+                    onSave?.();
+                    onClose?.();
+                }}
+                onDiscard={() => {
+                    setConfirming(false);
+                    onChange(pristine);
+                    onClose?.();
+                }}
+            />
         </DialogFrame>
     );
 };

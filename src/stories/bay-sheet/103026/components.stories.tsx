@@ -9,15 +9,19 @@ import {
     bayCustomers,
     feeFor,
     fmtDuration,
+    matchesFilter,
+    noFilter,
     seedBlocks,
     seedReservations,
     type RepeatFreq,
+    type SheetFilter,
 } from "@/components/concepts/bay-sheet/103026/bay-data";
 import {
     BaySheet,
     BlockChip,
     ChipMarks,
     ReservationChip,
+    SheetFilterBar,
     SheetLegend,
     StatusPill,
 } from "@/components/concepts/bay-sheet/103026/bay-sheet-parts";
@@ -30,7 +34,6 @@ import {
     FieldRow,
     FieldShell,
     FeePanel,
-    InlineActionCard,
     LimitWarning,
     NoteField,
     RepeatPicker,
@@ -52,30 +55,38 @@ import { DialogFrame, FooterButton } from "@/components/concepts/bay-sheet/10302
  * Everything here is live, and everything here is the same code the
  * **Screens**, **End to end** and prototype V2 run — there is no second copy.
  *
- * | # | Component | File | What it is |
- * | --- | --- | --- | --- |
- * | 1 | `BaySheet` | `bay-sheet-parts.tsx` | The grid: bays across, the day down |
- * | 2 | `ReservationChip` | `bay-sheet-parts.tsx` | One booking, reading its own height |
- * | 3 | `BlockChip` | `bay-sheet-parts.tsx` | Time that belongs to nobody |
- * | 4 | `ChipMarks` | `bay-sheet-parts.tsx` | Checked in, paid, tab, repeat, note |
- * | 5 | `StatusPill` | `bay-sheet-parts.tsx` | The same states, in words |
- * | 6 | `SheetLegend` | `bay-sheet-parts.tsx` | What teaches the marks |
- * | 7 | `FieldShell` | `bay-form-parts.tsx` | The bordered box every question sits in |
- * | 8 | `SelectField` | `bay-form-parts.tsx` | A dropdown in that box |
- * | 9 | `BayPicker` | `bay-form-parts.tsx` | `SelectField` over the eight bays |
- * | 10 | `Stepper` | `bay-form-parts.tsx` | Minutes and people, full width |
- * | 11 | `TextInputField` | `bay-form-parts.tsx` | One line of text |
- * | 12 | `NoteField` | `bay-form-parts.tsx` | Six rows of it |
- * | 13 | `CustomerPicker` | `bay-form-parts.tsx` | Search, then the chosen person |
- * | 14 | `RepeatPicker` | `bay-form-parts.tsx` | Five cadences across the width |
- * | 15 | `FeePanel` | `bay-form-parts.tsx` | The money, derived not typed |
- * | 16 | `ConfirmationToggle` | `bay-form-parts.tsx` | Requirement 12's one switch |
- * | 17 | `InlineActionCard` | `bay-form-parts.tsx` | A side errand — open a tab |
- * | 18 | `DangerActions` | `bay-form-parts.tsx` | The irreversible ones, in the body |
- * | 19 | `ConflictWarning` | `bay-form-parts.tsx` | Red. No way past it |
- * | 20 | `LimitWarning` | `bay-form-parts.tsx` | Amber, with a switch |
- * | 21 | `SectionTitle` | `bay-form-parts.tsx` | A heading and its explanation |
- * | 22 | `DialogFrame` | `bay-dialogs.tsx` | Header, scrolling body, two-key footer |
+ * ## The sheet — `bay-sheet-parts.tsx`
+ *
+ * `BaySheet` the grid, `ReservationChip` one booking reading its own height,
+ * `BlockChip` time that belongs to nobody, `ChipMarks` the five marks,
+ * `StatusPill` the same states in words, `SheetLegend` what teaches them, and
+ * `SheetFilterBar` the row that decides how much of a fifteen-bay day the
+ * screen is being asked to hold.
+ *
+ * ## The reservation dialog — `bay-form-parts.tsx`
+ *
+ * The language Justin picked on Nov 1. `SectionRule` is a group heading that
+ * sits *outside* its card; `Section` is that heading plus the card, with a
+ * slot on the right for a total. Inside a card, `ListRow` puts the label left
+ * and the control right — `RowSelect` and `RowStepper` are the two controls
+ * that fit there. `OrderLine` is one charge with its arithmetic shown,
+ * `OccasionRail` ten optional tags on one scrolling line, `StatusSegments`
+ * the three-way toggle, `RemoveGroup` the red keys at the foot, and
+ * `ConflictBand` an overlap in a single line.
+ *
+ * ## Booking and blocks — `bay-form-parts.tsx`
+ *
+ * The older field-shell language, still right where a question needs room:
+ * `FieldShell` the bordered box, `SelectField` a dropdown in one, `BayPicker`
+ * and `RepeatPicker` built on it, `Stepper` and `StepperField`,
+ * `TextInputField`, `NoteField`, `CustomerPicker` the search, `FeePanel` the
+ * money, `ConfirmationToggle`, `DangerActions`, `ConflictWarning`,
+ * `LimitWarning`, `SectionTitle`.
+ *
+ * ## Chrome — `bay-dialogs.tsx`
+ *
+ * `DialogFrame` (header, scrolling body, two-key footer, optional close key)
+ * and `UnsavedPrompt`, the guard every way out runs through.
  */
 const meta = {
     title: "Bay Sheet Oct 30/Components",
@@ -100,7 +111,7 @@ const Caption = ({ children }: { children: React.ReactNode }) => (
 /* ------------------------------------------------------- 1–6: the sheet */
 
 /**
- * **1 · `BaySheet`** — bays across the top, the day down the side.
+ * **`BaySheet`** — bays across the top, the day down the side.
  *
  * Requirement 1 asks for as many bays as possible without scrolling, so the
  * bays are the axis that never scrolls and time is the one that does. Blank
@@ -116,7 +127,7 @@ export const Sheet: Story = {
 };
 
 /**
- * **2 · `ReservationChip`**, at every height the sheet draws it.
+ * **`ReservationChip`**, at every height the sheet draws it.
  *
  * This is requirements 2, 3 and 4 in about 149px of column width — the player,
  * the duration, the party size, checked-in, paid, the open-tab indicator and
@@ -165,7 +176,7 @@ export const Chips: Story = {
 };
 
 /**
- * **3 · `BlockChip`.** Hatched, labelled, owned by nobody — which is what
+ * **`BlockChip`.** Hatched, labelled, owned by nobody — which is what
  * tells it apart from a reservation at a glance, before you read either.
  */
 export const Blocks: Story = {
@@ -182,7 +193,7 @@ export const Blocks: Story = {
 };
 
 /**
- * **4 · `ChipMarks`.** Five facts in about 70 pixels.
+ * **`ChipMarks`.** Five facts in about 70 pixels.
  *
  * Checked in, paid, an open tab, a repeat and a note. They are marks rather
  * than words because a 149px column has room for a name or for five labels,
@@ -209,7 +220,7 @@ export const Marks: Story = {
 };
 
 /**
- * **5 · `StatusPill`.** The same four states the chip draws as marks, said in
+ * **`StatusPill`.** The same four states the chip draws as marks, said in
  * words — because the details dialog has the room and no reason to make you
  * decode anything.
  */
@@ -227,11 +238,11 @@ export const Pills: Story = {
 };
 
 /**
- * **6 · `SheetLegend`.** The marks, taught once, above the sheet.
+ * **`SheetLegend`.** The marks, taught once, above the sheet.
  *
  * A legend is an admission that the chips are compressed. It is the right
- * trade at eight bays across a fourteen-hour day — but it is a trade, and
- * worth revisiting if the bay count ever drops.
+ * trade at eight visible bays across a fourteen-hour day — but it is a trade,
+ * and worth revisiting if the bay count ever drops.
  */
 export const Legend: Story = {
     name: "SheetLegend",
@@ -242,10 +253,45 @@ export const Legend: Story = {
     ),
 };
 
+/**
+ * **`SheetFilterBar`.** Live — toggle it and watch the count on the right.
+ *
+ * Four pieces, left to right: a guest search, the four marks as toggles,
+ * *Hide cancelled*, and the bay picker. Three notes on why it is shaped this
+ * way:
+ *
+ * - **The marks narrow.** Each one is ANDed with the rest, so *Checked in*
+ *   plus *Open tab* asks "who is in the building with a bill running". Chips
+ *   that OR together only ever grow the list, which is not what the word
+ *   filter means to anyone standing at a counter.
+ * - **The count is not decoration.** A filtered sheet and a quiet day are the
+ *   same picture, so the row has to say how much it is hiding — and, when a
+ *   search has folded the empty bays away, how many columns are left.
+ * - **The bay picker is the one that matters.** Fifteen bays do not fit a 1280
+ *   tablet; choosing the six you are running tonight is what removes the
+ *   sideways scroll rather than merely making it navigable.
+ */
+export const Filter: Story = {
+    name: "SheetFilterBar",
+    render: () => {
+        const [filter, setFilter] = useState<SheetFilter>(noFilter);
+        const shown = seedReservations.filter((reservation) => matchesFilter(reservation, filter));
+
+        return (
+            <Frame width={1200}>
+                <SheetFilterBar filter={filter} onFilter={setFilter} shown={shown.length} total={seedReservations.length} />
+                <Typography sx={{ mt: 2, fontSize: 14, color: appColors.textSecondary }}>
+                    {shown.length === 0 ? "Nothing on the sheet." : shown.map((reservation) => reservation.customer.name).join(" · ")}
+                </Typography>
+            </Frame>
+        );
+    },
+};
+
 /* ------------------------------------------------- 7–12: the field shell */
 
 /**
- * **7 · `FieldShell`** — the box every question in every dialog sits in.
+ * **`FieldShell`** — the box every question in every dialog sits in.
  *
  * Label inside at the top, answer underneath, an optional mark on the right.
  * This is the layout from the reference Justin sent on Nov 1, and it replaced
@@ -281,7 +327,7 @@ export const Shell: Story = {
     ),
 };
 
-/** **8 · `SelectField`** — a dropdown inside the shell, chevron on the right. */
+/** **`SelectField`** — a dropdown inside the shell, chevron on the right. */
 export const Dropdown: Story = {
     name: "SelectField",
     render: function DropdownStory() {
@@ -306,7 +352,7 @@ export const Dropdown: Story = {
 };
 
 /**
- * **9 · `BayPicker`** — requirement 22, *"staff can move the reservation to a
+ * **`BayPicker`** — requirement 22, *"staff can move the reservation to a
  * different bay."*
  *
  * It was eight chips: a row and a half of targets that read as a toolbar. One
@@ -327,7 +373,7 @@ export const Bays: Story = {
 };
 
 /**
- * **10 · `Stepper`** — one control for both minutes and people, differing
+ * **`Stepper`** — one control for both minutes and people, differing
  * only in its step.
  *
  * Full width is how the dialogs use it: the keys go to the ends of the row and
@@ -364,7 +410,7 @@ export const Steppers: Story = {
     },
 };
 
-/** **11 · `TextInputField`** — one line. The block's reason is the only one. */
+/** **`TextInputField`** — one line. The block's reason is the only one. */
 export const TextInput: Story = {
     name: "TextInputField",
     render: function TextInputStory() {
@@ -379,7 +425,7 @@ export const TextInput: Story = {
 };
 
 /**
- * **12 · `NoteField`** — six rows, not two.
+ * **`NoteField`** — six rows, not two.
  *
  * Requirement 4 puts notes on the sheet itself, so what staff type here is
  * read by everyone all day. *"Birthday — needs the big screen and two extra
@@ -402,7 +448,7 @@ export const Note: Story = {
 /* --------------------------------------------- 13–18: the rest of the form */
 
 /**
- * **13 · `CustomerPicker`** — requirement 6.
+ * **`CustomerPicker`** — requirement 6.
  *
  * Search `justin` for a punch card, `maya` for a guest with none, `avery` for
  * someone with a single punch left. Weston's open question — *"can staff
@@ -427,7 +473,7 @@ export const Customer: Story = {
 };
 
 /**
- * **14 · `RepeatPicker`** — requirement 13's four cadences and the *does not
+ * **`RepeatPicker`** — requirement 13's four cadences and the *does not
  * repeat* that is the default, flexed across the full width so the five read
  * as one control rather than a drift of chips.
  *
@@ -452,7 +498,7 @@ export const Repeat: Story = {
 };
 
 /**
- * **15 · `FeePanel`** — requirements 7, 8 and 23.
+ * **`FeePanel`** — requirements 7, 8 and 23.
  *
  * The fee is never typed: change who, when, how long or which bay and it
  * recalculates. The punch card sits under it because it does not change the
@@ -499,7 +545,7 @@ export const Fee: Story = {
     },
 };
 
-/** **16 · `ConfirmationToggle`** — requirement 12, and the one switch that is a decision rather than a warning. */
+/** **`ConfirmationToggle`** — requirement 12, and the one switch that is a decision rather than a warning. */
 export const Confirmation: Story = {
     name: "ConfirmationToggle",
     render: function ConfirmationStory() {
@@ -514,28 +560,7 @@ export const Confirmation: Story = {
 };
 
 /**
- * **17 · `InlineActionCard`** — requirement 30's *open a tab*.
- *
- * A side errand rather than an answer to a question, so it is a card with its
- * own key instead of a field. The explanation is load-bearing: moving a fee to
- * a tab changes what the chip says about being paid, and Weston's open
- * question about that state is still open.
- */
-export const Inline: Story = {
-    name: "InlineActionCard",
-    render: () => (
-        <Frame width={660}>
-            <InlineActionCard
-                title="Open a tab"
-                description="Moves the bay fee onto a tab so they can add food and drinks and settle at the end."
-                actionLabel="OPEN TAB"
-            />
-        </Frame>
-    ),
-};
-
-/**
- * **18 · `DangerActions`** — the irreversible ones, in the body of the dialog.
+ * **`DangerActions`** — the irreversible ones, in the body of the dialog.
  *
  * They were four red keys in the footer beside SAVE, which made the most
  * destructive things on the screen the most prominent and left the footer
@@ -561,7 +586,7 @@ export const Danger: Story = {
 /* ------------------------------------------------ 19–22: guards and chrome */
 
 /**
- * **19 · `ConflictWarning`** — requirement 10. Red, and there is no way past
+ * **`ConflictWarning`** — requirement 10. Red, and there is no way past
  * it: the primary action reads TIME UNAVAILABLE and does nothing.
  *
  * Compare it with the next story. One rule is physics, the other is policy,
@@ -581,7 +606,7 @@ export const Conflict: Story = {
 };
 
 /**
- * **20 · `LimitWarning`** — requirements 17 and 18. Amber, **with a switch in
+ * **`LimitWarning`** — requirements 17 and 18. Amber, **with a switch in
  * it**, because the PRD says staff can override the daily limit and complete
  * the booking.
  *
@@ -601,7 +626,7 @@ export const Limit: Story = {
     },
 };
 
-/** **21 · `SectionTitle`** — a heading and the sentence that explains the group under it. */
+/** **`SectionTitle`** — a heading and the sentence that explains the group under it. */
 export const Headings: Story = {
     name: "SectionTitle",
     render: () => (
@@ -616,7 +641,7 @@ export const Headings: Story = {
 };
 
 /**
- * **22 · `DialogFrame`** — header, scrolling body, and a footer of exactly two
+ * **`DialogFrame`** — header, scrolling body, and a footer of exactly two
  * keys.
  *
  * The footer carried up to five before Nov 1, four of them red. Cancel and

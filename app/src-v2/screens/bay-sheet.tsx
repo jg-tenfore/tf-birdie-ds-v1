@@ -17,7 +17,11 @@ import { useActions } from "../store";
  * V1's version of this screen is still in `app/src/screens/bay-sheet.tsx`,
  * untouched, so the two can be opened side by side. What changed:
  *
- * - **Eight bays** and a full 8am–10pm day, where V1 drew six over four hours.
+ * - **Fifteen bays** and a full 8am–10pm day, where V1 drew six over four
+ *   hours. Eight columns fit the tablet and the rest scroll sideways under a
+ *   pinned clock and a pinned row of bay names.
+ * - A **filter row** above the sheet: find a golfer, narrow by mark, or pick
+ *   the bays you are running tonight — which is what makes fifteen bays fit.
  * - A reservation knows nine more things about itself — checked in, paid,
  *   whether a tab is open, its note, whether it repeats, whether it was
  *   cancelled or no-showed, which punch card paid for it, and whether booking
@@ -50,7 +54,8 @@ import { useActions } from "../store";
  * | `#/baysheet` | the sheet |
  * | `#/baysheet/book/teal/1100` | a new booking, Teal Bay at 11:00 AM |
  * | `#/baysheet/book/blue/1100?customer=c-6` | the same, with Jordan Blake already picked |
- * | `#/baysheet/reservation/r-7` | Justin's standing Tuesday lesson |
+ * | `#/baysheet/reservation/r-7` | Justin's standing Tuesday lesson, peeked |
+ * | `#/baysheet/reservation/r-7/edit` | the same booking, in the full dialog |
  * | `#/baysheet/newblock/green/1200` | a new block on Green Bay at noon |
  * | `#/baysheet/block/bl-1` | the league-night block |
  */
@@ -76,7 +81,9 @@ export const bayDialogPath = (route: BayDialogRoute): string => {
         case "book":
             return `/baysheet/book/${route.bayId}/${clockOf(route.start)}${route.customerId ? `?customer=${route.customerId}` : ""}`;
         case "reservation":
-            return `/baysheet/reservation/${route.id}`;
+            /* The peek panel and the full dialog are separate addresses, so a
+               link can open either one. */
+            return `/baysheet/reservation/${route.id}${route.edit ? "/edit" : ""}`;
         case "newblock":
             return `/baysheet/newblock/${route.bayId}/${clockOf(route.start)}`;
         case "block":
@@ -90,7 +97,7 @@ export const parseBayDialog = (splat: string, search = ""): BayDialogRoute => {
     const [kind, first, second] = splat.split("/").filter(Boolean);
     const known = (bayId?: string) => bays.some((bay) => bay.id === bayId);
 
-    if (kind === "reservation" && first) return { kind: "reservation", id: first };
+    if (kind === "reservation" && first) return { kind: "reservation", id: first, edit: second === "edit" };
     if (kind === "block" && first) return { kind: "block", id: first };
 
     if ((kind === "book" || kind === "newblock") && known(first)) {
@@ -177,8 +184,10 @@ export const BaySheetScreen = () => {
  * `app/src-v2/mobile/screens/bay-sheet.tsx` draws its own layout for 402px but
  * takes the bays and the day from this screen, so the two surfaces cannot
  * disagree about how many bays the course has or when it opens. They now come
- * from the Oct 30 model rather than from constants declared here — eight bays
- * and an 8am–10pm day, where V1 had six and four hours.
+ * from the Oct 30 model rather than from constants declared here — fifteen
+ * bays and an 8am–10pm day, where V1 had six and four hours. The phone build
+ * needs no change for the bay count: its bays are already a scrolling rail of
+ * tabs rather than columns.
  */
 export const BAYS = bays.map((bay) => bay.name);
 export const START_HOUR = DAY_START / 60;

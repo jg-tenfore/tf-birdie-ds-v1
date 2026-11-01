@@ -4,8 +4,22 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { appColors } from "@/theme/app-replica-tokens";
-import { bayCustomers, feeFor, punchesNeeded, seedBlocks, seedReservations, type BayBlock, type Reservation } from "./bay-data";
-import { BaySheet, SheetLegend, type Zoom } from "./bay-sheet-parts";
+import {
+    bayCustomers,
+    bays,
+    columnsFor,
+    feeFor,
+    matchesFilter,
+    noFilter,
+    punchesNeeded,
+    seedBlocks,
+    seedReservations,
+    type BayBlock,
+    type Reservation,
+    type SheetFilter,
+} from "./bay-data";
+import { BaySheet, SheetFilterBar, SheetLegend, type Zoom } from "./bay-sheet-parts";
+import { ReservationPeek } from "./reservation-peek";
 import { BlockDialog, BookingDialog, ReservationDialog, emptyBlock, emptyDraft, type BlockDraft, type BookingDraft } from "./bay-dialogs";
 
 /**
@@ -37,7 +51,8 @@ import { BlockDialog, BookingDialog, ReservationDialog, emptyBlock, emptyDraft, 
 export type BayDialogRoute =
     | { kind: "none" }
     | { kind: "book"; bayId: string; start: number; customerId?: string }
-    | { kind: "reservation"; id: string }
+    /* `edit` is the full dialog; without it, the peek panel. */
+    | { kind: "reservation"; id: string; edit?: boolean }
     | { kind: "newblock"; bayId: string; start: number }
     | { kind: "block"; id: string };
 
@@ -49,9 +64,11 @@ const routeKey = (route: BayDialogRoute): string =>
         ? `book:${route.bayId}:${route.start}:${route.customerId ?? ""}`
         : route.kind === "newblock"
           ? `newblock:${route.bayId}:${route.start}`
-          : route.kind === "reservation" || route.kind === "block"
-            ? `${route.kind}:${route.id}`
-            : "none";
+          : route.kind === "reservation"
+            ? `reservation:${route.id}:${route.edit ? "edit" : "peek"}`
+            : route.kind === "block"
+              ? `block:${route.id}`
+              : "none";
 
 /* ---------------------------------------------------- the dialog wrappers */
 
@@ -98,7 +115,7 @@ const ReservationFlow = ({
     blocks,
     onSave,
     onCancelReservation,
-    onNoShow,
+    onStatus,
     onClearSeries,
     onOpenTab,
     onClose,
@@ -108,7 +125,7 @@ const ReservationFlow = ({
     blocks: BayBlock[];
     onSave: (reservation: Reservation) => void;
     onCancelReservation: (reservation: Reservation) => void;
-    onNoShow: (reservation: Reservation) => void;
+    onStatus: (reservation: Reservation, status: Reservation["status"]) => void;
     onClearSeries: (reservation: Reservation) => void;
     onOpenTab: (reservation: Reservation) => void;
     onClose: () => void;
@@ -123,7 +140,7 @@ const ReservationFlow = ({
             onChange={setEdited}
             onSave={() => onSave(edited)}
             onCancelReservation={() => onCancelReservation(edited)}
-            onNoShow={() => onNoShow(edited)}
+            onStatus={(status) => onStatus(edited, status)}
             onClearSeries={() => onClearSeries(edited)}
             onOpenTab={() => onOpenTab(edited)}
             onClose={onClose}
@@ -184,6 +201,10 @@ export interface BayWorkspaceProps {
     onRoute?: (route: BayDialogRoute) => void;
     /** The sheet alone, with no legend — for an embedded view. */
     hideLegend?: boolean;
+    /** The sheet alone, with no filter row — for an embedded view. */
+    hideFilter?: boolean;
+    /** Opening filter, for a story or a link that is about a narrowed sheet. */
+    initialFilter?: SheetFilter;
     /** A banner above the sheet, used by the prototype for its own chrome. */
     banner?: React.ReactNode;
     /** Told when something lands in the order, so a POS can take the money. */
@@ -198,6 +219,8 @@ export const BayWorkspace = ({
     route: controlledRoute,
     onRoute,
     hideLegend = false,
+    hideFilter = false,
+    initialFilter,
     banner,
     onCharge,
 }: BayWorkspaceProps) => {
@@ -210,6 +233,16 @@ export const BayWorkspace = ({
     const route = controlledRoute ?? selfRoute;
     const go = (next: BayDialogRoute) => (onRoute ? onRoute(next) : setSelfRoute(next));
     const close = () => go(noDialog);
+
+    /*
+     * The filter is a view, not a fact: it changes what the sheet draws and
+     * nothing else. Every dialog below still gets the whole day, because an
+     * overlap check that only saw the filtered bookings would happily let you
+     * double-book a golfer you had filtered out.
+     */
+    const [filter, setFilter] = useState<SheetFilter>(initialFilter ?? noFilter);
+    const onSheet = reservations.filter((reservation) => matchesFilter(reservation, filter));
+    const columns = columnsFor(reservations, filter);
 
     /** What the staff did last, so a prototype can show it happened. */
     const [toast, setToast] = useState<string | undefined>(undefined);
@@ -311,10 +344,24 @@ export const BayWorkspace = ({
             {banner}
 
             <BaySheet
-                reservations={reservations}
+                reservations={onSheet}
                 blocks={blocks}
                 zoom={zoom}
-                header={hideLegend ? undefined : <SheetLegend />}
+                bayIds={columns}
+                header={
+                    <>
+                        {!hideFilter && (
+                            <SheetFilterBar
+                                filter={filter}
+                                onFilter={setFilter}
+                                shown={onSheet.length}
+                                total={reservations.length}
+                                bayCount={columns.length || bays.length}
+                            />
+                        )}
+                        {!hideLegend && <SheetLegend />}
+                    </>
+                }
                 onBookSlot={(bayId, start) => go({ kind: "book", bayId, start })}
                 onOpenReservation={(reservation) => go({ kind: "reservation", id: reservation.id })}
                 onOpenBlock={(block) => go({ kind: "block", id: block.id })}
@@ -353,7 +400,35 @@ export const BayWorkspace = ({
                 />
             )}
 
-            {openReservation && (
+            {/* A tap on a chip peeks first. Most taps are not edits — they are
+                "who is this, have they shown up, what do they owe". */}
+            {openReservation && route.kind === "reservation" && !route.edit && (
+                <ReservationPeek
+                    key={routeKey(route)}
+                    reservation={openReservation}
+                    reservations={reservations}
+                    onStatus={(status) =>
+                        setStatus(
+                            openReservation,
+                            status,
+                            {
+                                booked: "Put back to booked.",
+                                checkedIn: "Checked in.",
+                                noShow: "Marked as a no-show. It still counts toward the daily limit.",
+                                cancelled: "Reservation cancelled — the bay time is free again.",
+                            }[status],
+                        )
+                    }
+                    onEdit={() => go({ kind: "reservation", id: openReservation.id, edit: true })}
+                    onOpenTab={() => openTab(openReservation)}
+                    onCancelReservation={() =>
+                        setStatus(openReservation, "cancelled", "Reservation cancelled — the bay time is free again.")
+                    }
+                    onClose={close}
+                />
+            )}
+
+            {openReservation && route.kind === "reservation" && route.edit && (
                 <ReservationFlow
                     key={routeKey(route)}
                     reservation={openReservation}
@@ -361,7 +436,21 @@ export const BayWorkspace = ({
                     blocks={blocks}
                     onSave={save}
                     onCancelReservation={(edited) => setStatus(edited, "cancelled", "Reservation cancelled — the bay time is free again.")}
-                    onNoShow={(edited) => setStatus(edited, "noShow", "Marked as a no-show. It still counts toward the daily limit.")}
+                    /* The status toggle at the top of the dialog, not a one-shot
+                       button: checking someone in is as routine as marking them
+                       absent, and both must be reversible. */
+                    onStatus={(edited, status) =>
+                        setStatus(
+                            edited,
+                            status,
+                            {
+                                booked: "Put back to booked.",
+                                checkedIn: "Checked in.",
+                                noShow: "Marked as a no-show. It still counts toward the daily limit.",
+                                cancelled: "Reservation cancelled — the bay time is free again.",
+                            }[status],
+                        )
+                    }
                     onClearSeries={clearSeries}
                     onOpenTab={openTab}
                     onClose={close}
