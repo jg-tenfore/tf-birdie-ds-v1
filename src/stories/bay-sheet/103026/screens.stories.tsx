@@ -93,12 +93,15 @@ export const Sheet: Story = {
  * part of the fee?"* The panel shows the shortfall rather than hiding it.
  *
  * At the bottom, requirement 12: **Don't send confirmation**.
+ *
+ * Every dialog in this category has an address in prototype V2 — this one is
+ * `#/baysheet/book/teal/1100`. The overview lists them all.
  */
 export const Booking: Story = {
     name: "2 — Book a bay",
     render: () => (
         <Shell>
-            <BayWorkspace openBooking={{ bayId: "teal", start: 11 * 60 }} />
+            <BayWorkspace initialRoute={{ kind: "book", bayId: "teal", start: 11 * 60 }} />
         </Shell>
     ),
 };
@@ -118,13 +121,13 @@ export const Booking: Story = {
  * is physics, the other is policy, and the screen should not make them look
  * alike.
  *
- * Move the bay with the picker and the warning clears.
+ * Change the bay in the dropdown and the warning clears.
  */
 export const Conflict: Story = {
     name: "3 — Overlap is refused",
     render: () => (
         <Shell>
-            <BayWorkspace openBooking={{ bayId: "blue", start: 11 * 60 }} openBookingCustomerId="c-6" />
+            <BayWorkspace initialRoute={{ kind: "book", bayId: "blue", start: 11 * 60, customerId: "c-6" }} />
         </Shell>
     ),
 };
@@ -154,7 +157,7 @@ export const Limit: Story = {
     name: "4 — Over the daily limit",
     render: () => (
         <Shell>
-            <BayWorkspace openBooking={{ bayId: "magenta", start: 15 * 60 }} openBookingCustomerId="c-1" />
+            <BayWorkspace initialRoute={{ kind: "book", bayId: "magenta", start: 15 * 60, customerId: "c-1" }} />
         </Shell>
     ),
 };
@@ -170,19 +173,20 @@ export const Limit: Story = {
  * duration and makes you cancel to fix it is the thing this PRD is replacing.
  *
  * Change the duration and watch the fee and the punch count follow (23). Move
- * it to another bay with the picker (22) — and if you move it onto something,
+ * it to another bay with the dropdown (22) — and if you move it onto something,
  * the same overlap warning appears here as in the booking flow.
  *
- * The three destructive actions sit together, apart from SAVE: **no-show**,
- * **cancel**, and — because this one repeats weekly — **clear series** (15).
- * Above them, the rule that surprises people: changes apply to this occurrence
- * only (14).
+ * The three destructive actions sit together in the body under **Remove this
+ * reservation**: no-show, cancel, and — because this one repeats weekly —
+ * clear series (15). They are not in the footer, which is cancel and save and
+ * nothing else. Above them, the rule that surprises people: changes apply to
+ * this occurrence only (14).
  */
 export const Details: Story = {
     name: "5 — Reservation details",
     render: () => (
         <Shell>
-            <BayWorkspace openReservationId="r-7" />
+            <BayWorkspace initialRoute={{ kind: "reservation", id: "r-7" }} />
         </Shell>
     ),
 };
@@ -206,7 +210,7 @@ export const Tab: Story = {
     name: "6 — Open a tab",
     render: () => (
         <Shell>
-            <BayWorkspace openReservationId="r-2" />
+            <BayWorkspace initialRoute={{ kind: "reservation", id: "r-2" }} />
         </Shell>
     ),
 };
@@ -233,7 +237,7 @@ export const Block: Story = {
     name: "7 — Block a bay",
     render: () => (
         <Shell>
-            <BayWorkspace openBlock={{ bayId: "green", start: 12 * 60 }} />
+            <BayWorkspace initialRoute={{ kind: "newblock", bayId: "green", start: 12 * 60 }} />
         </Shell>
     ),
 };

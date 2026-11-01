@@ -65,6 +65,8 @@ const routes: [string, React.ReactNode][] = [
     ["/coursheet/:resource/:time", <ResourceReservationScreen />],
     ["/customers/new", <NewCustomerScreen />],
     ["/baysheet", <BaySheetScreen />],
+    /* Every bay sheet dialog has an address — see `screens/bay-sheet.tsx`. */
+    ["/baysheet/*", <BaySheetScreen />],
     ["/reservations", <RestaurantReservationsScreen />],
     ["/orderstips", <OrdersTipsScreen />],
     ["/tablechart", <TableChartScreen />],

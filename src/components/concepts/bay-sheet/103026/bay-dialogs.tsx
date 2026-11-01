@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
 import Typography from "@mui/material/Typography";
 
-import { appColors, appRadius } from "@/theme/app-replica-tokens";
+import { appColors } from "@/theme/app-replica-tokens";
 import { touchTarget } from "@/theme/tokens";
 import {
     bayById,
@@ -26,12 +26,17 @@ import {
     ConfirmationToggle,
     ConflictWarning,
     CustomerPicker,
+    DangerActions,
     DialogHeader,
+    FIELD_RADIUS,
     FeePanel,
-    FieldLabel,
+    InlineActionCard,
     LimitWarning,
+    NoteField,
     RepeatPicker,
-    Stepper,
+    SectionTitle,
+    StepperField,
+    TextInputField,
 } from "./bay-form-parts";
 import { StatusPill } from "./bay-sheet-parts";
 
@@ -42,13 +47,93 @@ import { StatusPill } from "./bay-sheet-parts";
  * the context — requirement 17 says the warning shows *"on the bay sheet"*,
  * and moving a reservation to a different bay (22) is a decision you make
  * looking at the other bays.
+ *
+ * ## Nov 1 — the rebuild
+ *
+ * Four things changed, all of them Justin's notes on the Oct 30 draft:
+ *
+ * 1. **The footer is cancel and save, and nothing else.** It was carrying up
+ *    to five keys, four of them red, which made the irreversible actions the
+ *    loudest thing on the screen and the footer unreadable at a glance.
+ * 2. **The destructive actions moved into the body**, each its own button,
+ *    flexed to fill the width, under a heading that says what they do.
+ * 3. **Every question is a bordered field with its label inside it** — the
+ *    layout from the reference Justin attached. Bay is a dropdown; how long,
+ *    party size and repeat each take the full width.
+ * 4. **The dialog is much taller** and the note is six rows, because
+ *    requirement 4 puts notes on the sheet where everyone reads them all day.
  */
 
-const Footer = ({ children }: { children: React.ReactNode }) => (
-    <Box sx={{ display: "flex", gap: 1.5, px: 3, py: 2, bgcolor: appColors.canvasAlt }}>{children}</Box>
+/* ---------------------------------------------------------- dialog chrome */
+
+/**
+ * The frame all three share: fixed header, scrolling body, fixed footer.
+ *
+ * `tall` holds the dialog open to most of the viewport rather than letting it
+ * shrink to its content. The booking and details dialogs use it so the body
+ * does not jump as fields appear; a block has four questions and is allowed to
+ * be the size of four questions.
+ */
+export const DialogFrame = ({
+    open,
+    onClose,
+    title,
+    subtitle,
+    width = 820,
+    tall = true,
+    footer,
+    children,
+}: {
+    open: boolean;
+    onClose?: () => void;
+    title: string;
+    subtitle?: string;
+    width?: number;
+    tall?: boolean;
+    footer: React.ReactNode;
+    children: React.ReactNode;
+}) => (
+    <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth={false}
+        slotProps={{
+            paper: {
+                sx: {
+                    width,
+                    maxWidth: "96vw",
+                    height: tall ? "min(92vh, 980px)" : "auto",
+                    maxHeight: "92vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRadius: `${FIELD_RADIUS + 2}px`,
+                },
+            },
+        }}
+    >
+        <DialogHeader title={title} subtitle={subtitle} />
+
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 3, py: 3, bgcolor: appColors.canvas }}>{children}</Box>
+
+        <Box
+            sx={{
+                flexShrink: 0,
+                display: "flex",
+                gap: 1.5,
+                px: 3,
+                py: 2,
+                bgcolor: appColors.surface,
+                borderTop: "1px solid",
+                borderColor: appColors.divider,
+            }}
+        >
+            {footer}
+        </Box>
+    </Dialog>
 );
 
-const Action = ({
+/** The footer's two keys. Nothing else belongs down there. */
+export const FooterButton = ({
     children,
     tone = "default",
     disabled,
@@ -56,35 +141,52 @@ const Action = ({
     grow = 1,
 }: {
     children: React.ReactNode;
-    tone?: "default" | "primary" | "danger";
+    tone?: "default" | "primary";
     disabled?: boolean;
     onClick?: () => void;
     grow?: number;
 }) => (
-    <Button
-        onClick={onClick}
+    <ButtonBase
+        onClick={disabled ? undefined : onClick}
         disabled={disabled}
-        disableElevation
         sx={{
-            flex: grow,
-            minHeight: touchTarget.comfortable,
-            borderRadius: `${appRadius.button}px`,
-            fontSize: 16,
+            /* `flex: 0` would zero the basis as well and collapse the label,
+               so a non-growing key is sized by its own content instead. */
+            flex: grow === 0 ? "0 0 auto" : grow,
+            minWidth: 0,
+            minHeight: touchTarget.large,
+            px: 4,
+            borderRadius: `${FIELD_RADIUS}px`,
+            fontSize: 17,
             letterSpacing: "0.04em",
-            color: "#fff",
-            bgcolor: tone === "primary" ? appColors.green : tone === "danger" ? appColors.red : appColors.slate,
-            "&:hover": { bgcolor: tone === "primary" ? appColors.greenDark : tone === "danger" ? appColors.red : appColors.slateDark },
-            "&.Mui-disabled": { bgcolor: appColors.greyLight, color: "rgba(255,255,255,0.8)" },
+            border: tone === "primary" ? "1px solid transparent" : "1px solid",
+            borderColor: tone === "primary" ? "transparent" : appColors.divider,
+            bgcolor: tone === "primary" ? appColors.green : appColors.surface,
+            color: tone === "primary" ? "#fff" : appColors.textPrimary,
+            "&:hover": { bgcolor: tone === "primary" ? appColors.greenDark : appColors.canvasAlt },
+            "&.Mui-disabled": {
+                bgcolor: tone === "primary" ? appColors.greyLight : appColors.surface,
+                color: tone === "primary" ? "rgba(255,255,255,0.85)" : appColors.textDisabled,
+            },
         }}
     >
         {children}
-    </Button>
+    </ButtonBase>
 );
 
-const Section = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <Box sx={{ mb: 2.5 }}>
-        <FieldLabel>{label}</FieldLabel>
-        {children}
+/**
+ * Why the note is six rows and has a heading of its own.
+ *
+ * Requirement 4 puts notes on the sheet, which makes this the one field in the
+ * dialog whose contents the whole shift reads.
+ */
+const NOTE_HINT = "Notes show on the bay sheet itself (requirement 4), so what goes here is read by everyone all day.";
+
+/** One block of the body: a heading, an optional explanation, the fields. */
+const Group = ({ title, hint, children }: { title?: string; hint?: string; children: React.ReactNode }) => (
+    <Box sx={{ mb: 3 }}>
+        {title && <SectionTitle hint={hint}>{title}</SectionTitle>}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>{children}</Box>
     </Box>
 );
 
@@ -118,11 +220,11 @@ export const emptyDraft = (bayId: string, start: number): BookingDraft => ({
 /**
  * **Book a bay** — requirements 5 through 18, on one canvas.
  *
- * The order is the order a counter asks it in: who, how long, how many, does
- * it repeat, anything to note. The fee follows the answers rather than being
- * asked for, and the two guards sit where they can still be acted on — the
- * overlap above the action bar because it cannot be overridden, the daily
- * limit beside its own switch because it can.
+ * The order is the order a counter asks it in: who, where and how long, does
+ * it repeat, anything to note, what it costs. The fee follows the answers
+ * rather than being asked for, and the two guards sit directly under the
+ * customer — where they can still be acted on, and where their deliberate
+ * difference reads: the overlap refuses, the daily limit offers a switch.
  */
 export const BookingDialog = ({
     open = true,
@@ -152,128 +254,92 @@ export const BookingDialog = ({
     const blocked = Boolean(conflict) || !draft.customer || (atLimit && !draft.overrideLimit);
 
     return (
-        <Dialog
+        <DialogFrame
             open={open}
             onClose={onClose}
-            maxWidth={false}
-            slotProps={{ paper: { sx: { width: 760, borderRadius: `${appRadius.card}px` } } }}
+            title="New reservation"
+            subtitle={`${bayById(draft.bayId).name} · ${fmtTime(draft.start)} – ${fmtTime(draft.start + draft.duration)}`}
+            footer={
+                <>
+                    <FooterButton grow={0} onClick={onClose}>
+                        CANCEL
+                    </FooterButton>
+                    <FooterButton tone="primary" grow={1} disabled={blocked} onClick={() => onBook?.(draft)}>
+                        {conflict ? "TIME UNAVAILABLE" : !draft.customer ? "PICK A CUSTOMER" : `BOOK · ${usd(fee.amount)}`}
+                    </FooterButton>
+                </>
+            }
         >
-            <DialogHeader
-                title="New reservation"
-                subtitle={`${bayById(draft.bayId).name} · ${fmtTime(draft.start)} – ${fmtTime(draft.start + draft.duration)}`}
-            />
+            <Group title="Who it is for" hint="The fee, the punch card and the daily limit all follow from this.">
+                <CustomerPicker
+                    customer={draft.customer}
+                    onPick={(customer) => onChange({ ...draft, customer, usePunch: (customer.punchesLeft ?? 0) > 0 })}
+                    onClear={() => onChange({ ...draft, customer: undefined, usePunch: false, overrideLimit: false })}
+                />
 
-            <Box sx={{ px: 3, py: 2.5, bgcolor: appColors.canvas, maxHeight: 520, overflowY: "auto" }}>
-                <Section label="WHO IS IT FOR">
-                    <CustomerPicker
-                        customer={draft.customer}
-                        onPick={(customer) => onChange({ ...draft, customer, usePunch: (customer.punchesLeft ?? 0) > 0 })}
-                        onClear={() => onChange({ ...draft, customer: undefined, usePunch: false, overrideLimit: false })}
-                    />
-                </Section>
-
-                {/*
-                 * Both guards sit here, above the controls that trigger
-                 * them. They were below the fold in a 520px dialog, which
-                 * made the primary action go dead with no visible reason —
-                 * and side by side is also where the difference reads: one
-                 * refuses, one warns and offers a way through.
-                 */}
-                {conflict && (
-                    <Box sx={{ mb: 2.5 }}>
-                        <ConflictWarning conflict={conflict} />
-                    </Box>
-                )}
+                {conflict && <ConflictWarning conflict={conflict} />}
 
                 {draft.customer && atLimit && (
-                    <Box sx={{ mb: 2.5 }}>
-                        <LimitWarning
-                            customer={draft.customer}
-                            count={alreadyToday.length}
-                            override={draft.overrideLimit}
-                            onOverride={(value) => set("overrideLimit", value)}
-                        />
-                    </Box>
-                )}
-
-                <Box sx={{ display: "flex", gap: 4, mb: 2.5 }}>
-                    <Box>
-                        <FieldLabel>HOW LONG</FieldLabel>
-                        <Stepper
-                            value={draft.duration}
-                            onChange={(value) => set("duration", value)}
-                            step={30}
-                            min={30}
-                            max={300}
-                            format={fmtDuration}
-                            label="minutes"
-                        />
-                    </Box>
-                    <Box>
-                        <FieldLabel>PARTY SIZE</FieldLabel>
-                        <Stepper value={draft.party} onChange={(value) => set("party", value)} min={1} max={12} label="players" />
-                    </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <FieldLabel>BAY</FieldLabel>
-                        <BayPicker value={draft.bayId} onChange={(bayId) => set("bayId", bayId)} />
-                    </Box>
-                </Box>
-
-                <Section label="REPEATS">
-                    <RepeatPicker value={draft.repeat} onChange={(value) => set("repeat", value)} />
-                    {draft.repeat !== "none" && (
-                        /* Weston's open question, surfaced rather than guessed:
-                           "do they need an end date or a number of occurrences?" */
-                        <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 1 }}>
-                            Repeats {repeatLabels[draft.repeat].toLowerCase()}. How far ahead is still to be decided — see the overview.
-                        </Typography>
-                    )}
-                </Section>
-
-                <Section label="NOTE">
-                    <Box
-                        component="textarea"
-                        value={draft.note}
-                        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => set("note", event.target.value)}
-                        placeholder="Anything the staff should know"
-                        aria-label="Reservation note"
-                        rows={2}
-                        sx={{
-                            width: "100%",
-                            resize: "none",
-                            p: 1.5,
-                            fontFamily: "inherit",
-                            fontSize: 16,
-                            color: appColors.textPrimary,
-                            bgcolor: appColors.fieldFill,
-                            border: "none",
-                            outline: "none",
-                            borderBottom: "1px solid rgba(0,0,0,0.42)",
-                            borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
-                        }}
-                    />
-                </Section>
-
-                <Section label="FEE">
-                    <FeePanel
-                        fee={fee}
-                        duration={draft.duration}
+                    <LimitWarning
                         customer={draft.customer}
-                        usePunch={draft.usePunch}
-                        onUsePunch={(value) => set("usePunch", value)}
+                        count={alreadyToday.length}
+                        override={draft.overrideLimit}
+                        onOverride={(value) => set("overrideLimit", value)}
                     />
-                </Section>
+                )}
+            </Group>
 
+            <Group title="Bay and time" hint="Moving the bay or the duration re-runs the overlap check and the fee.">
+                <BayPicker value={draft.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <StepperField
+                    label="How long"
+                    value={draft.duration}
+                    onChange={(value) => set("duration", value)}
+                    step={30}
+                    min={30}
+                    max={300}
+                    format={fmtDuration}
+                    ariaLabel="minutes"
+                />
+                <StepperField
+                    label="Party size"
+                    value={draft.party}
+                    onChange={(value) => set("party", value)}
+                    min={1}
+                    max={12}
+                    ariaLabel="players"
+                />
+            </Group>
+
+            <Group title="Repeat">
+                <RepeatPicker
+                    value={draft.repeat}
+                    onChange={(value) => set("repeat", value)}
+                    hint={
+                        draft.repeat === "none"
+                            ? undefined
+                            : /* Weston's open question, surfaced rather than guessed: "do they
+                                 need an end date or a number of occurrences?" */
+                              `Repeats ${repeatLabels[draft.repeat].toLowerCase()}. How far ahead is still to be decided — see the overview.`
+                    }
+                />
+            </Group>
+
+            <Group title="Notes" hint={NOTE_HINT}>
+                <NoteField value={draft.note} onChange={(value) => set("note", value)} />
+            </Group>
+
+            <Group title="Fee" hint="Never typed. It is derived from who it is for, when it starts and how long it runs.">
+                <FeePanel
+                    fee={fee}
+                    duration={draft.duration}
+                    customer={draft.customer}
+                    usePunch={draft.usePunch}
+                    onUsePunch={(value) => set("usePunch", value)}
+                />
                 <ConfirmationToggle skip={draft.skipConfirmation} onSkip={(value) => set("skipConfirmation", value)} />
-            </Box>
-
-            <Footer>
-                <Action onClick={onClose}>CANCEL</Action>
-                <Action tone="primary" grow={2} disabled={blocked} onClick={blocked ? undefined : () => onBook?.(draft)}>
-                    {conflict ? "TIME UNAVAILABLE" : !draft.customer ? "PICK A CUSTOMER" : `BOOK · ${usd(fee.amount)}`}
-                </Action>
-            </Footer>
-        </Dialog>
+            </Group>
+        </DialogFrame>
     );
 };
 
@@ -286,8 +352,10 @@ export const BookingDialog = ({
  * and because a modal that shows you a wrong duration and makes you cancel to
  * fix it is the thing the PRD is replacing.
  *
- * The three destructive actions sit together at the bottom, apart from SAVE:
- * cancel, no-show, and — for a repeating booking — clear the whole series.
+ * The three destructive actions sit together near the bottom of the body under
+ * their own heading — no-show, cancel, and, for a repeating booking, clear the
+ * whole series. They are not in the footer: a footer of five keys, four of
+ * them red, taught staff to read none of them.
  */
 export const ReservationDialog = ({
     open = true,
@@ -328,154 +396,120 @@ export const ReservationDialog = ({
     const conflict = conflictFor(reservations, blocks, reservation);
     const series = seriesOf(reservations, reservation.seriesId);
     const freed = reservation.status === "cancelled" || reservation.status === "noShow";
+    const repeating = reservation.repeat !== "none";
 
     return (
-        <Dialog
+        <DialogFrame
             open={open}
             onClose={onClose}
-            maxWidth={false}
-            slotProps={{ paper: { sx: { width: 760, borderRadius: `${appRadius.card}px` } } }}
+            title={reservation.customer.name}
+            subtitle={`${bayById(reservation.bayId).name} · ${fmtTime(reservation.start)} – ${fmtTime(reservation.start + reservation.duration)}`}
+            footer={
+                <>
+                    <FooterButton grow={0} onClick={onClose}>
+                        CANCEL
+                    </FooterButton>
+                    <FooterButton tone="primary" grow={1} disabled={Boolean(conflict)} onClick={onSave}>
+                        {conflict ? "TIME UNAVAILABLE" : "SAVE"}
+                    </FooterButton>
+                </>
+            }
         >
-            <DialogHeader
-                title={reservation.customer.name}
-                subtitle={`${bayById(reservation.bayId).name} · ${fmtTime(reservation.start)} – ${fmtTime(reservation.start + reservation.duration)}`}
-            />
-
-            <Box sx={{ px: 3, py: 2.5, bgcolor: appColors.canvas, maxHeight: 520, overflowY: "auto" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
-                    <StatusPill reservation={reservation} />
-                    {reservation.tabOpen && (
-                        <Typography sx={{ fontSize: 15, color: "#A9661F" }}>Tab open — closes at the end of the session</Typography>
-                    )}
-                    {reservation.repeat !== "none" && (
-                        <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
-                            {repeatLabels[reservation.repeat]} · {series.length} in this series
-                        </Typography>
-                    )}
-                </Box>
-
-                {conflict && (
-                    <Box sx={{ mb: 2.5 }}>
-                        <ConflictWarning conflict={conflict} />
-                    </Box>
+            <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1.5, mb: 3 }}>
+                <StatusPill reservation={reservation} />
+                {reservation.tabOpen && (
+                    <Typography sx={{ fontSize: 15, color: "#A9661F" }}>Tab open — closes at the end of the session</Typography>
                 )}
-
-                {/* Requirement 14, said out loud, because it is the rule most
-                    likely to surprise somebody editing a standing booking. */}
-                {reservation.repeat !== "none" && (
-                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary, mb: 2.5 }}>
-                        Changes here apply to <strong>this occurrence only</strong>.
+                {repeating && (
+                    <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
+                        {repeatLabels[reservation.repeat]} · {series.length} in this series
                     </Typography>
                 )}
+            </Box>
 
-                <Box sx={{ display: "flex", gap: 4, mb: 2.5 }}>
-                    <Box>
-                        <FieldLabel>HOW LONG</FieldLabel>
-                        <Stepper
-                            value={reservation.duration}
-                            onChange={(value) => set("duration", value)}
-                            step={30}
-                            min={30}
-                            max={300}
-                            format={fmtDuration}
-                            label="minutes"
-                        />
-                    </Box>
-                    <Box>
-                        <FieldLabel>PARTY SIZE</FieldLabel>
-                        <Stepper value={reservation.party} onChange={(value) => set("party", value)} min={1} max={12} label="players" />
-                    </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <FieldLabel>BAY</FieldLabel>
-                        <BayPicker value={reservation.bayId} onChange={(bayId) => set("bayId", bayId)} />
-                    </Box>
+            {conflict && (
+                <Box sx={{ mb: 3 }}>
+                    <ConflictWarning conflict={conflict} />
                 </Box>
+            )}
 
-                <Section label="NOTE">
-                    <Box
-                        component="textarea"
-                        value={reservation.note ?? ""}
-                        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => set("note", event.target.value)}
-                        placeholder="Anything the staff should know"
-                        aria-label="Reservation note"
-                        rows={2}
-                        sx={{
-                            width: "100%",
-                            resize: "none",
-                            p: 1.5,
-                            fontFamily: "inherit",
-                            fontSize: 16,
-                            color: appColors.textPrimary,
-                            bgcolor: appColors.fieldFill,
-                            border: "none",
-                            outline: "none",
-                            borderBottom: "1px solid rgba(0,0,0,0.42)",
-                            borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
-                        }}
-                    />
-                </Section>
+            <Group
+                title="Bay and time"
+                hint={
+                    repeating
+                        ? /* Requirement 14, said out loud, because it is the rule most
+                             likely to surprise somebody editing a standing booking. */
+                          "Changes here apply to this occurrence only — the rest of the series is untouched."
+                        : "Changing the bay or the duration re-runs the overlap check, the fee and the punch count."
+                }
+            >
+                <BayPicker value={reservation.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <StepperField
+                    label="How long"
+                    value={reservation.duration}
+                    onChange={(value) => set("duration", value)}
+                    step={30}
+                    min={30}
+                    max={300}
+                    format={fmtDuration}
+                    ariaLabel="minutes"
+                />
+                <StepperField
+                    label="Party size"
+                    value={reservation.party}
+                    onChange={(value) => set("party", value)}
+                    min={1}
+                    max={12}
+                    ariaLabel="players"
+                />
+            </Group>
 
-                <Section label="FEE">
-                    <FeePanel
-                        fee={reservation.fee}
-                        duration={reservation.duration}
-                        customer={reservation.customer}
-                        usePunch={reservation.punchesUsed !== undefined}
-                        onUsePunch={(value) =>
-                            onChange({ ...reservation, punchesUsed: value ? punchesNeeded(reservation.duration) : undefined })
-                        }
-                    />
-                </Section>
+            <Group title="Notes" hint={NOTE_HINT}>
+                <NoteField value={reservation.note ?? ""} onChange={(value) => set("note", value)} />
+            </Group>
+
+            <Group title="Fee">
+                <FeePanel
+                    fee={reservation.fee}
+                    duration={reservation.duration}
+                    customer={reservation.customer}
+                    usePunch={reservation.punchesUsed !== undefined}
+                    onUsePunch={(value) =>
+                        onChange({ ...reservation, punchesUsed: value ? punchesNeeded(reservation.duration) : undefined })
+                    }
+                />
 
                 {/* Requirement 30 — the fee moves to a tab so food and drink can
                     join it and the whole thing closes at the end. */}
                 {!reservation.tabOpen && !freed && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 2,
-                            bgcolor: appColors.surface,
-                            borderRadius: `${appRadius.card}px`,
-                            px: 2.5,
-                            py: 2,
-                        }}
-                    >
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography sx={{ fontSize: 17, color: appColors.textPrimary }}>Open a tab</Typography>
-                            <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>
-                                Moves the bay fee onto a tab so they can add food and drinks and settle at the end.
-                            </Typography>
-                        </Box>
-                        <Action grow={0} onClick={onOpenTab}>
-                            OPEN TAB
-                        </Action>
-                    </Box>
+                    <InlineActionCard
+                        title="Open a tab"
+                        description="Moves the bay fee onto a tab so they can add food and drinks and settle at the end."
+                        actionLabel="OPEN TAB"
+                        onAction={onOpenTab}
+                    />
                 )}
-            </Box>
+            </Group>
 
-            <Footer>
-                <Action onClick={onClose}>CLOSE</Action>
-                {!freed && (
-                    <>
-                        <Action tone="danger" onClick={onNoShow}>
-                            NO-SHOW
-                        </Action>
-                        <Action tone="danger" onClick={onCancelReservation}>
-                            {reservation.repeat === "none" ? "CANCEL BOOKING" : "CANCEL THIS ONE"}
-                        </Action>
-                        {reservation.repeat !== "none" && (
-                            <Action tone="danger" onClick={onClearSeries}>
-                                CLEAR SERIES
-                            </Action>
-                        )}
-                    </>
-                )}
-                <Action tone="primary" grow={2} disabled={Boolean(conflict)} onClick={conflict ? undefined : onSave}>
-                    {conflict ? "TIME UNAVAILABLE" : "SAVE"}
-                </Action>
-            </Footer>
-        </Dialog>
+            {!freed && (
+                <Group
+                    title="Remove this reservation"
+                    hint={
+                        repeating
+                            ? "A no-show still counts toward the daily limit; a cancellation does not. Clearing the series cancels every occurrence."
+                            : "A no-show still counts toward the daily limit; a cancellation does not. Either one gives the bay time back."
+                    }
+                >
+                    <DangerActions
+                        actions={[
+                            { label: "MARK NO-SHOW", onClick: onNoShow },
+                            { label: repeating ? "CANCEL THIS ONE" : "CANCEL BOOKING", onClick: onCancelReservation },
+                            ...(repeating ? [{ label: "CLEAR SERIES", onClick: onClearSeries }] : []),
+                        ]}
+                    />
+                </Group>
+            )}
+        </DialogFrame>
     );
 };
 
@@ -537,96 +571,62 @@ export const BlockDialog = ({
         blocks.filter((b) => b.id !== editing?.id),
         draft,
     );
+    const named = Boolean(draft.label.trim());
+    const repeating = (editing?.repeat ?? "none") !== "none";
 
     return (
-        <Dialog
+        <DialogFrame
             open={open}
             onClose={onClose}
-            maxWidth={false}
-            slotProps={{ paper: { sx: { width: 640, borderRadius: `${appRadius.card}px` } } }}
+            tall={false}
+            width={720}
+            title={editing ? "Edit block" : "Block this time"}
+            subtitle={`${bayById(draft.bayId).name} · ${fmtTime(draft.start)} – ${fmtTime(draft.start + draft.duration)}`}
+            footer={
+                <>
+                    <FooterButton grow={0} onClick={onClose}>
+                        CANCEL
+                    </FooterButton>
+                    <FooterButton tone="primary" grow={1} disabled={Boolean(conflict) || !named} onClick={onSave}>
+                        {conflict ? "TIME UNAVAILABLE" : !named ? "ADD A REASON" : editing ? "SAVE BLOCK" : "ADD BLOCK"}
+                    </FooterButton>
+                </>
+            }
         >
-            <DialogHeader
-                title={editing ? "Edit block" : "Block this time"}
-                subtitle={`${bayById(draft.bayId).name} · ${fmtTime(draft.start)} – ${fmtTime(draft.start + draft.duration)}`}
-            />
+            <Group title="What this time is for" hint="A block belongs to nobody, so the reason is the only thing that explains it.">
+                <TextInputField
+                    label="Why"
+                    value={draft.label}
+                    onChange={(value) => set("label", value)}
+                    placeholder="Maintenance, league night, lesson…"
+                />
+                <BayPicker value={draft.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <StepperField
+                    label="How long"
+                    value={draft.duration}
+                    onChange={(value) => set("duration", value)}
+                    step={30}
+                    min={30}
+                    max={480}
+                    format={fmtDuration}
+                    ariaLabel="minutes"
+                />
 
-            <Box sx={{ px: 3, py: 2.5, bgcolor: appColors.canvas }}>
-                <Section label="WHY">
-                    <Box
-                        component="input"
-                        value={draft.label}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => set("label", event.target.value)}
-                        placeholder="Maintenance, league night, lesson…"
-                        aria-label="Block reason"
-                        sx={{
-                            width: "100%",
-                            minHeight: touchTarget.comfortable,
-                            px: 2,
-                            fontFamily: "inherit",
-                            fontSize: 18,
-                            color: appColors.textPrimary,
-                            bgcolor: appColors.fieldFill,
-                            border: "none",
-                            outline: "none",
-                            borderBottom: "1px solid rgba(0,0,0,0.42)",
-                            borderRadius: `${appRadius.button}px ${appRadius.button}px 0 0`,
-                        }}
+                {conflict && <ConflictWarning conflict={conflict} />}
+
+                <RepeatPicker value={draft.repeat} onChange={(value) => set("repeat", value)} />
+            </Group>
+
+            {editing && (
+                <Group title="Remove this block" hint={repeating ? "Clearing the series removes every occurrence of it." : undefined}>
+                    <DangerActions
+                        actions={[
+                            { label: repeating ? "REMOVE THIS ONE" : "REMOVE BLOCK", onClick: onDelete },
+                            ...(repeating ? [{ label: "CLEAR SERIES", onClick: onClearSeries }] : []),
+                        ]}
                     />
-                </Section>
-
-                <Box sx={{ display: "flex", gap: 4, mb: 2.5 }}>
-                    <Box>
-                        <FieldLabel>HOW LONG</FieldLabel>
-                        <Stepper
-                            value={draft.duration}
-                            onChange={(value) => set("duration", value)}
-                            step={30}
-                            min={30}
-                            max={480}
-                            format={fmtDuration}
-                            label="minutes"
-                        />
-                    </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <FieldLabel>BAY</FieldLabel>
-                        <BayPicker value={draft.bayId} onChange={(bayId) => set("bayId", bayId)} />
-                    </Box>
-                </Box>
-
-                {conflict && (
-                    <Box sx={{ mb: 2.5 }}>
-                        <ConflictWarning conflict={conflict} />
-                    </Box>
-                )}
-
-                <Section label="REPEATS">
-                    <RepeatPicker value={draft.repeat} onChange={(value) => set("repeat", value)} />
-                </Section>
-            </Box>
-
-            <Footer>
-                <Action onClick={onClose}>CANCEL</Action>
-                {editing && (
-                    <>
-                        <Action tone="danger" onClick={onDelete}>
-                            {editing.repeat === "none" ? "REMOVE" : "REMOVE THIS ONE"}
-                        </Action>
-                        {editing.repeat !== "none" && (
-                            <Action tone="danger" onClick={onClearSeries}>
-                                CLEAR SERIES
-                            </Action>
-                        )}
-                    </>
-                )}
-                <Action
-                    tone="primary"
-                    grow={2}
-                    disabled={Boolean(conflict) || !draft.label.trim()}
-                    onClick={conflict || !draft.label.trim() ? undefined : onSave}
-                >
-                    {conflict ? "TIME UNAVAILABLE" : !draft.label.trim() ? "ADD A REASON" : editing ? "SAVE BLOCK" : "ADD BLOCK"}
-                </Action>
-            </Footer>
-        </Dialog>
+                </Group>
+            )}
+        </DialogFrame>
     );
 };
