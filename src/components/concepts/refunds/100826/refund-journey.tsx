@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
+import type { NavKey } from "@/components/app-chrome/nav-items";
 import { OrderLookupResults } from "../order-lookup-results";
 import { dayOrderRows, formatMoney, ordersById, reversalIdFor, type LookupRow, type TransactionOrder } from "../refund-data";
 import { TransactionDetails } from "../transaction-details";
@@ -78,7 +79,22 @@ const rowFor = (order: TransactionOrder): LookupRow => ({
     amount: formatMoney(order.total),
 });
 
-export const RefundJourney = ({ renderModal }: { renderModal: (props: RefundModalProps) => ReactNode }) => {
+export const RefundJourney = ({
+    renderModal,
+    onNavigate,
+    onBack,
+}: {
+    renderModal: (props: RefundModalProps) => ReactNode;
+    /**
+     * Lets a host give the drawer a real destination.
+     *
+     * The stories leave it out and the drawer stays decorative, as it is
+     * everywhere else in Storybook; prototype V2 passes its router through so
+     * the journey is not a dead end inside a working application.
+     */
+    onNavigate?: (key: NavKey) => void;
+    onBack?: () => void;
+}) => {
     const [stage, setStage] = useState<"results" | "details" | "refund">("results");
     const [openOrderId, setOpenOrderId] = useState<string | null>(null);
     /** Reversal orders written during this run, newest first. */
@@ -98,7 +114,12 @@ export const RefundJourney = ({ renderModal }: { renderModal: (props: RefundModa
                 accountLabel=""
                 showLogOut={false}
                 showOverflow={false}
-                actionBar={<ActionButton icon={<ChevronLeftIcon />}>BACK</ActionButton>}
+                onNavigate={onNavigate}
+                actionBar={
+                    <ActionButton icon={<ChevronLeftIcon />} onClick={onBack}>
+                        BACK
+                    </ActionButton>
+                }
             >
                 <OrderLookupResults
                     rows={rows}
@@ -123,6 +144,7 @@ export const RefundJourney = ({ renderModal }: { renderModal: (props: RefundModa
             active="orderlookup"
             accountLabel=""
             showLogOut={false}
+            onNavigate={onNavigate}
             overlay={
                 stage === "refund"
                     ? renderModal({
