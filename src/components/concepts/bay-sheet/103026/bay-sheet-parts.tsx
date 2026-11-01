@@ -1,13 +1,19 @@
-import { Fragment, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import BlockIcon from "@mui/icons-material/Block";
+import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupIcon from "@mui/icons-material/Group";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RepeatIcon from "@mui/icons-material/Repeat";
+import SearchIcon from "@mui/icons-material/Search";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
@@ -16,14 +22,19 @@ import {
     DAY_START,
     bayById,
     bays,
+    filterIsOn,
     fmtDuration,
     fmtTime,
     holdsTime,
+    sheetMarks,
     statusLabel,
     usd,
     type BayBlock,
     type Reservation,
+    type SheetFilter,
+    type SheetMark,
 } from "./bay-data";
+import { FIELD_BORDER, FIELD_RADIUS } from "./bay-form-parts";
 
 /**
  * **The sheet, and the chip that does the work.**
@@ -223,6 +234,8 @@ export interface BaySheetProps {
     reservations: Reservation[];
     blocks: BayBlock[];
     zoom?: Zoom;
+    /** The bays to draw, in sheet order. Omitted or empty means every bay. */
+    bayIds?: string[];
     /** Requirement 19 — a chip opens its details. */
     onOpenReservation?: (reservation: Reservation) => void;
     onOpenBlock?: (block: BayBlock) => void;
@@ -235,115 +248,428 @@ export interface BaySheetProps {
 /** The slot a tap on blank canvas books. Half an hour, like the rules. */
 const SLOT = 30;
 
-export const BaySheet = ({ reservations, blocks, zoom = "normal", onOpenReservation, onOpenBlock, onBookSlot, header }: BaySheetProps) => {
+/**
+ * **The narrowest a bay column gets before the sheet scrolls sideways.**
+ *
+ * 150px is where a chip still reads: a first name, a duration and the marks.
+ * Below it the name starts to ellipse, which is the point at which another
+ * column stops being worth having — so instead of shrinking past it, the sheet
+ * gets wider than the screen and scrolls. Eight columns and the clock gutter
+ * come to 1288, which is why eight is what a 1280 tablet shows.
+ */
+export const COL = 150;
+
+export const BaySheet = ({
+    reservations,
+    blocks,
+    zoom = "normal",
+    bayIds,
+    onOpenReservation,
+    onOpenBlock,
+    onBookSlot,
+    header,
+}: BaySheetProps) => {
     const ppm = PPM[zoom];
     const minutes = DAY_END - DAY_START;
     const height = minutes * ppm;
     const rules = Array.from({ length: minutes / SLOT + 1 }, (_, i) => i * SLOT);
     const slots = Array.from({ length: minutes / SLOT }, (_, i) => DAY_START + i * SLOT);
 
+    const columns = bayIds?.length ? bays.filter((bay) => bayIds.includes(bay.id)) : bays;
+
+    /*
+     * One width, used by the header row, the hour rules and the columns, so
+     * nothing can drift out of line as the sheet scrolls. `max()` is doing the
+     * whole job: with few enough bays it resolves to 100% and the columns
+     * share the screen as they always did; with fifteen it resolves to pixels
+     * and the sheet overflows its scroller instead of squeezing the chips.
+     */
+    const width = `max(100%, ${GUTTER + columns.length * COL}px)`;
+
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: appColors.canvas }}>
             {header}
 
-            {/* Eight columns fit, so the bay names never scroll away. */}
+            {/*
+             * One scroller, both axes. The bay names ride `position: sticky`
+             * at the top and the clock rides it on the left, which is how they
+             * stay put without a second scroll container to keep in step — the
+             * version of this that syncs two scrollbars by hand always ends up
+             * a frame behind on a tablet.
+             */}
+            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", overscrollBehaviorX: "contain" }}>
+                <Box sx={{ width, position: "relative" }}>
+                    <Box
+                        sx={{
+                            position: "sticky",
+                            top: 0,
+                            zIndex: 3,
+                            display: "flex",
+                            bgcolor: appColors.surface,
+                            borderBottom: "1px solid",
+                            borderColor: appColors.divider,
+                        }}
+                    >
+                        {/* The corner: sticky in both directions, so it covers
+                            the clock as the names scroll under it. */}
+                        <Box sx={{ position: "sticky", left: 0, zIndex: 1, flexShrink: 0, width: GUTTER, bgcolor: appColors.surface }} />
+
+                        {columns.map((bay) => (
+                            <Box
+                                key={bay.id}
+                                sx={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    py: 1,
+                                    textAlign: "center",
+                                    borderLeft: "1px solid",
+                                    borderColor: appColors.divider,
+                                }}
+                            >
+                                <Box sx={{ width: 28, height: 4, borderRadius: 2, bgcolor: bay.color, mx: "auto", mb: 0.5 }} />
+                                <Typography noWrap sx={{ px: 0.5, fontSize: 14, fontWeight: 500, color: appColors.textPrimary }}>
+                                    {bay.name}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+
+                    <Box sx={{ display: "flex", height }}>
+                        {/* The clock, pinned left. */}
+                        <Box
+                            sx={{
+                                position: "sticky",
+                                left: 0,
+                                zIndex: 2,
+                                flexShrink: 0,
+                                width: GUTTER,
+                                bgcolor: appColors.canvas,
+                                borderRight: "1px solid",
+                                borderColor: appColors.divider,
+                            }}
+                        >
+                            {rules.map((offset) => {
+                                const mins = DAY_START + offset;
+                                const onHour = mins % 60 === 0;
+
+                                return (
+                                    <Typography
+                                        key={offset}
+                                        sx={{
+                                            position: "absolute",
+                                            left: 8,
+                                            top: offset * ppm - 8,
+                                            fontSize: onHour ? 14 : 12,
+                                            color: onHour ? appColors.textPrimary : appColors.textSecondary,
+                                        }}
+                                    >
+                                        {fmtTime(mins)}
+                                    </Typography>
+                                );
+                            })}
+                        </Box>
+
+                        <Box sx={{ flex: 1, minWidth: 0, position: "relative" }}>
+                            {rules.map((offset) => (
+                                <Box
+                                    key={offset}
+                                    sx={{
+                                        position: "absolute",
+                                        left: 0,
+                                        right: 0,
+                                        top: offset * ppm,
+                                        borderTop: "1px solid",
+                                        borderColor: (DAY_START + offset) % 60 === 0 ? "#C7CCD1" : appColors.divider,
+                                    }}
+                                />
+                            ))}
+
+                            <Box sx={{ position: "absolute", inset: 0, display: "flex" }}>
+                                {columns.map((bay) => (
+                                    <Box
+                                        key={bay.id}
+                                        sx={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            position: "relative",
+                                            borderLeft: "1px solid",
+                                            borderColor: appColors.divider,
+                                        }}
+                                    >
+                                        {/* Blank time is a target, not a gap. */}
+                                        {onBookSlot &&
+                                            slots.map((start) => (
+                                                <ButtonBase
+                                                    key={start}
+                                                    onClick={() => onBookSlot(bay.id, start)}
+                                                    aria-label={`Book ${bay.name} at ${fmtTime(start)}`}
+                                                    sx={{
+                                                        position: "absolute",
+                                                        top: (start - DAY_START) * ppm,
+                                                        left: 0,
+                                                        right: 0,
+                                                        height: SLOT * ppm,
+                                                        "&:hover": { bgcolor: "rgba(92,175,110,0.10)" },
+                                                    }}
+                                                />
+                                            ))}
+
+                                        {blocks
+                                            .filter((block) => block.bayId === bay.id)
+                                            .map((block) => (
+                                                <BlockChip key={block.id} block={block} ppm={ppm} onOpen={onOpenBlock} />
+                                            ))}
+
+                                        {reservations
+                                            .filter((r) => r.bayId === bay.id)
+                                            .map((r) => (
+                                                <ReservationChip key={r.id} reservation={r} ppm={ppm} onOpen={onOpenReservation} />
+                                            ))}
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+/* ------------------------------------------------------------- the filter */
+
+/** A toggle in the filter row. Colour is the only state, so nothing reflows. */
+const FilterChip = ({ label, active, hint, onClick }: { label: string; active: boolean; hint?: string; onClick: () => void }) => (
+    <ButtonBase
+        onClick={onClick}
+        aria-pressed={active}
+        title={hint}
+        sx={{
+            flexShrink: 0,
+            minHeight: 40,
+            px: 1.75,
+            borderRadius: 999,
+            fontSize: 14,
+            whiteSpace: "nowrap",
+            bgcolor: active ? appColors.slate : appColors.surface,
+            color: active ? "#fff" : appColors.textSecondary,
+            border: "1px solid",
+            borderColor: active ? appColors.slate : FIELD_BORDER,
+            "&:hover": { bgcolor: active ? appColors.slate : "rgba(0,0,0,0.04)" },
+        }}
+    >
+        {label}
+    </ButtonBase>
+);
+
+/**
+ * **The filter row — Nov 1, at Justin's request.**
+ *
+ * It sits above the legend and carries four things, left to right: a guest
+ * search, the four marks as toggles, *Hide cancelled*, and the bay picker.
+ * The count on the right is the honest part — a filtered sheet looks exactly
+ * like a quiet day, so the row has to say out loud how much of the day it is
+ * currently hiding.
+ *
+ * **The bay picker earns its place more than any of the others.** Fifteen bays
+ * do not fit a 1280 tablet, so the sheet scrolls sideways; choosing the six
+ * you are running tonight is the one control that makes the scroll go away.
+ */
+export const SheetFilterBar = ({
+    filter,
+    onFilter,
+    shown,
+    total,
+    bayCount = bays.length,
+}: {
+    filter: SheetFilter;
+    onFilter: (filter: SheetFilter) => void;
+    /** Bookings the filter leaves on the sheet, and how many there are in all. */
+    shown: number;
+    total: number;
+    /** Columns the sheet is actually drawing, which a search can narrow. */
+    bayCount?: number;
+}) => {
+    const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+    const on = filterIsOn(filter);
+
+    const toggleMark = (mark: SheetMark) =>
+        onFilter({
+            ...filter,
+            marks: filter.marks.includes(mark) ? filter.marks.filter((value) => value !== mark) : [...filter.marks, mark],
+        });
+
+    const toggleBay = (bayId: string) =>
+        onFilter({
+            ...filter,
+            bayIds: filter.bayIds.includes(bayId) ? filter.bayIds.filter((value) => value !== bayId) : [...filter.bayIds, bayId],
+        });
+
+    const bayLabel = filter.bayIds.length === 0 ? `All ${bays.length} bays` : `${filter.bayIds.length} of ${bays.length} bays`;
+
+    return (
+        <Box
+            sx={{
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                px: 2,
+                py: 1,
+                bgcolor: appColors.surface,
+                borderBottom: "1px solid",
+                borderColor: appColors.divider,
+            }}
+        >
+            {/* The guest search. Name, email or phone, like every other
+                customer field in the feature. */}
             <Box
                 sx={{
                     flexShrink: 0,
                     display: "flex",
-                    pl: `${GUTTER}px`,
+                    alignItems: "center",
+                    gap: 1,
+                    width: 232,
+                    minHeight: 40,
+                    px: 1.25,
                     bgcolor: appColors.surface,
-                    borderBottom: "1px solid",
-                    borderColor: appColors.divider,
+                    border: "1px solid",
+                    borderColor: filter.query ? appColors.green : FIELD_BORDER,
+                    borderRadius: `${FIELD_RADIUS}px`,
                 }}
             >
-                {bays.map((bay) => (
-                    <Box
-                        key={bay.id}
-                        sx={{ flex: 1, minWidth: 0, py: 1, textAlign: "center", borderLeft: "1px solid", borderColor: appColors.divider }}
+                <SearchIcon sx={{ fontSize: 20, color: appColors.textSecondary }} />
+                <Box
+                    component="input"
+                    value={filter.query}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => onFilter({ ...filter, query: event.target.value })}
+                    placeholder="Find a golfer"
+                    aria-label="Find a golfer on the sheet"
+                    sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        p: 0,
+                        border: "none",
+                        outline: "none",
+                        bgcolor: "transparent",
+                        fontFamily: "inherit",
+                        fontSize: 15,
+                        color: appColors.textPrimary,
+                        "&::placeholder": { color: appColors.textSecondary },
+                    }}
+                />
+                {filter.query && (
+                    <ButtonBase
+                        onClick={() => onFilter({ ...filter, query: "" })}
+                        aria-label="Clear the search"
+                        sx={{ flexShrink: 0, width: 24, height: 24, borderRadius: 999 }}
                     >
-                        <Box sx={{ width: 28, height: 4, borderRadius: 2, bgcolor: bay.color, mx: "auto", mb: 0.5 }} />
-                        <Typography noWrap sx={{ fontSize: 14, fontWeight: 500, color: appColors.textPrimary }}>
-                            {bay.name}
-                        </Typography>
-                    </Box>
+                        <CloseIcon sx={{ fontSize: 18, color: appColors.textSecondary }} />
+                    </ButtonBase>
+                )}
+            </Box>
+
+            {/* The marks. Each one narrows, so two of them is a smaller list. */}
+            <Box sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 1, overflowX: "auto", py: 0.25 }}>
+                {sheetMarks.map((mark) => (
+                    <FilterChip
+                        key={mark.id}
+                        label={mark.label}
+                        hint={mark.hint}
+                        active={filter.marks.includes(mark.id)}
+                        onClick={() => toggleMark(mark.id)}
+                    />
                 ))}
+
+                <FilterChip
+                    label="Hide cancelled"
+                    hint="Leave cancellations and no-shows off the sheet"
+                    active={filter.liveOnly}
+                    onClick={() => onFilter({ ...filter, liveOnly: !filter.liveOnly })}
+                />
             </Box>
 
-            <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-                <Box sx={{ position: "relative", height, pl: `${GUTTER}px` }}>
-                    {/* The time axis and its rules, drawn once across every bay. */}
-                    {rules.map((offset) => {
-                        const mins = DAY_START + offset;
-                        const onHour = mins % 60 === 0;
+            <ButtonBase
+                onClick={(event) => setAnchor(event.currentTarget)}
+                aria-label="Choose which bays to show"
+                sx={{
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    minHeight: 40,
+                    pl: 1.75,
+                    pr: 1,
+                    borderRadius: `${FIELD_RADIUS}px`,
+                    border: "1px solid",
+                    borderColor: filter.bayIds.length ? appColors.green : FIELD_BORDER,
+                    fontSize: 14,
+                    whiteSpace: "nowrap",
+                    color: appColors.textPrimary,
+                }}
+            >
+                {bayLabel}
+                <ExpandMoreIcon sx={{ fontSize: 20, color: appColors.textSecondary }} />
+            </ButtonBase>
 
-                        return (
-                            <Fragment key={offset}>
-                                <Typography
-                                    sx={{
-                                        position: "absolute",
-                                        left: 8,
-                                        top: offset * ppm - 8,
-                                        fontSize: onHour ? 14 : 12,
-                                        color: onHour ? appColors.textPrimary : appColors.textSecondary,
-                                    }}
-                                >
-                                    {fmtTime(mins)}
-                                </Typography>
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        left: GUTTER,
-                                        right: 0,
-                                        top: offset * ppm,
-                                        borderTop: "1px solid",
-                                        borderColor: onHour ? "#C7CCD1" : appColors.divider,
-                                    }}
-                                />
-                            </Fragment>
-                        );
-                    })}
+            <Menu
+                open={Boolean(anchor)}
+                anchorEl={anchor}
+                onClose={() => setAnchor(null)}
+                /* Fifteen rows at a touch height is taller than the tablet, so
+                   the list scrolls rather than the page. */
+                slotProps={{ paper: { sx: { maxHeight: 420, minWidth: 232 } } }}
+            >
+                <MenuItem
+                    onClick={() => {
+                        onFilter({ ...filter, bayIds: [] });
+                        setAnchor(null);
+                    }}
+                    sx={{ minHeight: 48, gap: 1.5 }}
+                >
+                    <Box sx={{ flex: 1, fontSize: 15 }}>All bays</Box>
+                    {filter.bayIds.length === 0 && <CheckIcon sx={{ fontSize: 20, color: appColors.greenDark }} />}
+                </MenuItem>
 
-                    <Box sx={{ position: "absolute", inset: 0, left: GUTTER, display: "flex" }}>
-                        {bays.map((bay) => (
-                            <Box
-                                key={bay.id}
-                                sx={{ flex: 1, minWidth: 0, position: "relative", borderLeft: "1px solid", borderColor: appColors.divider }}
-                            >
-                                {/* Blank time is a target, not a gap. */}
-                                {onBookSlot &&
-                                    slots.map((start) => (
-                                        <ButtonBase
-                                            key={start}
-                                            onClick={() => onBookSlot(bay.id, start)}
-                                            aria-label={`Book ${bay.name} at ${fmtTime(start)}`}
-                                            sx={{
-                                                position: "absolute",
-                                                top: (start - DAY_START) * ppm,
-                                                left: 0,
-                                                right: 0,
-                                                height: SLOT * ppm,
-                                                "&:hover": { bgcolor: "rgba(92,175,110,0.10)" },
-                                            }}
-                                        />
-                                    ))}
+                {bays.map((bay) => {
+                    const picked = filter.bayIds.includes(bay.id);
 
-                                {blocks
-                                    .filter((block) => block.bayId === bay.id)
-                                    .map((block) => (
-                                        <BlockChip key={block.id} block={block} ppm={ppm} onOpen={onOpenBlock} />
-                                    ))}
+                    return (
+                        <MenuItem key={bay.id} onClick={() => toggleBay(bay.id)} sx={{ minHeight: 48, gap: 1.5 }}>
+                            <Box sx={{ flexShrink: 0, width: 10, height: 10, borderRadius: 999, bgcolor: bay.color }} />
+                            <Box sx={{ flex: 1, fontSize: 15 }}>{bay.name}</Box>
+                            {picked && <CheckIcon sx={{ fontSize: 20, color: appColors.greenDark }} />}
+                        </MenuItem>
+                    );
+                })}
+            </Menu>
 
-                                {reservations
-                                    .filter((r) => r.bayId === bay.id)
-                                    .map((r) => (
-                                        <ReservationChip key={r.id} reservation={r} ppm={ppm} onOpen={onOpenReservation} />
-                                    ))}
-                            </Box>
-                        ))}
-                    </Box>
-                </Box>
-            </Box>
+            {/*
+             * How much of the day is hidden. A filtered sheet and a quiet day
+             * look identical without this, and the bay count is here rather
+             * than on the button because the button says what you *asked*
+             * for — this says what you got.
+             */}
+            <Typography sx={{ flexShrink: 0, fontSize: 14, color: appColors.textSecondary }}>
+                {on ? `${shown} of ${total}${bayCount < bays.length ? ` · ${bayCount} bays` : ""}` : `${total} bookings`}
+            </Typography>
+
+            {on && (
+                <ButtonBase
+                    onClick={() => onFilter({ query: "", marks: [], bayIds: [], liveOnly: false })}
+                    sx={{
+                        flexShrink: 0,
+                        minHeight: 40,
+                        px: 1.5,
+                        borderRadius: `${FIELD_RADIUS}px`,
+                        fontSize: 14,
+                        letterSpacing: "0.04em",
+                        color: appColors.greenDark,
+                    }}
+                >
+                    CLEAR
+                </ButtonBase>
+            )}
         </Box>
     );
 };

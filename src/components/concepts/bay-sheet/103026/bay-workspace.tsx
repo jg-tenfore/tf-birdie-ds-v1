@@ -4,8 +4,22 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { appColors } from "@/theme/app-replica-tokens";
-import { bayCustomers, feeFor, punchesNeeded, seedBlocks, seedReservations, type BayBlock, type Reservation } from "./bay-data";
-import { BaySheet, SheetLegend, type Zoom } from "./bay-sheet-parts";
+import {
+    bayCustomers,
+    bays,
+    columnsFor,
+    feeFor,
+    matchesFilter,
+    noFilter,
+    punchesNeeded,
+    seedBlocks,
+    seedReservations,
+    type BayBlock,
+    type Reservation,
+    type SheetFilter,
+} from "./bay-data";
+import { BaySheet, SheetFilterBar, SheetLegend, type Zoom } from "./bay-sheet-parts";
+import { ReservationPeek } from "./reservation-peek";
 import { BlockDialog, BookingDialog, ReservationDialog, emptyBlock, emptyDraft, type BlockDraft, type BookingDraft } from "./bay-dialogs";
 
 /**
@@ -21,26 +35,176 @@ import { BlockDialog, BookingDialog, ReservationDialog, emptyBlock, emptyDraft, 
  * static screen.
  */
 
+/* --------------------------------------------------------------- routing */
+
+/**
+ * **Which dialog is open, as a value.**
+ *
+ * Nov 1: the dialogs used to be four pieces of private state, which meant the
+ * only way to show somebody the booking flow was to tell them where to tap.
+ * They are one value now, so the V2 prototype can keep it in the URL and
+ * `#/baysheet/reservation/r-7` opens Justin's standing lesson directly.
+ *
+ * `app/src-v2/screens/bay-sheet.tsx` holds the translation between this and a
+ * path; nothing in here knows about URLs.
+ */
+export type BayDialogRoute =
+    | { kind: "none" }
+    | { kind: "book"; bayId: string; start: number; customerId?: string }
+    /* `edit` is the full dialog; without it, the peek panel. */
+    | { kind: "reservation"; id: string; edit?: boolean }
+    | { kind: "newblock"; bayId: string; start: number }
+    | { kind: "block"; id: string };
+
+export const noDialog: BayDialogRoute = { kind: "none" };
+
+/** A stable identity for the open dialog, used to reset its draft on change. */
+const routeKey = (route: BayDialogRoute): string =>
+    route.kind === "book"
+        ? `book:${route.bayId}:${route.start}:${route.customerId ?? ""}`
+        : route.kind === "newblock"
+          ? `newblock:${route.bayId}:${route.start}`
+          : route.kind === "reservation"
+            ? `reservation:${route.id}:${route.edit ? "edit" : "peek"}`
+            : route.kind === "block"
+              ? `block:${route.id}`
+              : "none";
+
+/* ---------------------------------------------------- the dialog wrappers */
+
+/**
+ * Each dialog's draft lives in a small wrapper that the workspace mounts with
+ * a `key`. Changing the route remounts the wrapper, which is how the draft
+ * resets without an effect that writes state during render.
+ */
+
+const BookingFlow = ({
+    bayId,
+    start,
+    customerId,
+    reservations,
+    blocks,
+    onBook,
+    onClose,
+}: {
+    bayId: string;
+    start: number;
+    customerId?: string;
+    reservations: Reservation[];
+    blocks: BayBlock[];
+    onBook: (draft: BookingDraft) => void;
+    onClose: () => void;
+}) => {
+    const [draft, setDraft] = useState<BookingDraft>(() => {
+        const seeded = emptyDraft(bayId, start);
+        const who = customerId ? bayCustomers.find((candidate) => candidate.id === customerId) : undefined;
+
+        /* A story or a link whose point is a warning has to show the warning:
+           both guards only fire once the flow knows who it is for. */
+        return who ? { ...seeded, customer: who, usePunch: (who.punchesLeft ?? 0) > 0 } : seeded;
+    });
+
+    return (
+        <BookingDialog draft={draft} reservations={reservations} blocks={blocks} onChange={setDraft} onBook={onBook} onClose={onClose} />
+    );
+};
+
+const ReservationFlow = ({
+    reservation,
+    reservations,
+    blocks,
+    onSave,
+    onCancelReservation,
+    onStatus,
+    onClearSeries,
+    onOpenTab,
+    onClose,
+}: {
+    reservation: Reservation;
+    reservations: Reservation[];
+    blocks: BayBlock[];
+    onSave: (reservation: Reservation) => void;
+    onCancelReservation: (reservation: Reservation) => void;
+    onStatus: (reservation: Reservation, status: Reservation["status"]) => void;
+    onClearSeries: (reservation: Reservation) => void;
+    onOpenTab: (reservation: Reservation) => void;
+    onClose: () => void;
+}) => {
+    const [edited, setEdited] = useState<Reservation>(reservation);
+
+    return (
+        <ReservationDialog
+            reservation={edited}
+            reservations={reservations}
+            blocks={blocks}
+            onChange={setEdited}
+            onSave={() => onSave(edited)}
+            onCancelReservation={() => onCancelReservation(edited)}
+            onStatus={(status) => onStatus(edited, status)}
+            onClearSeries={() => onClearSeries(edited)}
+            onOpenTab={() => onOpenTab(edited)}
+            onClose={onClose}
+        />
+    );
+};
+
+const BlockFlow = ({
+    seed,
+    editing,
+    reservations,
+    blocks,
+    onSave,
+    onDelete,
+    onClearSeries,
+    onClose,
+}: {
+    seed: BlockDraft;
+    editing?: BayBlock;
+    reservations: Reservation[];
+    blocks: BayBlock[];
+    onSave: (draft: BlockDraft, editing?: BayBlock) => void;
+    onDelete: (block: BayBlock) => void;
+    onClearSeries: (block: BayBlock) => void;
+    onClose: () => void;
+}) => {
+    const [draft, setDraft] = useState<BlockDraft>(seed);
+
+    return (
+        <BlockDialog
+            draft={draft}
+            editing={editing}
+            reservations={reservations}
+            blocks={blocks}
+            onChange={setDraft}
+            onSave={() => onSave(draft, editing)}
+            onDelete={() => editing && onDelete(editing)}
+            onClearSeries={() => editing && onClearSeries(editing)}
+            onClose={onClose}
+        />
+    );
+};
+
+/* ------------------------------------------------------------- the whole */
+
 export interface BayWorkspaceProps {
     /** Opening day. Both default to the seeded day with every state on it. */
     initialReservations?: Reservation[];
     initialBlocks?: BayBlock[];
     zoom?: Zoom;
-    /** Starts with the booking dialog open on this slot, for the stories. */
-    openBooking?: { bayId: string; start: number };
     /**
-     * Opens that booking with a customer already chosen.
-     *
-     * A story whose point is a warning has to show the warning: both guards
-     * only fire once the flow knows who it is for.
+     * Which dialog to open on mount, for a story that is about one dialog.
+     * Ignored when `route` is supplied, which makes the workspace controlled.
      */
-    openBookingCustomerId?: string;
-    /** Starts with this reservation's details open, for the stories. */
-    openReservationId?: string;
-    /** Starts with the block dialog open, for the stories. */
-    openBlock?: { bayId: string; start: number };
+    initialRoute?: BayDialogRoute;
+    /** Controlled mode: the open dialog, and where to send a change to it. */
+    route?: BayDialogRoute;
+    onRoute?: (route: BayDialogRoute) => void;
     /** The sheet alone, with no legend — for an embedded view. */
     hideLegend?: boolean;
+    /** The sheet alone, with no filter row — for an embedded view. */
+    hideFilter?: boolean;
+    /** Opening filter, for a story or a link that is about a narrowed sheet. */
+    initialFilter?: SheetFilter;
     /** A banner above the sheet, used by the prototype for its own chrome. */
     banner?: React.ReactNode;
     /** Told when something lands in the order, so a POS can take the money. */
@@ -51,32 +215,34 @@ export const BayWorkspace = ({
     initialReservations = seedReservations,
     initialBlocks = seedBlocks,
     zoom = "normal",
-    openBooking,
-    openBookingCustomerId,
-    openReservationId,
-    openBlock,
+    initialRoute,
+    route: controlledRoute,
+    onRoute,
     hideLegend = false,
+    hideFilter = false,
+    initialFilter,
     banner,
     onCharge,
 }: BayWorkspaceProps) => {
     const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
     const [blocks, setBlocks] = useState<BayBlock[]>(initialBlocks);
 
-    const [draft, setDraft] = useState<BookingDraft | undefined>(() => {
-        if (!openBooking) return undefined;
+    /* Controlled when the host passes a route — the V2 prototype does, so the
+       URL is the source of truth there — and self-driven otherwise. */
+    const [selfRoute, setSelfRoute] = useState<BayDialogRoute>(initialRoute ?? noDialog);
+    const route = controlledRoute ?? selfRoute;
+    const go = (next: BayDialogRoute) => (onRoute ? onRoute(next) : setSelfRoute(next));
+    const close = () => go(noDialog);
 
-        const seeded = emptyDraft(openBooking.bayId, openBooking.start);
-        const who = openBookingCustomerId ? bayCustomers.find((c) => c.id === openBookingCustomerId) : undefined;
-
-        return who ? { ...seeded, customer: who, usePunch: (who.punchesLeft ?? 0) > 0 } : seeded;
-    });
-    const [editing, setEditing] = useState<Reservation | undefined>(
-        openReservationId ? initialReservations.find((r) => r.id === openReservationId) : undefined,
-    );
-    const [blockDraft, setBlockDraft] = useState<BlockDraft | undefined>(
-        openBlock ? emptyBlock(openBlock.bayId, openBlock.start) : undefined,
-    );
-    const [editingBlock, setEditingBlock] = useState<BayBlock | undefined>(undefined);
+    /*
+     * The filter is a view, not a fact: it changes what the sheet draws and
+     * nothing else. Every dialog below still gets the whole day, because an
+     * overlap check that only saw the filtered bookings would happily let you
+     * double-book a golfer you had filtered out.
+     */
+    const [filter, setFilter] = useState<SheetFilter>(initialFilter ?? noFilter);
+    const onSheet = reservations.filter((reservation) => matchesFilter(reservation, filter));
+    const columns = columnsFor(reservations, filter);
 
     /** What the staff did last, so a prototype can show it happened. */
     const [toast, setToast] = useState<string | undefined>(undefined);
@@ -84,120 +250,121 @@ export const BayWorkspace = ({
 
     /* ------------------------------------------------------------ booking */
 
-    const book = (d: BookingDraft) => {
-        if (!d.customer) return;
+    const book = (draft: BookingDraft) => {
+        if (!draft.customer) return;
 
-        const fee = feeFor(d.customer.tier, d.start, d.duration);
+        const fee = feeFor(draft.customer.tier, draft.start, draft.duration);
         const id = `r-new-${reservations.length + 1}`;
 
         const next: Reservation = {
             id,
-            bayId: d.bayId,
-            start: d.start,
-            duration: d.duration,
-            customer: d.customer,
-            party: d.party,
+            bayId: draft.bayId,
+            start: draft.start,
+            duration: draft.duration,
+            customer: draft.customer,
+            party: draft.party,
             status: "booked",
             paid: false,
             tabOpen: false,
-            note: d.note.trim() || undefined,
+            note: draft.note.trim() || undefined,
             fee,
-            punchesUsed: d.usePunch ? Math.min(punchesNeeded(d.duration), d.customer.punchesLeft ?? 0) : undefined,
-            repeat: d.repeat,
-            seriesId: d.repeat === "none" ? undefined : `s-new-${id}`,
+            punchesUsed: draft.usePunch ? Math.min(punchesNeeded(draft.duration), draft.customer.punchesLeft ?? 0) : undefined,
+            repeat: draft.repeat,
+            seriesId: draft.repeat === "none" ? undefined : `s-new-${id}`,
         };
 
         setReservations((prev) => [...prev, next]);
-        setDraft(undefined);
+        close();
         say(
-            d.skipConfirmation
-                ? `Booked ${d.customer.name} — no confirmation sent.`
-                : `Booked ${d.customer.name} — confirmation sent to ${d.customer.email}.`,
+            draft.skipConfirmation
+                ? `Booked ${draft.customer.name} — no confirmation sent.`
+                : `Booked ${draft.customer.name} — confirmation sent to ${draft.customer.email}.`,
         );
     };
 
     /* ------------------------------------------------------- the one open */
 
-    const save = () => {
-        if (!editing) return;
-        setReservations((prev) => prev.map((r) => (r.id === editing.id ? editing : r)));
-        setEditing(undefined);
+    const save = (edited: Reservation) => {
+        setReservations((prev) => prev.map((r) => (r.id === edited.id ? edited : r)));
+        close();
         say("Reservation updated.");
     };
 
-    const setStatus = (status: Reservation["status"], message: string) => {
-        if (!editing) return;
-        setReservations((prev) => prev.map((r) => (r.id === editing.id ? { ...editing, status } : r)));
-        setEditing(undefined);
+    const setStatus = (edited: Reservation, status: Reservation["status"], message: string) => {
+        setReservations((prev) => prev.map((r) => (r.id === edited.id ? { ...edited, status } : r)));
+        close();
         say(message);
     };
 
     /** Requirement 15 — the whole series goes, not just this occurrence. */
-    const clearSeries = () => {
-        if (!editing?.seriesId) return;
-        const id = editing.seriesId;
+    const clearSeries = (edited: Reservation) => {
+        if (!edited.seriesId) return;
+        const id = edited.seriesId;
         setReservations((prev) => prev.map((r) => (r.seriesId === id ? { ...r, status: "cancelled" } : r)));
-        setEditing(undefined);
+        close();
         say("Every occurrence in the series was cancelled.");
     };
 
-    const openTab = () => {
-        if (!editing) return;
-        const next = { ...editing, tabOpen: true };
-        setReservations((prev) => prev.map((r) => (r.id === editing.id ? next : r)));
-        setEditing(undefined);
+    const openTab = (edited: Reservation) => {
+        const next = { ...edited, tabOpen: true };
+        setReservations((prev) => prev.map((r) => (r.id === edited.id ? next : r)));
+        close();
         onCharge?.(next, "tab");
-        say(`Tab opened for ${editing.customer.name} — the bay fee is on it.`);
+        say(`Tab opened for ${edited.customer.name} — the bay fee is on it.`);
     };
 
     /* ------------------------------------------------------------- blocks */
 
-    const saveBlock = () => {
-        if (!blockDraft) return;
-
-        if (editingBlock) {
-            setBlocks((prev) => prev.map((b) => (b.id === editingBlock.id ? { ...editingBlock, ...blockDraft } : b)));
+    const saveBlock = (draft: BlockDraft, editing?: BayBlock) => {
+        if (editing) {
+            setBlocks((prev) => prev.map((b) => (b.id === editing.id ? { ...editing, ...draft } : b)));
             say("Block updated.");
         } else {
             const id = `bl-new-${blocks.length + 1}`;
-            setBlocks((prev) => [...prev, { id, ...blockDraft, seriesId: blockDraft.repeat === "none" ? undefined : `s-new-${id}` }]);
+            setBlocks((prev) => [...prev, { id, ...draft, seriesId: draft.repeat === "none" ? undefined : `s-new-${id}` }]);
             say("Block added.");
         }
 
-        setBlockDraft(undefined);
-        setEditingBlock(undefined);
+        close();
     };
 
-    const removeBlock = (series: boolean) => {
-        if (!editingBlock) return;
-        const { id, seriesId } = editingBlock;
-        setBlocks((prev) => prev.filter((b) => (series && seriesId ? b.seriesId !== seriesId : b.id !== id)));
-        setBlockDraft(undefined);
-        setEditingBlock(undefined);
+    const removeBlock = (block: BayBlock, series: boolean) => {
+        setBlocks((prev) => prev.filter((b) => (series && block.seriesId ? b.seriesId !== block.seriesId : b.id !== block.id)));
+        close();
         say(series ? "Every block in the series was removed." : "Block removed.");
     };
+
+    /* --------------------------------------------------- what is open now */
+
+    const openReservation = route.kind === "reservation" ? reservations.find((r) => r.id === route.id) : undefined;
+    const openBlock = route.kind === "block" ? blocks.find((b) => b.id === route.id) : undefined;
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: appColors.canvas }}>
             {banner}
 
             <BaySheet
-                reservations={reservations}
+                reservations={onSheet}
                 blocks={blocks}
                 zoom={zoom}
-                header={hideLegend ? undefined : <SheetLegend />}
-                onBookSlot={(bayId, start) => setDraft(emptyDraft(bayId, start))}
-                onOpenReservation={(reservation) => setEditing(reservation)}
-                onOpenBlock={(block) => {
-                    setEditingBlock(block);
-                    setBlockDraft({
-                        bayId: block.bayId,
-                        start: block.start,
-                        duration: block.duration,
-                        label: block.label,
-                        repeat: block.repeat,
-                    });
-                }}
+                bayIds={columns}
+                header={
+                    <>
+                        {!hideFilter && (
+                            <SheetFilterBar
+                                filter={filter}
+                                onFilter={setFilter}
+                                shown={onSheet.length}
+                                total={reservations.length}
+                                bayCount={columns.length || bays.length}
+                            />
+                        )}
+                        {!hideLegend && <SheetLegend />}
+                    </>
+                }
+                onBookSlot={(bayId, start) => go({ kind: "book", bayId, start })}
+                onOpenReservation={(reservation) => go({ kind: "reservation", id: reservation.id })}
+                onOpenBlock={(block) => go({ kind: "block", id: block.id })}
             />
 
             {/* What just happened, since a prototype has no server to tell you. */}
@@ -220,46 +387,106 @@ export const BayWorkspace = ({
                 </Box>
             )}
 
-            {draft && (
-                <BookingDialog
-                    draft={draft}
+            {route.kind === "book" && (
+                <BookingFlow
+                    key={routeKey(route)}
+                    bayId={route.bayId}
+                    start={route.start}
+                    customerId={route.customerId}
                     reservations={reservations}
                     blocks={blocks}
-                    onChange={setDraft}
                     onBook={book}
-                    onClose={() => setDraft(undefined)}
+                    onClose={close}
                 />
             )}
 
-            {editing && (
-                <ReservationDialog
-                    reservation={editing}
+            {/* A tap on a chip peeks first. Most taps are not edits — they are
+                "who is this, have they shown up, what do they owe". */}
+            {openReservation && route.kind === "reservation" && !route.edit && (
+                <ReservationPeek
+                    key={routeKey(route)}
+                    reservation={openReservation}
+                    reservations={reservations}
+                    onStatus={(status) =>
+                        setStatus(
+                            openReservation,
+                            status,
+                            {
+                                booked: "Put back to booked.",
+                                checkedIn: "Checked in.",
+                                noShow: "Marked as a no-show. It still counts toward the daily limit.",
+                                cancelled: "Reservation cancelled — the bay time is free again.",
+                            }[status],
+                        )
+                    }
+                    onEdit={() => go({ kind: "reservation", id: openReservation.id, edit: true })}
+                    onOpenTab={() => openTab(openReservation)}
+                    onCancelReservation={() =>
+                        setStatus(openReservation, "cancelled", "Reservation cancelled — the bay time is free again.")
+                    }
+                    onClose={close}
+                />
+            )}
+
+            {openReservation && route.kind === "reservation" && route.edit && (
+                <ReservationFlow
+                    key={routeKey(route)}
+                    reservation={openReservation}
                     reservations={reservations}
                     blocks={blocks}
-                    onChange={setEditing}
                     onSave={save}
-                    onCancelReservation={() => setStatus("cancelled", "Reservation cancelled — the bay time is free again.")}
-                    onNoShow={() => setStatus("noShow", "Marked as a no-show. It still counts toward the daily limit.")}
+                    onCancelReservation={(edited) => setStatus(edited, "cancelled", "Reservation cancelled — the bay time is free again.")}
+                    /* The status toggle at the top of the dialog, not a one-shot
+                       button: checking someone in is as routine as marking them
+                       absent, and both must be reversible. */
+                    onStatus={(edited, status) =>
+                        setStatus(
+                            edited,
+                            status,
+                            {
+                                booked: "Put back to booked.",
+                                checkedIn: "Checked in.",
+                                noShow: "Marked as a no-show. It still counts toward the daily limit.",
+                                cancelled: "Reservation cancelled — the bay time is free again.",
+                            }[status],
+                        )
+                    }
                     onClearSeries={clearSeries}
                     onOpenTab={openTab}
-                    onClose={() => setEditing(undefined)}
+                    onClose={close}
                 />
             )}
 
-            {blockDraft && (
-                <BlockDialog
-                    draft={blockDraft}
+            {route.kind === "newblock" && (
+                <BlockFlow
+                    key={routeKey(route)}
+                    seed={emptyBlock(route.bayId, route.start)}
                     reservations={reservations}
                     blocks={blocks}
-                    editing={editingBlock}
-                    onChange={setBlockDraft}
                     onSave={saveBlock}
-                    onDelete={() => removeBlock(false)}
-                    onClearSeries={() => removeBlock(true)}
-                    onClose={() => {
-                        setBlockDraft(undefined);
-                        setEditingBlock(undefined);
+                    onDelete={(block) => removeBlock(block, false)}
+                    onClearSeries={(block) => removeBlock(block, true)}
+                    onClose={close}
+                />
+            )}
+
+            {openBlock && (
+                <BlockFlow
+                    key={routeKey(route)}
+                    seed={{
+                        bayId: openBlock.bayId,
+                        start: openBlock.start,
+                        duration: openBlock.duration,
+                        label: openBlock.label,
+                        repeat: openBlock.repeat,
                     }}
+                    editing={openBlock}
+                    reservations={reservations}
+                    blocks={blocks}
+                    onSave={saveBlock}
+                    onDelete={(block) => removeBlock(block, false)}
+                    onClearSeries={(block) => removeBlock(block, true)}
+                    onClose={close}
                 />
             )}
         </Box>
