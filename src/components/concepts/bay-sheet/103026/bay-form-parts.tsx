@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
 import ButtonBase from "@mui/material/ButtonBase";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
@@ -41,6 +42,7 @@ import {
     type RepeatFreq,
     type Reservation,
     type ReservationStatus,
+    statusOf,
 } from "./bay-data";
 
 /**
@@ -459,7 +461,7 @@ export const CustomerPicker = ({
                     <Typography sx={{ fontSize: 13, color: appColors.textSecondary, mb: 0.4 }}>Customer</Typography>
                     <Typography sx={{ fontSize: 18, color: appColors.textPrimary }}>{customer.name}</Typography>
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                        {customer.tier}
+                        {statusOf(customer.status).label}
                         {customer.punchCardName ? ` · ${customer.punchCardName}: ${customer.punchesLeft} left` : ""}
                     </Typography>
                 </Box>
@@ -540,7 +542,7 @@ export const CustomerPicker = ({
                         >
                             <Typography sx={{ fontSize: 17, color: appColors.textPrimary }}>{result.name}</Typography>
                             <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                                {result.tier} · {result.phone}
+                                {statusOf(result.status).label} · {result.phone}
                             </Typography>
                         </ButtonBase>
                     ))}
@@ -630,6 +632,136 @@ export const BayPicker = ({
         value={bayById(value).id}
         onChange={onChange}
         options={bays.map((bay) => ({ value: bay.id, label: bay.name, dot: bay.color }))}
+    />
+);
+
+/**
+ * **Nov 2 — picking more than one bay.**
+ *
+ * Weston, in the review: *"being able to block like multiple bays at the same
+ * time, because if not, you have to do it one by one."* Cody's answer was to
+ * take an array at the endpoint, and Justin's was checkboxes in the dropdown
+ * that is already there — so this is the same field, the same chevron and the
+ * same menu as `SelectField`, with a box in front of every row.
+ *
+ * It stays open while you tick, because the whole point is choosing several
+ * and a menu that shut after each one would be slower than the one-by-one it
+ * replaces.
+ */
+export const MultiSelectField = ({
+    label,
+    values,
+    options,
+    onChange,
+    hint,
+    ariaLabel,
+    summary,
+}: {
+    label: string;
+    values: string[];
+    options: SelectOption[];
+    onChange: (values: string[]) => void;
+    hint?: string;
+    ariaLabel?: string;
+    /** How to say what is ticked. Defaults to the labels, comma separated. */
+    summary?: (chosen: SelectOption[]) => string;
+}) => {
+    const chosen = options.filter((option) => values.includes(option.value));
+    const say = summary ?? ((picked: SelectOption[]) => picked.map((option) => option.label).join(", "));
+
+    return (
+        <FieldShell label={label} hint={hint} trailing={<ExpandMoreIcon sx={{ fontSize: 26, color: appColors.textSecondary }} />}>
+            <Select
+                multiple
+                displayEmpty
+                value={values}
+                onChange={(event) => onChange(typeof event.target.value === "string" ? [event.target.value] : event.target.value)}
+                variant="standard"
+                fullWidth
+                IconComponent={() => null}
+                inputProps={{ "aria-label": ariaLabel ?? label }}
+                MenuProps={{ slotProps: { paper: { sx: { mt: 0.5, borderRadius: `${FIELD_RADIUS}px`, maxHeight: 420 } } } }}
+                renderValue={() => (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+                        {/* The ticked swatches, up to four, so a glance at the
+                            closed field still shows which bays are in. */}
+                        {chosen.slice(0, 4).map(
+                            (option) =>
+                                option.dot && (
+                                    <Box
+                                        key={option.value}
+                                        sx={{ flexShrink: 0, width: 12, height: 12, borderRadius: "50%", bgcolor: option.dot }}
+                                    />
+                                ),
+                        )}
+                        <Typography
+                            component="span"
+                            noWrap
+                            sx={{ fontSize: 18, color: chosen.length ? appColors.textPrimary : appColors.textSecondary, minWidth: 0 }}
+                        >
+                            {chosen.length ? say(chosen) : "None selected"}
+                        </Typography>
+                    </Box>
+                )}
+                sx={{
+                    "&::before, &::after": { display: "none" },
+                    "& .MuiSelect-select": {
+                        p: 0,
+                        minHeight: "0 !important",
+                        bgcolor: "transparent !important",
+                        display: "flex",
+                        alignItems: "center",
+                    },
+                }}
+            >
+                {options.map((option) => (
+                    <MenuItem key={option.value} value={option.value} sx={{ minHeight: touchTarget.min, gap: 0.5, fontSize: 17, pl: 0.5 }}>
+                        <Checkbox
+                            checked={values.includes(option.value)}
+                            tabIndex={-1}
+                            disableRipple
+                            sx={{ color: FIELD_BORDER, "&.Mui-checked": { color: appColors.green } }}
+                        />
+                        {option.dot && <Box sx={{ flexShrink: 0, width: 12, height: 12, borderRadius: "50%", bgcolor: option.dot }} />}
+                        <Box sx={{ minWidth: 0, ml: 0.75 }}>
+                            {option.label}
+                            {option.caption && (
+                                <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>{option.caption}</Typography>
+                            )}
+                        </Box>
+                    </MenuItem>
+                ))}
+            </Select>
+        </FieldShell>
+    );
+};
+
+/**
+ * The bay picker that takes several.
+ *
+ * One bay reads as its name, which is what the single picker said and what
+ * staff will see almost every time. More than one counts them, because five
+ * bay names do not fit the field and "5 bays" is the fact that matters.
+ */
+export const BayMultiPicker = ({
+    values,
+    onChange,
+    label = "Bays",
+    hint,
+}: {
+    values: string[];
+    onChange: (bayIds: string[]) => void;
+    label?: string;
+    hint?: string;
+}) => (
+    <MultiSelectField
+        label={label}
+        hint={hint}
+        ariaLabel="Bays"
+        values={values}
+        onChange={onChange}
+        options={bays.map((bay) => ({ value: bay.id, label: bay.name, dot: bay.color }))}
+        summary={(chosen) => (chosen.length === 1 ? chosen[0].label : `${chosen.length} bays`)}
     />
 );
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import Box from "@mui/material/Box";
@@ -14,7 +13,6 @@ import { touchTarget } from "@/theme/tokens";
 import {
     SERIES_WEEKS,
     bayById,
-    bays,
     bookingsToday,
     conflictFor,
     feeFor,
@@ -33,6 +31,7 @@ import {
     type ReservationStatus,
 } from "./bay-data";
 import {
+    BayMultiPicker,
     BayPicker,
     ConfirmationToggle,
     ConflictBand,
@@ -44,18 +43,12 @@ import {
     FIELD_RADIUS,
     FeePanel,
     LimitWarning,
-    ListRow,
     NoteField,
     OccasionRail,
     OrderLine,
-    ROW_PAD,
     ROW_RULE,
     RemoveGroup,
     RepeatPicker,
-    RowSelect,
-    RowStepper,
-    Section,
-    SectionRule,
     SectionTitle,
     StatusSegments,
     StepperField,
@@ -214,10 +207,69 @@ export const FooterButton = ({
 const NOTE_HINT = "Notes show on the bay sheet itself (requirement 4), so what goes here is read by everyone all day.";
 
 /** One block of the body: a heading, an optional explanation, the fields. */
-const Group = ({ title, hint, children }: { title?: string; hint?: string; children: React.ReactNode }) => (
+/**
+ * One question, or a few related ones, under a heading.
+ *
+ * Nov 2: `aside` and `boxed` arrived when the details dialog was rebuilt on
+ * this component. `aside` is the one number a heading is allowed to carry —
+ * the order's total — and `boxed` wraps the children in a single bordered
+ * card instead of giving each its own box, which is what an itemised list of
+ * charges wants. Both came from `Section`, the component this replaced, so
+ * nothing the details dialog could say before it can say now.
+ */
+const Group = ({
+    title,
+    hint,
+    aside,
+    boxed = false,
+    children,
+}: {
+    title?: string;
+    hint?: string;
+    aside?: React.ReactNode;
+    boxed?: boolean;
+    children: React.ReactNode;
+}) => (
     <Box sx={{ mb: 3 }}>
-        {title && <SectionTitle hint={hint}>{title}</SectionTitle>}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>{children}</Box>
+        {title && (
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <SectionTitle hint={hint}>{title}</SectionTitle>
+                </Box>
+                {aside}
+            </Box>
+        )}
+        <Box
+            sx={
+                boxed
+                    ? {
+                          bgcolor: appColors.surface,
+                          border: "1px solid",
+                          borderColor: FIELD_BORDER,
+                          borderRadius: `${FIELD_RADIUS}px`,
+                          overflow: "hidden",
+                      }
+                    : { display: "flex", flexDirection: "column", gap: 2 }
+            }
+        >
+            {children}
+        </Box>
+    </Box>
+);
+
+/**
+ * The occasion rail, with its caption.
+ *
+ * Nov 2: it was on the details dialog and not the booking one, which meant a
+ * birthday could only be recorded after the booking existed. Both dialogs now
+ * render this, which is most of what *"align edit vs create"* meant.
+ */
+const OccasionPicker = ({ value, onChange }: { value?: string; onChange: (value: string | undefined) => void }) => (
+    <Box>
+        <Typography sx={{ fontSize: 12, letterSpacing: "0.08em", fontWeight: 600, color: appColors.textSecondary, mb: 0.75 }}>
+            OCCASION — OPTIONAL
+        </Typography>
+        <OccasionRail value={value} onChange={onChange} />
     </Box>
 );
 
@@ -230,6 +282,8 @@ export interface BookingDraft {
     party: number;
     customer?: BayCustomer;
     note: string;
+    /** Nov 2 — the booking dialog can mark the occasion too, as edit always could. */
+    occasion?: string;
     repeat: RepeatFreq;
     usePunch: boolean;
     skipConfirmation: boolean;
@@ -279,7 +333,7 @@ export const BookingDialog = ({
     const conflict = conflictFor(reservations, blocks, draft);
     const alreadyToday = draft.customer ? bookingsToday(reservations, draft.customer.id) : [];
     const atLimit = alreadyToday.length >= 2;
-    const fee = feeFor(draft.customer?.tier ?? "Guest", draft.start, draft.duration);
+    const fee = feeFor(draft.customer?.status ?? "public", draft.start, draft.duration);
 
     /* Requirement 10 has no override; requirement 18 does. */
     const blocked = Boolean(conflict) || !draft.customer || (atLimit && !draft.overrideLimit);
@@ -357,6 +411,7 @@ export const BookingDialog = ({
             </Group>
 
             <Group title="Notes" hint={NOTE_HINT}>
+                <OccasionPicker value={draft.occasion} onChange={(value) => set("occasion", value)} />
                 <NoteField value={draft.note} onChange={(value) => set("note", value)} />
             </Group>
 
@@ -442,7 +497,7 @@ const useReservationEdits = (reservation: Reservation, onChange: (reservation: R
         const next = { ...reservation, [key]: value };
 
         /* Requirement 23 — the fee and the punch count follow the booking. */
-        next.fee = feeFor(next.customer.tier, next.start, next.duration);
+        next.fee = feeFor(next.customer.status, next.start, next.duration);
         if (next.punchesUsed !== undefined) next.punchesUsed = punchesNeeded(next.duration);
 
         onChange(next);
@@ -520,7 +575,6 @@ export const ReservationDialog = ({
        an edit silently: the X, the footer's CANCEL, escape, and the backdrop. */
     const { pristine, dirty } = useDirty(reservation);
     const [confirming, setConfirming] = useState(false);
-    const [pickingGuest, setPickingGuest] = useState(false);
     const attemptClose = () => (dirty ? setConfirming(true) : onClose?.());
 
     return (
@@ -528,14 +582,19 @@ export const ReservationDialog = ({
             open={open}
             onClose={attemptClose}
             closeKey
-            width={640}
-            tall={false}
-            padX={2.5}
-            padY={1.25}
+            /* Nov 2: no width, no padding overrides. It used to run narrower
+               and tighter than the booking dialog because it was a list of
+               rows; now that it asks its questions in the same boxes, the
+               same frame is the rest of the alignment. */
             title={reservation.customer.name}
+            /* Nov 2: just bay and time, the same subtitle the booking dialog
+               has. The series clause moved into the Repeat group, where it can
+               say the cadence as well as the count — and where it stops
+               reading as "1 in the series" on a series with one visit on the
+               sheet. */
             subtitle={`${bayById(reservation.bayId).name} · ${fmtTime(reservation.start)} – ${fmtTime(
                 reservation.start + reservation.duration,
-            )}${repeating ? ` · ${series.length} in the series, edits hit this one` : ""}`}
+            )}`}
             footer={
                 <>
                     <FooterButton grow={0} onClick={attemptClose}>
@@ -549,74 +608,68 @@ export const ReservationDialog = ({
         >
             {conflict && <ConflictBand conflict={conflict} />}
 
-            {/* The segmented control is back, and labelled. Status is the one
-                question the dialog answers at a glance, so it goes first and
-                it stays legible without being opened. */}
-            <Box sx={{ mb: 2 }}>
-                <SectionRule>Reservation status</SectionRule>
+            {/* Status is the one question the dialog answers at a glance, so it
+                goes first and stays legible without being opened. It is the
+                only group the booking dialog has no counterpart for — nothing
+                is checked in before it exists. */}
+            <Group title="Status" hint="Checking in, no-showing or cancelling takes effect on the sheet as soon as you pick it.">
                 <StatusSegments status={reservation.status} onStatus={onStatus} fill />
-            </Box>
+            </Group>
 
-            <Section label="Reservation">
-                {/* Requirement 7: the tier decides the fee, so who the booking
-                    is for is a priced field, not a caption. It was settable
-                    only at booking time until now — this row is where a
-                    mis-picked guest gets fixed. */}
-                <ListRow label="Guest" hint={`${reservation.customer.tier} · ${reservation.customer.phone}`} padY={ROW_PAD}>
-                    <ButtonBase
-                        onClick={() => setPickingGuest(true)}
-                        sx={{
-                            gap: 0.75,
-                            minHeight: touchTarget.min,
-                            px: 1.5,
-                            borderRadius: `${FIELD_RADIUS}px`,
-                            color: appColors.textPrimary,
-                            fontSize: 17,
-                            "&:hover": { bgcolor: appColors.canvasAlt },
-                        }}
-                    >
-                        {reservation.customer.name}
-                        <ChevronRightIcon sx={{ fontSize: 20, color: appColors.textSecondary }} />
-                    </ButtonBase>
-                </ListRow>
+            {/* Requirement 7: the status decides the fee, so who the booking is
+                for is a priced field, not a caption. Nov 2 — this was a row
+                that opened a second dialog on top of this one; it is now the
+                same inline picker the booking dialog uses, which is one fewer
+                layer and one fewer way for the two screens to disagree. */}
+            <Group title="Who it is for" hint="The fee, the punch card and the daily limit all follow from this.">
+                <CustomerPicker customer={reservation.customer} onPick={(picked) => set("customer", picked)} />
+            </Group>
 
-                <ListRow label="Bay" padY={ROW_PAD}>
-                    <RowSelect
-                        ariaLabel="Bay"
-                        value={reservation.bayId}
-                        onChange={(bayId) => set("bayId", bayId)}
-                        options={bays.map((bay) => ({ value: bay.id, label: bay.name, dot: bay.color }))}
-                    />
-                </ListRow>
+            <Group title="Bay and time" hint="Moving the bay or the duration re-runs the overlap check and the fee.">
+                <BayPicker value={reservation.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <StepperField
+                    label="How long"
+                    value={reservation.duration}
+                    onChange={(value) => set("duration", value)}
+                    step={30}
+                    min={30}
+                    max={300}
+                    format={fmtDuration}
+                    ariaLabel="minutes"
+                />
+                <StepperField
+                    label="Party size"
+                    value={reservation.party}
+                    onChange={(value) => set("party", value)}
+                    min={1}
+                    max={12}
+                    ariaLabel="players"
+                />
+            </Group>
 
-                <ListRow label="How long" padY={ROW_PAD}>
-                    <RowStepper
-                        value={reservation.duration}
-                        onChange={(value) => set("duration", value)}
-                        step={30}
-                        min={30}
-                        max={300}
-                        format={fmtDuration}
-                        unit="minutes"
-                    />
-                </ListRow>
+            <Group title="Repeat">
+                <RepeatPicker
+                    value={reservation.repeat}
+                    onChange={(value) => set("repeat", value)}
+                    hint={
+                        repeating
+                            ? `${scheduleLabel(reservation.repeat, reservation.start)} · ${visits} visits booked out ${SERIES_WEEKS} weeks${
+                                  series.length > 1 ? `, ${series.length} of them on today's sheet` : ""
+                              }. Edits here hit this visit; use CLEAR SERIES below for all of them.`
+                            : undefined
+                    }
+                />
+            </Group>
 
-                <ListRow label="Party size" padY={ROW_PAD}>
-                    <RowStepper value={reservation.party} onChange={(value) => set("party", value)} min={1} max={12} unit="players" />
-                </ListRow>
+            <Group title="Notes" hint={NOTE_HINT}>
+                <OccasionPicker value={reservation.occasion} onChange={(value) => set("occasion", value)} />
+                <NoteField value={reservation.note ?? ""} onChange={(value) => set("note", value)} />
+            </Group>
 
-                <ListRow label="Repeats" padY={ROW_PAD} last>
-                    <RowSelect
-                        ariaLabel="Repeats"
-                        value={reservation.repeat}
-                        onChange={(value) => set("repeat", value as RepeatFreq)}
-                        options={(Object.keys(repeatLabels) as RepeatFreq[]).map((freq) => ({ value: freq, label: repeatLabels[freq] }))}
-                    />
-                </ListRow>
-            </Section>
-
-            <Section
-                label="Order"
+            <Group
+                title="Order"
+                hint="Never typed. It is derived from who it is for, when it starts and how long it runs."
+                boxed
                 aside={
                     <Typography sx={{ flexShrink: 0, fontSize: 18, fontWeight: 600, color: appColors.textPrimary }}>
                         <Box component="span" sx={{ fontSize: 13, fontWeight: 400, color: appColors.textSecondary, mr: 0.75 }}>
@@ -695,7 +748,7 @@ export const ReservationDialog = ({
                         last
                     />
                 )}
-            </Section>
+            </Group>
 
             {/* Requirement 30, standing on its own — a second act, not a field. */}
             {!freed &&
@@ -742,60 +795,7 @@ export const ReservationDialog = ({
                     </ButtonBase>
                 ))}
 
-            {/* The note keeps company with the removal keys at the foot: both are
-                things you do to a booking once the booking itself is settled. */}
-            <Section label="Note — shows on the bay sheet">
-                <Typography
-                    sx={{ px: 2, pt: 1.25, fontSize: 12, letterSpacing: "0.08em", fontWeight: 600, color: appColors.textSecondary }}
-                >
-                    OCCASION — OPTIONAL
-                </Typography>
-                <OccasionRail value={reservation.occasion} onChange={(value) => set("occasion", value)} />
-
-                <Box
-                    component="textarea"
-                    value={reservation.note ?? ""}
-                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => set("note", event.target.value)}
-                    placeholder="Anything the staff should know — who is paying, a club fitting, a group running late"
-                    aria-label="Note"
-                    rows={6}
-                    sx={{
-                        display: "block",
-                        width: "100%",
-                        resize: "vertical",
-                        px: 2,
-                        py: 1.5,
-                        border: "none",
-                        outline: "none",
-                        bgcolor: "transparent",
-                        fontFamily: "inherit",
-                        fontSize: 16,
-                        lineHeight: 1.5,
-                        color: appColors.textPrimary,
-                        "&::placeholder": { color: appColors.textSecondary },
-                    }}
-                />
-            </Section>
-
             {!freed && <RemoveGroup repeating={repeating} onCancelReservation={onCancelReservation} onClearSeries={onClearSeries} />}
-
-            {/* Changing the guest re-prices the booking through the same path
-                every other edit takes, so the order updates as it closes. */}
-            <Dialog
-                open={pickingGuest}
-                onClose={() => setPickingGuest(false)}
-                maxWidth={false}
-                slotProps={{ paper: { sx: { width: 560, maxWidth: "92vw", borderRadius: `${FIELD_RADIUS + 2}px`, p: 3 } } }}
-            >
-                <Typography sx={{ fontSize: 20, color: appColors.textPrimary, mb: 2 }}>Who is this booking for?</Typography>
-                <CustomerPicker
-                    customer={reservation.customer}
-                    onPick={(picked) => {
-                        set("customer", picked);
-                        setPickingGuest(false);
-                    }}
-                />
-            </Dialog>
 
             <UnsavedPrompt
                 open={confirming}
@@ -818,7 +818,18 @@ export const ReservationDialog = ({
 /* -------------------------------------------------------------- 3. blocks */
 
 export interface BlockDraft {
-    bayId: string;
+    /**
+     * **Nov 2 — bays, plural.**
+     *
+     * Weston: *"being able to block like multiple bays at the same time,
+     * because if not, you have to do it one by one."* Cody will take an array
+     * at the endpoint, so the draft carries one.
+     *
+     * Tapping a blank slot still seeds exactly one, which is the common case;
+     * the checkboxes are there for the morning somebody has to close half the
+     * house for a league.
+     */
+    bayIds: string[];
     start: number;
     duration: number;
     label: string;
@@ -826,7 +837,7 @@ export interface BlockDraft {
 }
 
 export const emptyBlock = (bayId: string, start: number): BlockDraft => ({
-    bayId,
+    bayIds: [bayId],
     start,
     duration: 60,
     label: "",
@@ -842,6 +853,17 @@ export const emptyBlock = (bayId: string, start: number): BlockDraft => ({
  * **Weston's open question is unanswered**: *"can a block be placed over
  * existing reservations?"* This says no, by running the same overlap check a
  * booking runs; it is the cautious reading, and the easy one to reverse.
+ *
+ * ## Nov 2 — several bays at once
+ *
+ * The bay field is now checkboxes, and the overlap check runs once per ticked
+ * bay. A bay that is busy fails the whole dialog rather than being quietly
+ * dropped: blocking four of five bays when staff asked for five is the kind
+ * of half-success that gets found out at 7pm.
+ *
+ * Editing works the same way, and that is deliberate. An existing block owns
+ * one bay; ticking more while editing it moves that one and creates the rest,
+ * because *"also block these"* is the thing staff will be trying to do.
  */
 export const BlockDialog = ({
     open = true,
@@ -868,13 +890,23 @@ export const BlockDialog = ({
     onClose?: () => void;
 }) => {
     const set = <K extends keyof BlockDraft>(key: K, value: BlockDraft[K]) => onChange({ ...draft, [key]: value });
-    const conflict = conflictFor(
-        reservations,
-        blocks.filter((b) => b.id !== editing?.id),
-        draft,
-    );
+
+    /* One check per ticked bay, against everything except the block being
+       edited. `clashes` keeps the bay with its reason so the warning can name
+       both rather than saying "that time is taken" and leaving staff to find
+       out where. */
+    const standing = blocks.filter((b) => b.id !== editing?.id);
+    const clashes = draft.bayIds
+        .map((bayId) => ({ bayId, conflict: conflictFor(reservations, standing, { bayId, start: draft.start, duration: draft.duration }) }))
+        .filter((entry) => entry.conflict !== undefined);
+
     const named = Boolean(draft.label.trim());
     const repeating = (editing?.repeat ?? "none") !== "none";
+    const count = draft.bayIds.length;
+    const none = count === 0;
+    /* Which bays, in words. One is its name — what the field said before today
+       — and several is a count, because five names do not fit a subtitle. */
+    const which = count === 1 ? bayById(draft.bayIds[0]).name : `${count} bays`;
 
     return (
         <DialogFrame
@@ -883,14 +915,26 @@ export const BlockDialog = ({
             tall={false}
             width={720}
             title={editing ? "Edit block" : "Block this time"}
-            subtitle={`${bayById(draft.bayId).name} · ${fmtTime(draft.start)} – ${fmtTime(draft.start + draft.duration)}`}
+            subtitle={`${none ? "No bay chosen" : which} · ${fmtTime(draft.start)} – ${fmtTime(draft.start + draft.duration)}`}
             footer={
                 <>
                     <FooterButton grow={0} onClick={onClose}>
                         CANCEL
                     </FooterButton>
-                    <FooterButton tone="primary" grow={1} disabled={Boolean(conflict) || !named} onClick={onSave}>
-                        {conflict ? "TIME UNAVAILABLE" : !named ? "ADD A REASON" : editing ? "SAVE BLOCK" : "ADD BLOCK"}
+                    <FooterButton tone="primary" grow={1} disabled={clashes.length > 0 || !named || none} onClick={onSave}>
+                        {none
+                            ? "PICK A BAY"
+                            : clashes.length > 0
+                              ? clashes.length === 1
+                                  ? "TIME UNAVAILABLE"
+                                  : `${clashes.length} BAYS UNAVAILABLE`
+                              : !named
+                                ? "ADD A REASON"
+                                : editing
+                                  ? "SAVE BLOCK"
+                                  : count === 1
+                                    ? "ADD BLOCK"
+                                    : `BLOCK ${count} BAYS`}
                     </FooterButton>
                 </>
             }
@@ -902,7 +946,11 @@ export const BlockDialog = ({
                     onChange={(value) => set("label", value)}
                     placeholder="Maintenance, league night, lesson…"
                 />
-                <BayPicker value={draft.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <BayMultiPicker
+                    values={draft.bayIds}
+                    onChange={(bayIds) => set("bayIds", bayIds)}
+                    hint="Tick every bay this applies to. They all get the same reason, time and repeat."
+                />
                 <StepperField
                     label="How long"
                     value={draft.duration}
@@ -914,7 +962,19 @@ export const BlockDialog = ({
                     ariaLabel="minutes"
                 />
 
-                {conflict && <ConflictWarning conflict={conflict} />}
+                {clashes[0]?.conflict && (
+                    <>
+                        {/* The first reason in full, because it is the same
+                            warning a single-bay block has always shown. */}
+                        <ConflictWarning conflict={clashes[0].conflict} />
+                        {clashes.length > 1 && (
+                            <Typography sx={{ fontSize: 15, color: appColors.red }}>
+                                {clashes.length} of the {count} bays are busy then:{" "}
+                                {clashes.map((entry) => bayById(entry.bayId).name).join(", ")}. Untick those, or move the time.
+                            </Typography>
+                        )}
+                    </>
+                )}
 
                 <RepeatPicker value={draft.repeat} onChange={(value) => set("repeat", value)} />
             </Group>

@@ -19,8 +19,8 @@ import {
     type SheetFilter,
 } from "./bay-data";
 import { BayRows } from "./bay-rows";
-import { BaySheet, SheetFilterBar, SheetLegend, type Zoom } from "./bay-sheet-parts";
-import { ReservationPeek } from "./reservation-peek";
+import { BaySheet, SheetFilterBar, SheetLegend, type SheetTint, type Zoom } from "./bay-sheet-parts";
+import { ReservationPeek, type PeekWidth } from "./reservation-peek";
 import { BlockDialog, BookingDialog, ReservationDialog, emptyBlock, emptyDraft, type BlockDraft, type BookingDraft } from "./bay-dialogs";
 
 /**
@@ -205,6 +205,13 @@ export interface BayWorkspaceProps {
     /** The layout. Defaults to the calendar grid, which is Option A. */
     variant?: SheetVariant;
     /**
+     * Nov 2 — the course-level colour preference and the panel width, both
+     * passed through so a story can show them on the real screen rather than
+     * on a component in isolation. Neither is a staff-facing switch.
+     */
+    tint?: SheetTint;
+    peekWidth?: PeekWidth;
+    /**
      * Which dialog to open on mount, for a story that is about one dialog.
      * Ignored when `route` is supplied, which makes the workspace controlled.
      */
@@ -229,6 +236,8 @@ export const BayWorkspace = ({
     initialBlocks = seedBlocks,
     zoom = "normal",
     variant = "calendar",
+    tint = "ribbon",
+    peekWidth = "wide",
     initialRoute,
     route: controlledRoute,
     onRoute,
@@ -267,7 +276,7 @@ export const BayWorkspace = ({
     const book = (draft: BookingDraft) => {
         if (!draft.customer) return;
 
-        const fee = feeFor(draft.customer.tier, draft.start, draft.duration);
+        const fee = feeFor(draft.customer.status, draft.start, draft.duration);
         const id = `r-new-${reservations.length + 1}`;
 
         const next: Reservation = {
@@ -281,6 +290,7 @@ export const BayWorkspace = ({
             paid: false,
             tabOpen: false,
             note: draft.note.trim() || undefined,
+            occasion: draft.occasion,
             fee,
             punchesUsed: draft.usePunch ? Math.min(punchesNeeded(draft.duration), draft.customer.punchesLeft ?? 0) : undefined,
             repeat: draft.repeat,
@@ -329,14 +339,33 @@ export const BayWorkspace = ({
 
     /* ------------------------------------------------------------- blocks */
 
+    /**
+     * Nov 2: one draft can now become several blocks, one per ticked bay.
+     *
+     * A block still belongs to exactly one bay in the model, because that is
+     * what the sheet draws and what the shipping data says. The plural lives
+     * in the dialog and ends here — which also means a series started across
+     * four bays shares one `seriesId`, so clearing it clears all four.
+     */
     const saveBlock = (draft: BlockDraft, editing?: BayBlock) => {
+        const { bayIds, ...shared } = draft;
+        const stamp = Date.now();
+        const seriesId = draft.repeat === "none" ? undefined : `s-new-${stamp}`;
+
         if (editing) {
-            setBlocks((prev) => prev.map((b) => (b.id === editing.id ? { ...editing, ...draft } : b)));
-            say("Block updated.");
+            /* The edited block keeps its id and takes the first bay. Any bay
+               ticked on top of it becomes a new block beside it, because
+               "also block these" is what the extra ticks mean. */
+            const [first, ...also] = bayIds;
+
+            setBlocks((prev) => [
+                ...prev.map((b) => (b.id === editing.id ? { ...editing, ...shared, bayId: first ?? editing.bayId } : b)),
+                ...also.map((bayId, index) => ({ id: `bl-new-${stamp}-${index}`, bayId, ...shared, seriesId })),
+            ]);
+            say(also.length ? `Block updated, and added to ${also.length} more ${also.length === 1 ? "bay" : "bays"}.` : "Block updated.");
         } else {
-            const id = `bl-new-${blocks.length + 1}`;
-            setBlocks((prev) => [...prev, { id, ...draft, seriesId: draft.repeat === "none" ? undefined : `s-new-${id}` }]);
-            say("Block added.");
+            setBlocks((prev) => [...prev, ...bayIds.map((bayId, index) => ({ id: `bl-new-${stamp}-${index}`, bayId, ...shared, seriesId }))]);
+            say(bayIds.length === 1 ? "Block added." : `${bayIds.length} bays blocked.`);
         }
 
         close();
@@ -364,6 +393,7 @@ export const BayWorkspace = ({
                 reservations={onSheet}
                 blocks={blocks}
                 zoom={zoom}
+                tint={tint}
                 bayIds={columns}
                 header={
                     <>
@@ -422,6 +452,7 @@ export const BayWorkspace = ({
             {openReservation && route.kind === "reservation" && !route.edit && (
                 <ReservationPeek
                     key={routeKey(route)}
+                    width={peekWidth}
                     reservation={openReservation}
                     reservations={reservations}
                     onStatus={(status) =>
@@ -491,7 +522,7 @@ export const BayWorkspace = ({
                 <BlockFlow
                     key={routeKey(route)}
                     seed={{
-                        bayId: openBlock.bayId,
+                        bayIds: [openBlock.bayId],
                         start: openBlock.start,
                         duration: openBlock.duration,
                         label: openBlock.label,

@@ -86,13 +86,64 @@ export const usd = (value: number): string => `$${value.toLocaleString("en-US", 
 
 /* ------------------------------------------------------------- the people */
 
+/**
+ * **Nov 2 — what the colour on a booking means.**
+ *
+ * Until today a chip carried its bay's colour on its left edge, which spent
+ * the only colour a card has on the one fact its column heading already
+ * states. Weston asked for the tee sheet's pattern instead: the bar reports
+ * who the golfer is to the course — a simulator member, a member, or the
+ * public — so a glance at the sheet answers *who is in the building*, and the
+ * bay stays identified by the column the chip sits in.
+ *
+ * Three, because those are the three he named. It is a list rather than a
+ * union of two so a course with more types is a data change and not a code
+ * change.
+ *
+ * **Open for Weston**: the colours are chosen to stay apart at 4px, not
+ * matched to the tee sheet's existing bar. If the tee sheet already has
+ * values for these statuses, those should win over these.
+ */
+export type CustomerStatus = "simulator" | "member" | "public";
+
+export const customerStatuses: {
+    id: CustomerStatus;
+    label: string;
+    /** The ribbon colour: read against white, at 4px. */
+    color: string;
+    /**
+     * The same colour darkened enough to carry white text, for the courses
+     * that choose a filled card over a ribbon. Every one of these clears 4.5:1
+     * against white, which the ribbon colours do not have to and do not.
+     */
+    solid: string;
+    /** What a staff member learns from seeing it on the sheet. */
+    hint: string;
+}[] = [
+    {
+        id: "simulator",
+        label: "Simulator Member",
+        color: "#00796B",
+        solid: "#00695C",
+        hint: "Pays the member rate, and usually holds a punch card.",
+    },
+    { id: "member", label: "Member", color: "#5E35B1", solid: "#4527A0", hint: "A club member without a simulator membership." },
+    { id: "public", label: "Public", color: "#78909C", solid: "#546E7A", hint: "No membership, so the walk-up rate applies." },
+];
+
+/** Public is the fallback: the status that assumes the least. */
+export const statusOf = (status: CustomerStatus) => customerStatuses.find((entry) => entry.id === status) ?? customerStatuses[2];
+
 export interface BayCustomer {
     id: string;
     name: string;
     email: string;
     phone: string;
-    /** Decides which fee applies — requirement 7. */
-    tier: "Member" | "Guest";
+    /**
+     * Who the golfer is to the course. It colours the ribbon on the chip and
+     * decides which fee applies — requirement 7.
+     */
+    status: CustomerStatus;
     /** Punches left on a membership card, requirement 8. Undefined: no card. */
     punchesLeft?: number;
     punchCardName?: string;
@@ -104,7 +155,7 @@ export const bayCustomers: BayCustomer[] = [
         name: "Justin Girard",
         email: "hello@girardjustin.com",
         phone: "(555) 215-8844",
-        tier: "Member",
+        status: "simulator",
         punchesLeft: 6,
         punchCardName: "Sim 10-Pack",
     },
@@ -113,22 +164,22 @@ export const bayCustomers: BayCustomer[] = [
         name: "Avery Nguyen",
         email: "avery.nguyen@email.com",
         phone: "(801) 555-0148",
-        tier: "Member",
+        status: "simulator",
         punchesLeft: 1,
         punchCardName: "Sim 10-Pack",
     },
-    { id: "c-3", name: "Maya Okafor", email: "m.okafor@email.com", phone: "(801) 555-0192", tier: "Guest" },
-    { id: "c-4", name: "Riley Hartman", email: "riley.hartman@email.com", phone: "(385) 555-0107", tier: "Guest" },
+    { id: "c-3", name: "Maya Okafor", email: "m.okafor@email.com", phone: "(801) 555-0192", status: "public" },
+    { id: "c-4", name: "Riley Hartman", email: "riley.hartman@email.com", phone: "(385) 555-0107", status: "public" },
     {
         id: "c-5",
         name: "Sofia Reyes",
         email: "sofia.reyes@email.com",
         phone: "(385) 555-0163",
-        tier: "Member",
+        status: "simulator",
         punchesLeft: 0,
         punchCardName: "Sim 10-Pack",
     },
-    { id: "c-6", name: "Jordan Blake", email: "jordan.blake@email.com", phone: "(801) 555-0175", tier: "Guest" },
+    { id: "c-6", name: "Jordan Blake", email: "jordan.blake@email.com", phone: "(801) 555-0175", status: "public" },
     /*
      * c-7 and up arrived with bays 9–15. They are a separate six on purpose:
      * the daily-limit stories lean on exactly how many bookings c-1 through
@@ -140,31 +191,29 @@ export const bayCustomers: BayCustomer[] = [
         name: "Dana Whitfield",
         email: "dana.whitfield@email.com",
         phone: "(801) 555-0221",
-        tier: "Member",
+        status: "simulator",
         punchesLeft: 4,
         punchCardName: "Sim 10-Pack",
     },
-    { id: "c-8", name: "Elliot Chen", email: "elliot.chen@email.com", phone: "(385) 555-0244", tier: "Guest" },
+    { id: "c-8", name: "Elliot Chen", email: "elliot.chen@email.com", phone: "(385) 555-0244", status: "public" },
     {
         id: "c-9",
         name: "Priya Raman",
         email: "priya.raman@email.com",
         phone: "(801) 555-0268",
-        tier: "Member",
+        status: "simulator",
         punchesLeft: 9,
         punchCardName: "Sim 20-Pack",
     },
-    { id: "c-10", name: "Marcus Webb", email: "marcus.webb@email.com", phone: "(385) 555-0287", tier: "Guest" },
+    { id: "c-10", name: "Marcus Webb", email: "marcus.webb@email.com", phone: "(385) 555-0287", status: "public" },
     {
         id: "c-11",
         name: "Tessa Lindqvist",
         email: "tessa.l@email.com",
         phone: "(801) 555-0303",
-        tier: "Member",
-        punchesLeft: 2,
-        punchCardName: "Sim 10-Pack",
+        status: "member",
     },
-    { id: "c-12", name: "Owen Castellano", email: "owen.c@email.com", phone: "(385) 555-0329", tier: "Guest" },
+    { id: "c-12", name: "Owen Castellano", email: "owen.c@email.com", phone: "(385) 555-0329", status: "member" },
 ];
 
 export const searchBayCustomers = (query: string): BayCustomer[] => {
@@ -183,12 +232,30 @@ export const searchBayCustomers = (query: string): BayCustomer[] => {
  */
 export const PEAK_FROM = 16 * 60;
 
-export const feeFor = (tier: BayCustomer["tier"], start: number, duration: number) => {
+/**
+ * **Nov 2 — one rate per status.**
+ *
+ * It was two rates under three statuses, with a simulator member and a club
+ * member paying the same for sim time. Justin's call in the review was that
+ * they should differ: a simulator membership has to be worth something on sim
+ * time, which is the point of selling one.
+ *
+ * **The middle pair of numbers is a placeholder and Weston's to set.** The
+ * two outer rates are what the reference device charges; 35 and 50 are simply
+ * between them, and changing them is this table and nothing else.
+ */
+const RATES: Record<CustomerStatus, { normal: number; peak: number }> = {
+    simulator: { normal: 30, peak: 40 },
+    member: { normal: 35, peak: 50 },
+    public: { normal: 45, peak: 60 },
+};
+
+export const feeFor = (status: CustomerStatus, start: number, duration: number) => {
     const peak = start >= PEAK_FROM;
-    const hourly = tier === "Member" ? (peak ? 40 : 30) : peak ? 60 : 45;
+    const hourly = peak ? RATES[status].peak : RATES[status].normal;
 
     return {
-        name: `Sim Hour — ${tier}${peak ? " · Peak" : ""}`,
+        name: `Sim Hour — ${statusOf(status).label}${peak ? " · Peak" : ""}`,
         hourly,
         amount: Number(((hourly * duration) / 60).toFixed(2)),
     };
@@ -319,7 +386,7 @@ const reservation = (
         status: "booked",
         paid: false,
         tabOpen: false,
-        fee: feeFor(who.tier, start, duration),
+        fee: feeFor(who.status, start, duration),
         repeat: "none",
         ...extra,
     };

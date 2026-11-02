@@ -534,7 +534,7 @@ export const Fee: Story = {
                 </Box>
 
                 <FeePanel
-                    fee={feeFor(customer?.tier ?? "Guest", 10 * 60, duration)}
+                    fee={feeFor(customer?.status ?? "public", 10 * 60, duration)}
                     duration={duration}
                     customer={customer}
                     usePunch={usePunch}

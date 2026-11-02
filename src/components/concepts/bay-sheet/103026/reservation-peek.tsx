@@ -26,6 +26,7 @@ import {
     usd,
     type Reservation,
     type ReservationStatus,
+    statusOf,
 } from "./bay-data";
 import { FIELD_BORDER, FIELD_RADIUS, ROW_RULE, SectionRule, StatusSegments } from "./bay-form-parts";
 
@@ -56,9 +57,21 @@ import { FIELD_BORDER, FIELD_RADIUS, ROW_RULE, SectionRule, StatusSegments } fro
  */
 
 /** One fact: a quiet label above the value, which reads faster than a row of pairs. */
-const PeekRow = ({ label, value, icon: Icon }: { label: string; value: React.ReactNode; icon?: typeof PhoneIcon }) => (
+const PeekRow = ({
+    label,
+    value,
+    icon: Icon,
+    dot,
+}: {
+    label: string;
+    value: React.ReactNode;
+    icon?: typeof PhoneIcon;
+    /** A colour swatch before the value — the customer status uses it. */
+    dot?: string;
+}) => (
     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25, px: 2, py: 1.25, borderBottom: "1px solid", borderColor: ROW_RULE }}>
         {Icon && <Icon sx={{ flexShrink: 0, fontSize: 19, mt: 0.25, color: appColors.textSecondary }} />}
+        {dot && <Box sx={{ flexShrink: 0, width: 11, height: 11, borderRadius: "50%", bgcolor: dot, mt: 1.75 }} />}
         <Box sx={{ minWidth: 0 }}>
             <Typography sx={{ fontSize: 12, letterSpacing: "0.06em", color: appColors.textSecondary }}>{label.toUpperCase()}</Typography>
             <Typography sx={{ fontSize: 16, color: appColors.textPrimary }}>{value}</Typography>
@@ -120,6 +133,29 @@ const PeekAction = ({
     </ButtonBase>
 );
 
+/**
+ * **Nov 2 — the three widths to choose between.**
+ *
+ * The panel was 420 since it was built. Weston asked for it wider in the
+ * review — *"it was a little bigger on the T-sheet designs"* — and Justin
+ * offered three to look at rather than one to argue about. On the 1280
+ * landscape tablet these read as a third, a bit over a third, and getting on
+ * for half the screen.
+ *
+ * **Nov 2, decided: `wide`.** 560 is the default — the one closest to the
+ * tee sheet's own detail panel, and the one to pick if the panel grows, which
+ * it has done twice already. The other two stay as stories to compare.
+ *
+ * Cody's constraint may still move it, and that is expected rather than a
+ * problem: *"in a lot of these cases, they're going on an onscreen
+ * keyboard."* A keyboard takes roughly the bottom 40% of the tablet, so
+ * whatever the width, the panel's body scrolls and the actions stay at its
+ * foot. He will flex the final number against a real one.
+ */
+export const PEEK_WIDTHS = { snug: 420, roomy: 480, wide: 560 } as const;
+
+export type PeekWidth = keyof typeof PEEK_WIDTHS;
+
 export interface ReservationPeekProps {
     open?: boolean;
     reservation: Reservation;
@@ -129,6 +165,8 @@ export interface ReservationPeekProps {
     onOpenTab?: () => void;
     onCancelReservation?: () => void;
     onClose?: () => void;
+    /** Which of the three widths to draw. Nov 2: 560 unless a story says otherwise. */
+    width?: PeekWidth;
 }
 
 export const ReservationPeek = ({
@@ -140,6 +178,7 @@ export const ReservationPeek = ({
     onOpenTab,
     onCancelReservation,
     onClose,
+    width = "wide",
 }: ReservationPeekProps) => {
     const { customer } = reservation;
     const repeating = reservation.repeat !== "none";
@@ -170,12 +209,17 @@ export const ReservationPeek = ({
                         right: 0,
                         bottom: 0,
                         m: 0,
-                        width: 420,
+                        width: PEEK_WIDTHS[width],
                         maxWidth: "92vw",
                         maxHeight: "100vh",
                         borderRadius: 0,
                         display: "flex",
                         flexDirection: "column",
+                        /* The same fact the chip's ribbon reports, on the same
+                           edge, so opening a booking confirms what the sheet
+                           already said rather than restating it in words. */
+                        borderLeft: "6px solid",
+                        borderColor: statusOf(customer.status).color,
                     },
                 },
             }}
@@ -273,8 +317,8 @@ export const ReservationPeek = ({
                 </Box>
                 {/* Requirement 7 and 8 both live on the guest, and neither was
                     visible anywhere once the booking was made. */}
-                <PeekCard label="Guest">
-                    <PeekRow label="Pricing tier" value={customer.tier} />
+                <PeekCard label="Customer">
+                    <PeekRow label="Customer status" value={statusOf(customer.status).label} dot={statusOf(customer.status).color} />
                     <PeekRow label="Phone" value={customer.phone} icon={PhoneIcon} />
                     <PeekRow label="Email" value={customer.email} icon={EmailIcon} />
                     {customer.punchCardName && (
