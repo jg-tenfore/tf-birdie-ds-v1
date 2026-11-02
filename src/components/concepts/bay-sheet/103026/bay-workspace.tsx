@@ -18,6 +18,7 @@ import {
     type Reservation,
     type SheetFilter,
 } from "./bay-data";
+import { BayRows } from "./bay-rows";
 import { BaySheet, SheetFilterBar, SheetLegend, type Zoom } from "./bay-sheet-parts";
 import { ReservationPeek } from "./reservation-peek";
 import { BlockDialog, BookingDialog, ReservationDialog, emptyBlock, emptyDraft, type BlockDraft, type BookingDraft } from "./bay-dialogs";
@@ -186,11 +187,23 @@ const BlockFlow = ({
 
 /* ------------------------------------------------------------- the whole */
 
+/**
+ * **Which of the two sheets to draw.**
+ *
+ * Nov 2: `calendar` is Option A, the time grid this build started as.
+ * `rows` is Option B, the same day drawn the way the shipping tee sheet draws
+ * its own — one card per half hour. Everything below the sheet is shared, so
+ * the variant decides the layout and nothing else.
+ */
+export type SheetVariant = "calendar" | "rows";
+
 export interface BayWorkspaceProps {
     /** Opening day. Both default to the seeded day with every state on it. */
     initialReservations?: Reservation[];
     initialBlocks?: BayBlock[];
     zoom?: Zoom;
+    /** The layout. Defaults to the calendar grid, which is Option A. */
+    variant?: SheetVariant;
     /**
      * Which dialog to open on mount, for a story that is about one dialog.
      * Ignored when `route` is supplied, which makes the workspace controlled.
@@ -215,6 +228,7 @@ export const BayWorkspace = ({
     initialReservations = seedReservations,
     initialBlocks = seedBlocks,
     zoom = "normal",
+    variant = "calendar",
     initialRoute,
     route: controlledRoute,
     onRoute,
@@ -339,11 +353,14 @@ export const BayWorkspace = ({
     const openReservation = route.kind === "reservation" ? reservations.find((r) => r.id === route.id) : undefined;
     const openBlock = route.kind === "block" ? blocks.find((b) => b.id === route.id) : undefined;
 
+    /* The one line the variant decides. Both take `BaySheetProps`. */
+    const Sheet = variant === "rows" ? BayRows : BaySheet;
+
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: appColors.canvas }}>
             {banner}
 
-            <BaySheet
+            <Sheet
                 reservations={onSheet}
                 blocks={blocks}
                 zoom={zoom}
