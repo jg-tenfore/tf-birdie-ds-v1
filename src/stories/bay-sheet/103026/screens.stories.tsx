@@ -42,7 +42,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * **1 — The day.**
+ * **1 — The day · Option A.** The calendar grid.
  *
  * > 1. *"The bay sheet shows as many bays as possible without scrolling."*
  * > 2. *"Each reservation shows: the player who booked, duration, party size,
@@ -76,10 +76,60 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
  * is that the fifteenth bay is now reachable rather than impossible.
  */
 export const Sheet: Story = {
-    name: "1 — The day",
+    name: "1 — The day · Option A",
     render: () => (
         <Shell>
             <BayWorkspace />
+        </Shell>
+    ),
+};
+
+/**
+ * **1 — The day · Option B.** The same day, drawn the way the tee sheet is.
+ *
+ * Nov 2, at Justin's request: *"an alt version with the look and feel of the
+ * tee sheet."* Put it beside Option A — the data, the dialogs, the filter and
+ * every guard are the same component underneath, so what differs is only the
+ * layout.
+ *
+ * **Time stops being a ruler and becomes a list.** Option A is a calendar:
+ * minutes are pixels, a chip's height *is* its duration, and you read down a
+ * column. This is the shipping tee sheet's shape — one white card per half
+ * hour on the mid-grey canvas, the clock in a cell on the left, the bays
+ * across it. So the first question it answers is **what is happening at
+ * 10:30**, where Option A answers **what does today look like**.
+ *
+ * **Colour moves from the bay to the booking.** Option A's chips are white
+ * with the bay's colour on the edge, because the column already names the bay.
+ * The tee sheet spends its colour on state instead — purple booked, green
+ * paid, grey blocked, with two purples alternating across adjacent bays the
+ * way the device does it. The bay's own colour survives as the swatch in the
+ * header, and the marks ride inside the fill: tick for checked in, receipt for
+ * an open tab, arrows for a series, corner for a note, the oversized `$`
+ * watermark when money is still owed, and the amount bold on the right.
+ *
+ * **Duration becomes shape rather than words.** A ninety-minute booking covers
+ * three rows and so never has to say "1h 30m", which is what buys room for the
+ * price on one line. The row a booking starts in carries everything; the rows
+ * it continues through repeat the name at a lower weight — an empty cell at
+ * 10:30 in a bay that is plainly busy would be a lie, and a bare colour would
+ * make staff count upwards to find out who.
+ *
+ * **What is worse about it, honestly.** Fourteen hours is twenty-eight rows,
+ * so the day no longer fits in either direction — Option A gets the whole
+ * morning in one look. And a booking read as stacked cells is weaker than one
+ * tall chip, because the 8px gap between cards, which is the tee sheet's
+ * signature, slices every booking. What it buys is a much better *now* view,
+ * which is what a counter is actually standing at. Also new: the counts strip
+ * above the rows, straight off the tee sheet, which Option A has no room for.
+ *
+ * The filter still works, and still folds columns away — try **Checked in**.
+ */
+export const SheetRows: Story = {
+    name: "1 — The day · Option B",
+    render: () => (
+        <Shell>
+            <BayWorkspace variant="rows" />
         </Shell>
     ),
 };

@@ -81,7 +81,7 @@ paid for it, and whether booking it puts the golfer over their daily limit.
 
 | # | Requirement | Where to see it |
 | :-- | :-- | :-- |
-| 1 | As many bays as possible without scrolling | **[1 — The day](?path=/story/bay-sheet-oct-30-screens--sheet)** · eight of fifteen bays fit, the rest scroll sideways, and **[10 — Narrow the sheet](?path=/story/bay-sheet-oct-30-screens--narrowed)** removes the scroll |
+| 1 | As many bays as possible without scrolling | **[1 — The day · Option A](?path=/story/bay-sheet-oct-30-screens--sheet)** · eight of fifteen bays fit, the rest scroll sideways; **[Option B](?path=/story/bay-sheet-oct-30-screens--sheet-rows)** answers it as rows; **[10 — Narrow the sheet](?path=/story/bay-sheet-oct-30-screens--narrowed)** removes the scroll |
 | 2 | Player, duration, party, checked-in, paid | **[ReservationChip](?path=/story/bay-sheet-oct-30-components--chips)** |
 | 3 | An indicator for an open tab | Same chip — the receipt mark |
 | 4 | Notes show on the sheet | Same chip — text when tall enough, a glyph when not |
@@ -131,6 +131,19 @@ is the other half of the answer — choose the six bays you are running tonight
 and nothing scrolls at all. Its marks narrow rather than widen, and it keeps a
 count on the right, because a filtered sheet and a quiet day are the same
 picture.
+
+**Two layouts, to choose between.** Nov 2: **[Option A](?path=/story/bay-sheet-oct-30-screens--sheet)**
+is the calendar grid this build started as — minutes are pixels, a chip's
+height *is* its duration, and you read down a column.
+**[Option B](?path=/story/bay-sheet-oct-30-screens--sheet-rows)** draws the
+same day the way the shipping tee sheet draws its own: one white card per half
+hour on the mid-grey canvas, the clock on the left, the bays across it, and
+colour spent on state rather than on which bay it is. So A answers *what does
+today look like* and B answers *what is happening at 10:30*. B also costs
+something — fourteen hours is twenty-eight rows, and the gap between cards
+slices every booking into its half hours. Underneath they are one component
+with one prop between them, so the filter, the peek, every dialog and every
+guard are identical and the comparison is only about the layout.
 
 ## Weston's open questions, and what this build assumed
 
