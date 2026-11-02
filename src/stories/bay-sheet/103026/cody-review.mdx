@@ -1,0 +1,121 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Cody to Review/What changed — Nov 2" />
+
+# What changed — Nov 2
+
+**Everything on this page came out of the Nov 2 review with Weston and Cody.**
+It exists so there is one short list to read instead of a diff to hunt for.
+
+Rather than copy the screens in here, which would drift the first time one of
+them changes, this links to them where they live. The screens themselves are in
+**Bay Sheet Oct 30**; the five new ones are in **Nov 2 — Bay Sheet**, next door.
+
+**How to read the status column.** *Build it* means Justin and Weston are both
+happy and nothing is waiting on an answer — pull it and implement it, no sync
+needed. *Needs an answer* means it is built but one decision in it is a guess,
+and the guess is named. *For spec* means it is deliberately not for this
+release.
+
+---
+
+## The decision that frames the rest
+
+**Option A was picked, unanimously.** The calendar grid, with a thin coloured
+edge on each chip instead of a tile of solid colour. It is now just
+[1 — The day](?path=/story/bay-sheet-oct-30-screens--sheet).
+
+Option B — the same day drawn in the tee sheet's language — is kept as
+[Option B, not chosen](?path=/story/bay-sheet-oct-30-screens--sheet-rows) so the
+record of what was weighed survives. Nothing from Nov 2 was applied to it.
+
+This leaves the bay sheet and the tee sheet looking different for a while,
+which the review took on knowingly, with the plan to move the tee sheet's
+elements over gradually — its detail view becoming a slide-over first.
+
+---
+
+## The five things
+
+| # | What | Status | Where |
+| :-- | :-- | :-- | :-- |
+| **A** | **The ribbon reports the membership, not the bay.** Teal simulator member, violet member, grey public. The legend names all three. | **Needs an answer** — the three statuses and their colours are a guess | [A — Ribbon by membership](?path=/story/cody-to-review-nov-2-bay-sheet--ribbon) |
+| **B** | **Full-card colour**, for the first course that says it cannot tell 4px ribbons apart. A course-level preference, not a per-user toggle. | **For spec** — ship A, keep this in a back pocket | [B — Full-card colour](?path=/story/cody-to-review-nov-2-bay-sheet--full-card) |
+| **C** | **Block several bays at once**, with a checkbox per bay in the dropdown that was already there. | **Build it** | [C — Block several bays](?path=/story/cody-to-review-nov-2-bay-sheet--block-multi-bay) |
+| **D** | **The edit dialog rebuilt to match the booking dialog** — same controls, same order, inline customer picker, occasion on both. | **Build it** | [D — Edit, aligned with create](?path=/story/cody-to-review-nov-2-bay-sheet--dialog-edit-aligned) |
+| **E** | **The slide-over is 560 wide.** Three were built to compare; 560 is the default. | **Build it** — subject to your keyboard test | [560, chosen](?path=/story/cody-to-review-nov-2-bay-sheet--peek-wide) · compare [420](?path=/story/cody-to-review-nov-2-bay-sheet--peek-snug) · [480](?path=/story/cody-to-review-nov-2-bay-sheet--peek-roomy) |
+
+---
+
+## Three rates, one per status
+
+Also decided after the review: the three statuses now have **three** rates,
+where they shared two before. A simulator membership has to be worth something
+on sim time, which is the point of selling one.
+
+| Status | Off-peak | Peak, from 4pm |
+| :-- | --: | --: |
+| Simulator Member | $30/hr | $40/hr |
+| **Member** | **$35/hr** | **$50/hr** |
+| Public | $45/hr | $60/hr |
+
+**The middle row is a placeholder and Weston's to set.** The outer two are what
+the device charges today; 35 and 50 are simply between them. It is one table in
+`bay-data.ts` and nothing else reads the numbers.
+
+---
+
+## The two things waiting on an answer
+
+**1. The colours on the ribbon.** Weston named *simulator member* and *public*
+out loud, so the set is Simulator Member / Member / Public, and that part is
+settled. The **colours** are not: they were picked to stay apart at 4px and to
+avoid the green that already means *paid*, not matched to anything. If the tee
+sheet's membership bar already has values for these statuses, those should win
+— Weston's whole argument for the ribbon was *"that's the pattern we've adopted
+on the tee sheet,"* and staff should not have to learn it twice. A screenshot
+of that bar is enough. It is a data change in `bay-data.ts`.
+
+The list could also be wrong, if a course has more than three types. Same file,
+same shape, no code change.
+
+**2. Where a course would set the full-card preference.** Cody raised this
+himself — *"obviously the question is, where are they going to modify all these
+settings?"* — and nothing here answers it. Deliberately left, because
+full-card is a fallback for a complaint nobody has made yet, and the complaint
+would also be the brief for where the switch lives.
+
+**Settled since the review, for the record:** the slide-over is 560, and
+multi-bay blocking fans out on edit as well as create — ticking extra bays on
+an existing block moves that one and creates the rest, because *"also block
+these"* is what the extra ticks mean.
+
+---
+
+## Noted, and deliberately not built yet
+
+**Several schedules in one day.** From the top of the review: today there is
+one schedule per day and no way to break a day into parts, so a course cannot
+say members book 8–12, the public books 12–4, and members again after 8. Cade
+is building that on the backend. It will change how the day is drawn — named
+windows down the clock gutter, and probably a rule about which bookings may
+land in which window — and that is a design pass of its own rather than a
+tweak to these screens. Say when it is close and it gets specced.
+
+**The old/new view toggle.** Cody's idea, and his to implement: a button that
+flips a page between the new design and the old one, cached per device until
+the next install. Nothing is needed from design for it.
+
+---
+
+## How this category will work from here
+
+Anything new or revised gets a dated page like this one, and the screens it
+touches get linked rather than copied. Items that Justin and Weston have both
+signed off say **build it** — that is the mark to look for, and it means no
+sync is needed first. Anything either of them wants to talk through says
+**needs an answer** and names the question.
+
+The Linear tickets follow the Rain Checks shape, since that worked: one parent
+project, smaller child tickets per phase, so phase 1 can ship while phase 2
+sits still.

@@ -42,7 +42,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * **1 — The day · Option A.** The calendar grid.
+ * **1 — The day.** The calendar grid, chosen unanimously on Nov 2.
  *
  * > 1. *"The bay sheet shows as many bays as possible without scrolling."*
  * > 2. *"Each reservation shows: the player who booked, duration, party size,
@@ -76,7 +76,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
  * is that the fifteenth bay is now reachable rather than impossible.
  */
 export const Sheet: Story = {
-    name: "1 — The day · Option A",
+    name: "1 — The day",
     render: () => (
         <Shell>
             <BayWorkspace />
@@ -85,12 +85,32 @@ export const Sheet: Story = {
 };
 
 /**
- * **1 — The day · Option B.** The same day, drawn the way the tee sheet is.
+ * **Option B — not chosen.** The same day, drawn the way the tee sheet is.
  *
- * Nov 2, at Justin's request: *"an alt version with the look and feel of the
- * tee sheet."* Put it beside Option A — the data, the dialogs, the filter and
- * every guard are the same component underneath, so what differs is only the
- * layout.
+ * **The Nov 2 review picked Option A, unanimously, and this is kept only as
+ * the record of what was weighed.** Cody: *"I like A way better. I want to
+ * get away from that paradigm that B has. I think it's really clunky and
+ * ugly."* Weston: *"I definitely like this look better… it's definitely an
+ * upgrade."* What they were buying was less visual noise — Cody again:
+ * *"I like the flags for the colouring instead of the whole freaking tile
+ * being the colour."*
+ *
+ * It was built on Nov 2 at Justin's request — *"an alt version with the look
+ * and feel of the tee sheet"* — for a specific reason he gave in the review:
+ * *"that's why I put B in there, just in case you guys didn't want to have
+ * such a drastic change."* They did want the change. Cody's answer to the
+ * discrepancy it leaves behind: *"you're going to have the tee sheet looks
+ * the way it does and now the bay sheet's going to have a different design,
+ * but I think that's a pill we just have to swallow for a while, because if
+ * we don't start moving pieces over bit by bit we're never going to change."*
+ *
+ * Everything below is what it was before the decision. The data, the
+ * dialogs, the filter and every guard are the same component underneath, so
+ * what differs is only the layout.
+ *
+ * **Note that this one still colours by bay and by paid state**, not by
+ * membership. The Nov 2 ribbon change was made to Option A only, because
+ * Option A is what ships.
  *
  * **Time stops being a ruler and becomes a list.** Option A is a calendar:
  * minutes are pixels, a chip's height *is* its duration, and you read down a
@@ -126,7 +146,7 @@ export const Sheet: Story = {
  * The filter still works, and still folds columns away — try **Checked in**.
  */
 export const SheetRows: Story = {
-    name: "1 — The day · Option B",
+    name: "Option B — not chosen (Nov 2)",
     render: () => (
         <Shell>
             <BayWorkspace variant="rows" />
