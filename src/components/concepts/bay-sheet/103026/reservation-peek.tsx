@@ -26,7 +26,7 @@ import {
     usd,
     type Reservation,
     type ReservationStatus,
-    statusOf,
+    membershipMark,
 } from "./bay-data";
 import { FIELD_BORDER, FIELD_RADIUS, ROW_RULE, SectionRule, StatusSegments } from "./bay-form-parts";
 
@@ -217,9 +217,11 @@ export const ReservationPeek = ({
                         flexDirection: "column",
                         /* The same fact the chip's ribbon reports, on the same
                            edge, so opening a booking confirms what the sheet
-                           already said rather than restating it in words. */
+                           already said rather than restating it in words. At
+                           6px a pale membership reads here even when its 4px
+                           edge on the chip did not. */
                         borderLeft: "6px solid",
-                        borderColor: statusOf(customer.status).color,
+                        borderColor: membershipMark(customer).color,
                     },
                 },
             }}
@@ -318,7 +320,7 @@ export const ReservationPeek = ({
                 {/* Requirement 7 and 8 both live on the guest, and neither was
                     visible anywhere once the booking was made. */}
                 <PeekCard label="Customer">
-                    <PeekRow label="Customer status" value={statusOf(customer.status).label} dot={statusOf(customer.status).color} />
+                    <PeekRow label="Membership" value={membershipMark(customer).name} dot={membershipMark(customer).color} />
                     <PeekRow label="Phone" value={customer.phone} icon={PhoneIcon} />
                     <PeekRow label="Email" value={customer.email} icon={EmailIcon} />
                     {customer.punchCardName && (

@@ -4,6 +4,12 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # What changed — Nov 2
 
+> **Part of this page was overtaken on Nov 3.** Weston answered both of the
+> open questions at the foot of it, and one answer replaced the model the
+> ribbon was built on. **Read [What changed — Nov 3](?path=/docs/cody-to-review-what-changed-nov-3--docs)
+> first** — this page is kept as the record of what Nov 2 decided, not as a
+> description of the screens as they stand.
+
 **Everything on this page came out of the Nov 2 review with Weston and Cody.**
 It exists so there is one short list to read instead of a diff to hunt for.
 
@@ -39,7 +45,7 @@ elements over gradually — its detail view becoming a slide-over first.
 
 | # | What | Status | Where |
 | :-- | :-- | :-- | :-- |
-| **A** | **The ribbon reports the membership, not the bay.** Teal simulator member, violet member, grey public. The legend names all three. | **Needs an answer** — the three statuses and their colours are a guess | [A — Ribbon by membership](?path=/story/cody-to-review-nov-2-bay-sheet--ribbon) |
+| **A** | **The ribbon reports the membership, not the bay.** Teal simulator member, violet member, grey public. The legend names all three. | **Answered Nov 3, and rebuilt** — there is no fixed status set; the colour comes off the membership record | [A — Ribbon by membership](?path=/story/cody-to-review-nov-2-bay-sheet--ribbon) |
 | **B** | **Full-card colour**, for the first course that says it cannot tell 4px ribbons apart. A course-level preference, not a per-user toggle. | **For spec** — ship A, keep this in a back pocket | [B — Full-card colour](?path=/story/cody-to-review-nov-2-bay-sheet--full-card) |
 | **C** | **Block several bays at once**, with a checkbox per bay in the dropdown that was already there. | **Build it** | [C — Block several bays](?path=/story/cody-to-review-nov-2-bay-sheet--block-multi-bay) |
 | **D** | **The edit dialog rebuilt to match the booking dialog** — same controls, same order, inline customer picker, occasion on both. | **Build it** | [D — Edit, aligned with create](?path=/story/cody-to-review-nov-2-bay-sheet--dialog-edit-aligned) |
@@ -47,21 +53,13 @@ elements over gradually — its detail view becoming a slide-over first.
 
 ---
 
-## Three rates, one per status
+## ~~Three rates, one per status~~ — withdrawn Nov 3
 
-Also decided after the review: the three statuses now have **three** rates,
-where they shared two before. A simulator membership has to be worth something
-on sim time, which is the point of selling one.
-
-| Status | Off-peak | Peak, from 4pm |
-| :-- | --: | --: |
-| Simulator Member | $30/hr | $40/hr |
-| **Member** | **$35/hr** | **$50/hr** |
-| Public | $45/hr | $60/hr |
-
-**The middle row is a placeholder and Weston's to set.** The outer two are what
-the device charges today; 35 and 50 are simply between them. It is one table in
-`bay-data.ts` and nothing else reads the numbers.
+This section asked Weston to fill in a middle row. He answered by showing the
+fee screen, and **the table was the wrong shape entirely** — pricing is not
+off-peak and peak, it is a list of named fees each carrying its own window,
+weekdays, memberships and priority. Nothing here survives. See
+[What changed — Nov 3](?path=/docs/cody-to-review-what-changed-nov-3--docs).
 
 ---
 
@@ -79,11 +77,22 @@ of that bar is enough. It is a data change in `bay-data.ts`.
 The list could also be wrong, if a course has more than three types. Same file,
 same shape, no code change.
 
+> **Answered Nov 3 — and the last paragraph was the right worry.** There is no
+> fixed set at all. A course creates unlimited memberships and picks each
+> one's colour on the plan, and the tee sheet already draws those colours.
+> The three invented colours are gone and the ribbon reads the membership
+> record. Rebuilt, not patched.
+
 **2. Where a course would set the full-card preference.** Cody raised this
 himself — *"obviously the question is, where are they going to modify all these
 settings?"* — and nothing here answers it. Deliberately left, because
 full-card is a fallback for a complaint nobody has made yet, and the complaint
 would also be the brief for where the switch lives.
+
+> **Still open after Nov 3**, and now with a second part to it: with courses
+> choosing their own colours, a filled card cannot assume white text. That
+> half is solved — the ink flips per chip — but where the preference lives is
+> still unanswered.
 
 **Settled since the review, for the record:** the slide-over is 560, and
 multi-bay blocking fans out on edit as well as create — ticking extra bays on

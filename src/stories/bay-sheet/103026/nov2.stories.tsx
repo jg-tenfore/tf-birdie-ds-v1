@@ -55,28 +55,40 @@ const PanelShell = ({ children }: { children: React.ReactNode }) => (
 /**
  * **A — The ribbon reports the membership.** Settled, build it.
  *
- * Until today the 4px edge on a chip was its bay's colour, which spent the
+ * **Revised Nov 3 — read *What changed — Nov 3* for why.** This story shows
+ * the current design, not the one Nov 2 described.
+ *
+ * Until Nov 2 the 4px edge on a chip was its bay's colour, which spent the
  * only colour a card has on the one fact the column heading above it already
  * states. Weston asked for the tee sheet's pattern instead: *"ideally it
  * would be their membership… oh, I can see that he's my simulator member. Oh,
  * this is a public."*
  *
- * So the edge now reports who the golfer is to the course — **teal** for a
- * simulator member, **violet** for a member, **grey** for the public — and the
- * legend above the sheet names all three, because a 4px ribbon cannot label
- * itself. The bay is still identified by the column the chip sits in and by
- * the swatch under its name.
+ * Nov 2 read that as three fixed statuses and invented three colours. Nov 3
+ * corrected both halves: a course creates **as many memberships as it likes**
+ * and **picks each one's colour on the plan itself**, so the colour is data
+ * and there is no set to enumerate. The edge draws the course's own colour,
+ * exactly as chosen.
  *
- * Read down the day: the punch-card holders are teal, the two members are
- * violet (Brown Bay at 3pm, Cyan Bay at 4pm), and everyone else is grey. The
- * cancelled and no-show chips have **no** colour at all, which is the same
- * rule as before — they are not bookings any more, they are time being
- * offered back.
+ * Read down the day: the punch-card holders carry the Gold Punch amber, Maya
+ * Okafor at 9am carries the Super Membership yellow, the Monthly Silver and
+ * Par plans appear in the afternoon, and the walk-ups get a neutral grey that
+ * says only *not a member*. The cancelled and no-show chips have **no**
+ * colour at all, which is the same rule as before — they are not bookings any
+ * more, they are time being offered back.
  *
- * **One thing is open**: these are the three statuses Weston said out loud,
- * and these colours were picked to stay apart at 4px rather than matched to
- * the tee sheet's existing bar. If the tee sheet already has values for these
- * statuses, those should win, and this is a one-line change in `bay-data.ts`.
+ * Two things to look at rather than take on trust:
+ *
+ * - **The legend names the memberships on this day's sheet**, not a fixed
+ *   list. It cannot be fixed any more; his test course alone has a dozen
+ *   plans and the bar would wrap to rows of memberships nobody booked.
+ * - **Maya's yellow is deliberately weak.** We draw what the course picked
+ *   rather than darkening it, so the sheet matches the membership form and
+ *   the tee sheet's bar. The cost is visible here on purpose.
+ *
+ * **The bay colours are gone**, which is the other Nov 3 change: a resource
+ * has no colour field, so the column heading is a name and an alternating
+ * neutral wash keeps fifteen columns trackable.
  */
 export const Ribbon: Story = {
     name: "A — Ribbon by membership",
@@ -99,8 +111,15 @@ export const Ribbon: Story = {
  *
  * This is that, built as a **course-level preference and not a per-user
  * toggle** — everyone standing at one counter should be reading the same
- * sheet. One prop, `tint="card"`, and the chip fills with a darkened twin of
- * the ribbon colour so white text clears 4.5:1 on all three.
+ * sheet. One prop, `tint="card"`, and the chip fills with the membership's
+ * colour.
+ *
+ * **Nov 3 changed how the text survives that.** When there were three colours
+ * I owned, each had a darkened twin that carried white text. A course picking
+ * its own colours breaks that: white on Weston's yellow is unreadable. So the
+ * card keeps the colour exactly and **moves the ink instead** — black or
+ * white per chip, by luminance. Look at Maya Okafor's yellow card against the
+ * amber ones beside it; they are the same treatment with different ink.
  *
  * Put it beside **A** and the trade is plain: this is easier to tell apart
  * across the room, and it is the visual noise Cody picked Option A to get
@@ -132,8 +151,14 @@ export const FullCard: Story = {
  * The field is the dropdown that was already there, with a checkbox in front
  * of every bay — **open the Bays field** and tick a few. It stays open while
  * you tick, because a menu that shut after each one would be slower than the
- * one-by-one it replaces. The closed field shows the ticked swatches and a
- * count, since five bay names do not fit.
+ * one-by-one it replaces.
+ *
+ * Weston confirmed it on Nov 3 — *"I really like it, the multi-select"* — in
+ * the same breath as asking for the bay colours to come out, which this field
+ * is where he noticed. **The swatches went with them**, so the closed field
+ * now names the bays while they fit and counts them after: `Red Bay, Teal
+ * Bay`, then `4 bays`. Naming them matters more here than anywhere, because
+ * this is the one field that can block four bays in one press.
  *
  * Three rules worth knowing before you build it:
  *

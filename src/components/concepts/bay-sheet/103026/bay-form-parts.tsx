@@ -42,7 +42,7 @@ import {
     type RepeatFreq,
     type Reservation,
     type ReservationStatus,
-    statusOf,
+    membershipMark,
 } from "./bay-data";
 
 /**
@@ -461,7 +461,7 @@ export const CustomerPicker = ({
                     <Typography sx={{ fontSize: 13, color: appColors.textSecondary, mb: 0.4 }}>Customer</Typography>
                     <Typography sx={{ fontSize: 18, color: appColors.textPrimary }}>{customer.name}</Typography>
                     <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                        {statusOf(customer.status).label}
+                        {membershipMark(customer).name}
                         {customer.punchCardName ? ` · ${customer.punchCardName}: ${customer.punchesLeft} left` : ""}
                     </Typography>
                 </Box>
@@ -542,7 +542,7 @@ export const CustomerPicker = ({
                         >
                             <Typography sx={{ fontSize: 17, color: appColors.textPrimary }}>{result.name}</Typography>
                             <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>
-                                {statusOf(result.status).label} · {result.phone}
+                                {membershipMark(result).name} · {result.phone}
                             </Typography>
                         </ButtonBase>
                     ))}
@@ -631,7 +631,7 @@ export const BayPicker = ({
         ariaLabel="Bay"
         value={bayById(value).id}
         onChange={onChange}
-        options={bays.map((bay) => ({ value: bay.id, label: bay.name, dot: bay.color }))}
+        options={bays.map((bay) => ({ value: bay.id, label: bay.name }))}
     />
 );
 
@@ -683,17 +683,21 @@ export const MultiSelectField = ({
                 MenuProps={{ slotProps: { paper: { sx: { mt: 0.5, borderRadius: `${FIELD_RADIUS}px`, maxHeight: 420 } } } }}
                 renderValue={() => (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-                        {/* The ticked swatches, up to four, so a glance at the
-                            closed field still shows which bays are in. */}
-                        {chosen.slice(0, 4).map(
-                            (option) =>
-                                option.dot && (
-                                    <Box
-                                        key={option.value}
-                                        sx={{ flexShrink: 0, width: 12, height: 12, borderRadius: "50%", bgcolor: option.dot }}
-                                    />
-                                ),
-                        )}
+                        {/* Nov 3: the ticked swatches are gone with the bay
+                            colours, so `summary` is now the only thing telling
+                            you which bays are in — see `BayMultiPicker`. The
+                            guard stays because other pickers still pass dots. */}
+                        {chosen
+                            .slice(0, 4)
+                            .map(
+                                (option) =>
+                                    option.dot && (
+                                        <Box
+                                            key={option.value}
+                                            sx={{ flexShrink: 0, width: 12, height: 12, borderRadius: "50%", bgcolor: option.dot }}
+                                        />
+                                    ),
+                            )}
                         <Typography
                             component="span"
                             noWrap
@@ -760,8 +764,17 @@ export const BayMultiPicker = ({
         ariaLabel="Bays"
         values={values}
         onChange={onChange}
-        options={bays.map((bay) => ({ value: bay.id, label: bay.name, dot: bay.color }))}
-        summary={(chosen) => (chosen.length === 1 ? chosen[0].label : `${chosen.length} bays`)}
+        options={bays.map((bay) => ({ value: bay.id, label: bay.name }))}
+        /*
+         * Nov 3: it names the bays while they fit, and counts them after.
+         *
+         * Until today a swatch per ticked bay did this work and the words only
+         * had to say how many. With the colours gone the words are all there
+         * is, and `3 bays` on a closed field is not a thing you can check
+         * before you hit save — which matters most here, because this is the
+         * one field that can block four bays at once.
+         */
+        summary={(chosen) => (chosen.length <= 2 ? chosen.map((bay) => bay.label).join(", ") : `${chosen.length} bays`)}
     />
 );
 

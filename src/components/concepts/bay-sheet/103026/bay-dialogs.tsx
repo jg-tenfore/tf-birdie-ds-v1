@@ -333,7 +333,7 @@ export const BookingDialog = ({
     const conflict = conflictFor(reservations, blocks, draft);
     const alreadyToday = draft.customer ? bookingsToday(reservations, draft.customer.id) : [];
     const atLimit = alreadyToday.length >= 2;
-    const fee = feeFor(draft.customer?.status ?? "public", draft.start, draft.duration);
+    const fee = feeFor(draft.customer, draft.start, draft.duration);
 
     /* Requirement 10 has no override; requirement 18 does. */
     const blocked = Boolean(conflict) || !draft.customer || (atLimit && !draft.overrideLimit);
@@ -497,7 +497,7 @@ const useReservationEdits = (reservation: Reservation, onChange: (reservation: R
         const next = { ...reservation, [key]: value };
 
         /* Requirement 23 — the fee and the punch count follow the booking. */
-        next.fee = feeFor(next.customer.status, next.start, next.duration);
+        next.fee = feeFor(next.customer, next.start, next.duration);
         if (next.punchesUsed !== undefined) next.punchesUsed = punchesNeeded(next.duration);
 
         onChange(next);
