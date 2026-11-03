@@ -20,8 +20,10 @@ import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import {
     DAY_END,
     DAY_START,
-    customerStatuses,
-    statusOf,
+    inkOn,
+    membershipMark,
+    membershipsOnSheet,
+    mutedInk,
     bays,
     filterIsOn,
     fmtDuration,
@@ -78,6 +80,21 @@ export type SheetTint = "ribbon" | "card";
 
 export const GUTTER = 88;
 
+/**
+ * **Nov 3 — what replaced the bay's colour.**
+ *
+ * The column heading used to carry a 28px bar of the bay's colour, and it was
+ * the thing that let your eye find a column and track straight down it at
+ * fifteen bays wide. The colour had to go — a resource has no colour field,
+ * so the sheet was asserting something the backend does not know — but the
+ * tracking problem it was solving is real.
+ *
+ * So every other column gets a wash of this instead: neutral, barely there,
+ * and carrying no information at all, which is the point. It cannot be
+ * mistaken for a fact about the bay, and it works at any number of columns.
+ */
+const COLUMN_TINT = "#FAFBFC";
+
 /* -------------------------------------------------------------- the pills */
 
 /**
@@ -90,30 +107,26 @@ export const GUTTER = 88;
 export const ChipMarks = ({
     reservation,
     size = 15,
-    onColor = false,
+    ink,
 }: {
     reservation: Reservation;
     size?: number;
-    /** True on a filled card, where the marks' own colours would disappear. */
-    onColor?: boolean;
+    /**
+     * Set on a filled card, where the marks' own colours would disappear.
+     * Nov 3: a colour rather than a flag, because a card filled with the
+     * course's own colour can need black marks as easily as white ones.
+     */
+    ink?: string;
 }) => (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        {reservation.status === "checkedIn" && (
-            <CheckCircleIcon sx={{ fontSize: size, color: onColor ? "#fff" : appColors.greenDark }} />
-        )}
+        {reservation.status === "checkedIn" && <CheckCircleIcon sx={{ fontSize: size, color: ink ?? appColors.greenDark }} />}
         {reservation.paid && (
-            <Typography sx={{ fontSize: size - 2, fontWeight: 700, color: onColor ? "#fff" : appColors.greenDark, lineHeight: 1 }}>
-                $
-            </Typography>
+            <Typography sx={{ fontSize: size - 2, fontWeight: 700, color: ink ?? appColors.greenDark, lineHeight: 1 }}>$</Typography>
         )}
         {/* Requirement 3 — the one mark the shipping chip has no room for. */}
-        {reservation.tabOpen && <ReceiptLongIcon sx={{ fontSize: size, color: onColor ? "#fff" : "#A9661F" }} />}
-        {reservation.repeat !== "none" && (
-            <RepeatIcon sx={{ fontSize: size, color: onColor ? "rgba(255,255,255,0.82)" : appColors.textSecondary }} />
-        )}
-        {reservation.note && (
-            <StickyNote2Icon sx={{ fontSize: size, color: onColor ? "rgba(255,255,255,0.82)" : appColors.textSecondary }} />
-        )}
+        {reservation.tabOpen && <ReceiptLongIcon sx={{ fontSize: size, color: ink ?? "#A9661F" }} />}
+        {reservation.repeat !== "none" && <RepeatIcon sx={{ fontSize: size, color: ink ? mutedInk(ink) : appColors.textSecondary }} />}
+        {reservation.note && <StickyNote2Icon sx={{ fontSize: size, color: ink ? mutedInk(ink) : appColors.textSecondary }} />}
     </Box>
 );
 
@@ -151,16 +164,22 @@ export const ReservationChip = ({
 }) => {
     const height = reservation.duration * ppm;
     const freed = !holdsTime(reservation);
-    const status = statusOf(reservation.customer.status);
     /*
      * Nov 2: the colour reports who the golfer is, not which bay they are in.
-     * A freed slot has no colour at all, because it is not a booking any more.
+     * Nov 3: it is the colour the course chose for that membership, drawn as
+     * chosen — so a pale plan gets a pale edge, which is Weston's yellow and
+     * a known consequence rather than a bug. A freed slot has no colour at
+     * all, because it is not a booking any more.
      *
      * `solid` is the course-level preference Cody raised, so the two modes
      * differ in exactly one decision — whether the colour is an edge or a
      * fill — and everything below reads `solid` rather than branching again.
      */
+    const mark = membershipMark(reservation.customer);
     const solid = tint === "card" && !freed;
+    /* The filled card has to carry text on the course's colour; the ribbon
+       does not, and so never moves off the normal ink. */
+    const ink = solid ? inkOn(mark.color) : undefined;
 
     /*
      * The chip decides what it can afford to say. Below ~56px there is room
@@ -170,7 +189,7 @@ export const ReservationChip = ({
     const roomForDetail = height >= 56;
     const roomForNote = height >= 96 && Boolean(reservation.note);
     /** Everything under the name is quieter than it, in either mode. */
-    const detail = solid ? "rgba(255,255,255,0.82)" : appColors.textSecondary;
+    const detail = ink ? mutedInk(ink) : appColors.textSecondary;
 
     return (
         <ButtonBase
@@ -189,11 +208,11 @@ export const ReservationChip = ({
                 overflow: "hidden",
                 borderRadius: `${appRadius.button}px`,
                 borderLeft: solid ? "none" : "4px solid",
-                borderColor: freed ? appColors.divider : status.color,
+                borderColor: freed ? appColors.divider : mark.color,
                 /* A freed slot is drawn as paper, not as a booking: it is time
                    the sheet is offering back (requirement 27). */
-                bgcolor: solid ? status.solid : freed ? "#F7F8F9" : appColors.surface,
-                color: solid ? "#fff" : "inherit",
+                bgcolor: solid ? mark.color : freed ? "#F7F8F9" : appColors.surface,
+                color: ink ?? "inherit",
                 boxShadow: freed ? "none" : "0 1px 2px rgba(0,0,0,0.22)",
                 opacity: freed ? 0.75 : 1,
             }}
@@ -206,13 +225,13 @@ export const ReservationChip = ({
                         minWidth: 0,
                         fontSize: 14,
                         fontWeight: 500,
-                        color: solid ? "#fff" : freed ? appColors.textSecondary : appColors.textPrimary,
+                        color: ink ?? (freed ? appColors.textSecondary : appColors.textPrimary),
                         textDecoration: reservation.status === "cancelled" ? "line-through" : "none",
                     }}
                 >
                     {reservation.customer.name}
                 </Typography>
-                {!freed && <ChipMarks reservation={reservation} onColor={solid} />}
+                {!freed && <ChipMarks reservation={reservation} ink={ink} />}
             </Box>
 
             {roomForDetail && (
@@ -364,7 +383,7 @@ export const BaySheet = ({
                             the clock as the names scroll under it. */}
                         <Box sx={{ position: "sticky", left: 0, zIndex: 1, flexShrink: 0, width: GUTTER, bgcolor: appColors.surface }} />
 
-                        {columns.map((bay) => (
+                        {columns.map((bay, index) => (
                             <Box
                                 key={bay.id}
                                 sx={{
@@ -374,9 +393,10 @@ export const BaySheet = ({
                                     textAlign: "center",
                                     borderLeft: "1px solid",
                                     borderColor: appColors.divider,
+                                    bgcolor: index % 2 === 1 ? COLUMN_TINT : "transparent",
                                 }}
                             >
-                                <Box sx={{ width: 28, height: 4, borderRadius: 2, bgcolor: bay.color, mx: "auto", mb: 0.5 }} />
+                                {/* Nov 3: the name is the whole identity of a bay. */}
                                 <Typography noWrap sx={{ px: 0.5, fontSize: 14, fontWeight: 500, color: appColors.textPrimary }}>
                                     {bay.name}
                                 </Typography>
@@ -420,6 +440,18 @@ export const BaySheet = ({
                         </Box>
 
                         <Box sx={{ flex: 1, minWidth: 0, position: "relative" }}>
+                            {/* Beneath the hour rules on purpose: a tint that
+                                covered them would trade one kind of tracking
+                                for another. */}
+                            <Box aria-hidden sx={{ position: "absolute", inset: 0, display: "flex" }}>
+                                {columns.map((bay, index) => (
+                                    <Box
+                                        key={bay.id}
+                                        sx={{ flex: 1, minWidth: 0, bgcolor: index % 2 === 1 ? COLUMN_TINT : "transparent" }}
+                                    />
+                                ))}
+                            </Box>
+
                             {rules.map((offset) => (
                                 <Box
                                     key={offset}
@@ -473,7 +505,13 @@ export const BaySheet = ({
                                         {reservations
                                             .filter((r) => r.bayId === bay.id)
                                             .map((r) => (
-                                                <ReservationChip key={r.id} reservation={r} ppm={ppm} tint={tint} onOpen={onOpenReservation} />
+                                                <ReservationChip
+                                                    key={r.id}
+                                                    reservation={r}
+                                                    ppm={ppm}
+                                                    tint={tint}
+                                                    onOpen={onOpenReservation}
+                                                />
                                             ))}
                                     </Box>
                                 ))}
@@ -686,7 +724,6 @@ export const SheetFilterBar = ({
 
                     return (
                         <MenuItem key={bay.id} onClick={() => toggleBay(bay.id)} sx={{ minHeight: 48, gap: 1.5 }}>
-                            <Box sx={{ flexShrink: 0, width: 10, height: 10, borderRadius: 999, bgcolor: bay.color }} />
                             <Box sx={{ flex: 1, fontSize: 15 }}>{bay.name}</Box>
                             {picked && <CheckIcon sx={{ fontSize: 20, color: appColors.greenDark }} />}
                         </MenuItem>
@@ -730,8 +767,14 @@ export const SheetFilterBar = ({
  * Nov 2: the colours joined the marks here. They had to — a ribbon that
  * reports a membership is only readable if something on the screen says which
  * membership is which, and the chip itself has no room to.
+ *
+ * **Nov 3: it names the memberships on this day's sheet, not a fixed set.** A
+ * course can create as many plans as it likes, so there is no list to print;
+ * printing the course's whole catalogue would wrap the bar to several rows of
+ * plans nobody booked. Pass the day's reservations and the legend reports the
+ * day. `No membership` appears only when somebody on the sheet is a walk-up.
  */
-export const SheetLegend = () => (
+export const SheetLegend = ({ reservations = [] }: { reservations?: Reservation[] }) => (
     <Box
         sx={{
             flexShrink: 0,
@@ -747,14 +790,14 @@ export const SheetLegend = () => (
             borderColor: appColors.divider,
         }}
     >
-        {customerStatuses.map((status) => (
-            <Box key={status.id} sx={{ display: "flex", alignItems: "center", gap: 0.75 }} title={status.hint}>
-                <Box sx={{ width: 4, height: 15, borderRadius: 1, bgcolor: status.color }} />
-                <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{status.label}</Typography>
+        {membershipsOnSheet(reservations).map((plan) => (
+            <Box key={plan.name} sx={{ display: "flex", alignItems: "center", gap: 0.75 }} title={plan.hint}>
+                <Box sx={{ width: 4, height: 15, borderRadius: 1, bgcolor: plan.color }} />
+                <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{plan.name}</Typography>
             </Box>
         ))}
 
-        <Box sx={{ width: "1px", height: 15, bgcolor: appColors.divider }} />
+        {reservations.length > 0 && <Box sx={{ width: "1px", height: 15, bgcolor: appColors.divider }} />}
 
         {(
             [

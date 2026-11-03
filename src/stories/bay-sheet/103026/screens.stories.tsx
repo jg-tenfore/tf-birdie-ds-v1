@@ -109,8 +109,10 @@ export const Sheet: Story = {
  * what differs is only the layout.
  *
  * **Note that this one still colours by bay and by paid state**, not by
- * membership. The Nov 2 ribbon change was made to Option A only, because
- * Option A is what ships.
+ * membership. Neither the Nov 2 ribbon change nor the Nov 3 removal of bay
+ * colour was applied here, deliberately: Option A is what ships, and this
+ * page is kept as the record of what was weighed against it. So the bay
+ * colours below are a fossil, not an oversight.
  *
  * **Time stops being a ruler and becomes a list.** Option A is a calendar:
  * minutes are pixels, a chip's height *is* its duration, and you read down a
@@ -120,7 +122,8 @@ export const Sheet: Story = {
  * 10:30**, where Option A answers **what does today look like**.
  *
  * **Colour moves from the bay to the booking.** Option A's chips are white
- * with the bay's colour on the edge, because the column already names the bay.
+ * with the golfer's membership colour on the edge — as of Nov 3 there is no
+ * bay colour anywhere in Option A, because a resource has no colour field.
  * The tee sheet spends its colour on state instead — purple booked, green
  * paid, grey blocked, with two purples alternating across adjacent bays the
  * way the device does it. The bay's own colour survives as the swatch in the
@@ -391,7 +394,7 @@ export const Narrowed: Story = {
                 initialFilter={{
                     query: "",
                     marks: [],
-                    bayIds: ["red", "green", "teal", "purple", "lime", "olive"],
+                    bayIds: ["red", "green", "teal", "eastporch", "nicklaus", "patio"],
                     liveOnly: true,
                 }}
             />

@@ -1,0 +1,208 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Cody to Review/What changed — Nov 3" />
+
+# What changed — Nov 3
+
+**Everything here came out of the Nov 3 check-in with Weston.** It is shorter
+than the Nov 2 page and it matters more, because two of the five items
+**replace** things Nov 2 asked you to build rather than adding to them.
+
+Nothing below needs a call. Two items name an open question, and both are
+Weston's to answer rather than yours to wait on.
+
+---
+
+## Read this first if you read nothing else
+
+**The three membership statuses never existed.** Nov 2 built the ribbon on
+Simulator Member / Member / Public, because those were the three Weston named
+out loud. On Nov 3 he showed where memberships actually come from:
+
+> *"There could be an infinite number of memberships. So we don't have
+> simulator memberships or public, like it's all just, you can create
+> different membership types… And they all have a colour associated with
+> them."*
+
+A course creates as many plans as it likes, and **picks each plan's colour on
+the plan itself**. The tee sheet already draws that colour as a bar under each
+cell — which is the pattern the ribbon was borrowed from in the first place.
+
+So the colour is **data**, not a design decision, and `WJ-169` is answered: the
+ribbon reads the membership record. The screens are rebuilt around that, and
+the three invented colours are gone.
+
+---
+
+## The five things
+
+| # | What | Status | Where |
+| :-- | :-- | :-- | :-- |
+| **1** | **The ribbon's colour comes off the membership record**, drawn exactly as the course chose it. The legend names the memberships on today's sheet, because an unbounded list cannot be printed. | **Build it** — replaces the Nov 2 model | [A — Ribbon by membership](?path=/story/cody-to-review-nov-2-bay-sheet--ribbon) |
+| **2** | **Bay colour is gone everywhere.** A resource has no colour field, so the sheet stopped asserting one. Column headings are names, with an alternating neutral wash to keep them trackable. | **Build it** | [A — Ribbon by membership](?path=/story/cody-to-review-nov-2-bay-sheet--ribbon) · [C — Block several bays](?path=/story/cody-to-review-nov-2-bay-sheet--block-multi-bay) |
+| **3** | **Fees are conditional, not peak and off-peak.** A named fee with a price, a window, weekdays, memberships and a priority. An order line now reads `Gold Afternoon`. | **Build it** — one open question, below | [G — Panel at 560](?path=/story/cody-to-review-nov-2-bay-sheet--peek-wide) |
+| **4** | **Full-card picks its text colour per chip**, because white on a course's yellow is unreadable. | **For spec**, as before | [B — Full-card colour](?path=/story/cody-to-review-nov-2-bay-sheet--full-card) |
+| **5** | **Multi-bay blocking confirmed**, unchanged except that the swatches went with the bay colours. | **Build it** — unchanged from Nov 2 | [C — Block several bays](?path=/story/cody-to-review-nov-2-bay-sheet--block-multi-bay) |
+
+---
+
+## 1. The ribbon, rebuilt
+
+Four of Weston's own plans are in the sample day, by name. Three things follow
+that are worth knowing before you build it:
+
+**The colour is drawn exactly as the course picked it.** No darkening, no
+contrast floor. The point of the ribbon was that it matches the tee sheet's
+bar and the membership form — *"that's the pattern we've adopted on the tee
+sheet"* — and a colour we corrected would be a third version of the same
+membership.
+
+**That has a visible cost, and it is on the screen on purpose.** Weston's own
+*Super Membership* is yellow. Maya Okafor's 9am booking carries it, and at 4px
+on white it barely reads. That is not a bug to file; it is the consequence of
+the decision above, put where you can see it. If it turns out to matter, the
+fix belongs in the membership form's colour picker rather than here.
+
+**The legend reports the day, not the catalogue.** It lists the memberships
+actually on this sheet and adds *No membership* only when somebody is a
+walk-up. A fixed legend was possible with three statuses. With his test
+course's dozen plans it would wrap to several rows of memberships nobody
+booked.
+
+Holding no membership is the one uncoloured case: a neutral grey that claims
+only *not a member*, duller than anything a colour picker is likely to produce.
+
+---
+
+## 2. Bay colour, removed
+
+Weston, looking at the block dialog:
+
+> *"They're not always a colour… we don't have a designated colour, and some
+> people use colour names, others just use like the Jack Nicklaus Bay and the
+> Tiger Woods Bay."*
+
+A bay is an activity resource on the backend and a resource has no colour
+field, so there was nothing to read — the sheet was inventing it. **It is out
+of all five places it was drawn**: the block dialog's bay picker, the
+reservation dialog's bay picker, the sheet's column headings, the bay filter,
+and the rows variant's headings.
+
+Two consequences:
+
+- **A bay is identified by its name.** The sample bays are now a mix — ten
+  colour names, an East and a West Porch Sim, a Patio Sim, and two named after
+  people — which is the spread a real course list has and the one the screen
+  has to survive.
+- **The column headings needed something else.** The swatch was doing real
+  work at fifteen bays wide: it let your eye find a column and track down it.
+  Every other column now gets a barely-there neutral wash, which cannot be
+  mistaken for a fact about the bay and works at any number of columns.
+
+`color` is still on the bay record, unread, because he wants it eventually —
+*"I wouldn't mind having that… we just don't have it right now."* Grep it and
+you will find every place that has to change when it comes back.
+
+**The not-chosen Option B still shows bay colours.** That is deliberate: it is
+the record of what was weighed on Oct 30 and nothing since has been applied to
+it.
+
+---
+
+## 3. Fees, rebuilt as conditional pricing
+
+The Nov 2 page asked you for a middle row in a rate table. **Withdraw that
+question** — the table was the wrong shape. A fee is a record:
+
+> *"It says from 12 to 9, I want my gold members… get this fee, $50. And then
+> maybe I'd create a gold morning. Everything's the same except it's $75."*
+
+Five of the six in `bay-data.ts` are copied off his fee screen with their real
+prices and priorities; the sixth is the Gold Morning he described creating,
+because a membership whose rate changes at midday is the point of the feature.
+
+| Fee | Price | When | For | Priority |
+| :-- | --: | :-- | :-- | --: |
+| Sim Hour Sun–Thurs | $100 | all day, Sun–Thu | anyone | 1 |
+| Sim Hour Fri–Sat Morning | $150 | to 12pm, Fri–Sat | anyone | 2 |
+| Sim Hour Fri–Sat Evening | $200 | from 12pm, Fri–Sat | anyone | 3 |
+| Gold Afternoon | $50 | 12:00pm–9:01pm | Gold Punch | 4 |
+| Gold Morning | $75 | to 12pm | Gold Punch | 5 |
+| Default Rate | $120 | all day | anyone | 6 |
+
+The design consequence is small and good: **a fee has a name**, so an order
+line says `Gold Afternoon` instead of a rate we made up. Open the 560 panel
+story and you will see it resolve — a 1pm gold member books at $50.
+
+**Price stays off the chips.** Weston on whether the sheet should show it:
+*"I don't know if we need to display it on here. We can see kind of what
+feedback we get."* So nothing was added.
+
+### The open question in this one
+
+**Does a membership-specific fee outrank a general one, or does the priority
+number win outright?** Read the column at face value and `Gold Afternoon`
+(priority 4) never applies on a Tuesday, because `Sim Hour Sun–Thurs`
+(priority 1) matches the same hours — which contradicts Weston describing it
+as the fee his gold members get. The prototype assumes **most specific first,
+priority breaks ties**. If the backend instead expects the operator to order
+the list correctly, say so; it is four lines either way.
+
+### The other thing this exposed
+
+Fees depend on the weekday, and **the sheet is one day wide with no date on
+it**. The sample day is fixed to a Tuesday so the general rate resolves. The
+shipping screen knows its own date, so this is a prototype limitation rather
+than a design question — but it is worth knowing that the day's identity is
+now load-bearing for pricing in a way it was not before.
+
+---
+
+## 4. Full-card, and why the text moved
+
+When there were three colours I owned, each had a darkened twin that carried
+white text at 4.5:1. A course choosing its own colours breaks that outright:
+white on Weston's yellow is unreadable.
+
+The card now keeps the colour exactly, like the ribbon does, and **moves the
+ink instead** — black or white per chip, by luminance. Put Maya's yellow card
+beside the amber ones in story B and it is the same treatment with different
+ink.
+
+Still **for spec, not for now**, and still carrying Cody's unanswered
+question about where a course would set the preference.
+
+---
+
+## 5. Multi-bay blocking, confirmed
+
+> *"I really like it, the multi-select."*
+
+Unchanged, except that the ticked swatches went with the bay colours. The
+closed field now names the bays while they fit and counts them after — `Red
+Bay, Teal Bay`, then `4 bays`. Naming them matters more here than anywhere
+else, because this is the one field that can block four bays in one press and
+`3 bays` is not something you can check before you hit save.
+
+---
+
+## What this does to the tickets
+
+`WJ-169` is answered and closed with the answer written into it. `WJ-170`'s
+body is rewritten, because its premise — three fixed statuses — is gone;
+the thread records what it used to say. `WJ-171` is unchanged and confirmed.
+`WJ-174` keeps its open question and gains the ink rule. The bay-colour
+removal and the fee model are new work and are tracked as their own tickets.
+
+---
+
+## Not the bay sheet, noted from the same call
+
+**Coach Now / clinics.** Weston needs backend requirements fleshed out, built
+on **Crane Web** rather than Fox, structured as web and mobile rather than
+frontend and backend. Justin drafts a first pass from the existing clinic
+designs; Jared scopes it after. It will probably need a new screen and a
+coach/instructor flow in Buck.
+
+**Gift cards and clinics updates** are getting Linear projects of their own.
+Neither is in this category and neither affects anything above.

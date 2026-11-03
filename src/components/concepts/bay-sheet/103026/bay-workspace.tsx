@@ -276,7 +276,7 @@ export const BayWorkspace = ({
     const book = (draft: BookingDraft) => {
         if (!draft.customer) return;
 
-        const fee = feeFor(draft.customer.status, draft.start, draft.duration);
+        const fee = feeFor(draft.customer, draft.start, draft.duration);
         const id = `r-new-${reservations.length + 1}`;
 
         const next: Reservation = {
@@ -364,7 +364,10 @@ export const BayWorkspace = ({
             ]);
             say(also.length ? `Block updated, and added to ${also.length} more ${also.length === 1 ? "bay" : "bays"}.` : "Block updated.");
         } else {
-            setBlocks((prev) => [...prev, ...bayIds.map((bayId, index) => ({ id: `bl-new-${stamp}-${index}`, bayId, ...shared, seriesId }))]);
+            setBlocks((prev) => [
+                ...prev,
+                ...bayIds.map((bayId, index) => ({ id: `bl-new-${stamp}-${index}`, bayId, ...shared, seriesId })),
+            ]);
             say(bayIds.length === 1 ? "Block added." : `${bayIds.length} bays blocked.`);
         }
 
@@ -406,7 +409,7 @@ export const BayWorkspace = ({
                                 bayCount={columns.length || bays.length}
                             />
                         )}
-                        {!hideLegend && <SheetLegend />}
+                        {!hideLegend && <SheetLegend reservations={reservations} />}
                     </>
                 }
                 onBookSlot={(bayId, start) => go({ kind: "book", bayId, start })}
