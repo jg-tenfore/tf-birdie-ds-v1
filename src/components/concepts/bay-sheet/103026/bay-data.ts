@@ -443,8 +443,8 @@ export const SHEET_WEEKDAY = 2;
  * specific one wins: a fee that names a membership beats one that applies to
  * everybody. Ties go to the lower priority number.
  *
- * **The specificity rule is an assumption and it is an open question for
- * Weston.** Reading the priority column at face value — lowest number wins
+ * **The specificity rule is an assumption and it is WJ-238's open
+ * question for Weston.** Reading the priority column at face value — lowest number wins
  * outright — would mean `Gold Afternoon` never applies on a Tuesday, because
  * `Sim Hour Sun–Thurs` is priority 1 and matches the same hours. He described
  * Gold Afternoon as the fee his gold members get, so specificity has to
