@@ -15,6 +15,7 @@ import {
     bayById,
     bookingsToday,
     conflictFor,
+    capacityOf,
     feeFor,
     fmtDuration,
     fmtTime,
@@ -375,7 +376,16 @@ export const BookingDialog = ({
             </Group>
 
             <Group title="Bay and time" hint="Moving the bay or the duration re-runs the overlap check and the fee.">
-                <BayPicker value={draft.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <BayPicker
+                    value={draft.bayId}
+                    onChange={(bayId) => {
+                        set("bayId", bayId);
+                        /* A party that no longer fits is clamped rather than
+                           left to fail on save — the smaller bay is the thing
+                           the user just chose, so it wins. */
+                        if (draft.party > capacityOf(bayId)) set("party", capacityOf(bayId));
+                    }}
+                />
                 <StepperField
                     label="How long"
                     value={draft.duration}
@@ -391,7 +401,8 @@ export const BookingDialog = ({
                     value={draft.party}
                     onChange={(value) => set("party", value)}
                     min={1}
-                    max={12}
+                    max={capacityOf(draft.bayId)}
+                    hint={`${bayById(draft.bayId).name} holds ${capacityOf(draft.bayId)}.`}
                     ariaLabel="players"
                 />
             </Group>
@@ -626,7 +637,13 @@ export const ReservationDialog = ({
             </Group>
 
             <Group title="Bay and time" hint="Moving the bay or the duration re-runs the overlap check and the fee.">
-                <BayPicker value={reservation.bayId} onChange={(bayId) => set("bayId", bayId)} />
+                <BayPicker
+                    value={reservation.bayId}
+                    onChange={(bayId) => {
+                        set("bayId", bayId);
+                        if (reservation.party > capacityOf(bayId)) set("party", capacityOf(bayId));
+                    }}
+                />
                 <StepperField
                     label="How long"
                     value={reservation.duration}
@@ -642,7 +659,8 @@ export const ReservationDialog = ({
                     value={reservation.party}
                     onChange={(value) => set("party", value)}
                     min={1}
-                    max={12}
+                    max={capacityOf(reservation.bayId)}
+                    hint={`${bayById(reservation.bayId).name} holds ${capacityOf(reservation.bayId)}.`}
                     ariaLabel="players"
                 />
             </Group>

@@ -26,6 +26,7 @@ import {
     usd,
     type Reservation,
     type ReservationStatus,
+    membershipById,
     membershipMark,
 } from "./bay-data";
 import { FIELD_BORDER, FIELD_RADIUS, ROW_RULE, SectionRule, StatusSegments } from "./bay-form-parts";
@@ -186,6 +187,9 @@ export const ReservationPeek = ({
     const series = seriesOf(reservations, reservation.seriesId);
 
     const needed = punchesNeeded(reservation.duration);
+    /* The plan that granted this card, when it is the plan's card. */
+    const plan = membershipById(customer.membershipId);
+    const grantedByPlan = plan && plan.grantsPunchCard === customer.punchCardName ? plan : undefined;
     const available = customer.punchesLeft ?? 0;
     const usePunch = reservation.punchesUsed !== undefined;
     const covered = usePunch ? Math.min(needed, available) : 0;
@@ -327,7 +331,20 @@ export const ReservationPeek = ({
                         <PeekRow
                             label="Punch card"
                             icon={ConfirmationNumberIcon}
-                            value={`${customer.punchCardName} — ${available} left${usePunch ? `, ${covered} on this booking` : ""}`}
+                            /*
+                             * Nov 3: the tail says where the card came from,
+                             * when the plan is what handed it over. Weston is
+                             * adding punch cards to simulator memberships —
+                             * *"it'll just automatically give it to them"* —
+                             * and until now the panel showed the plan and the
+                             * card as two unrelated facts a row apart.
+                             *
+                             * No tail for a walk-up who bought a 10-pack over
+                             * the counter, which stays a real case.
+                             */
+                            value={`${customer.punchCardName} — ${available} left${usePunch ? `, ${covered} on this booking` : ""}${
+                                grantedByPlan ? ` · included with ${grantedByPlan.name}` : ""
+                            }`}
                         />
                     )}
                 </PeekCard>
