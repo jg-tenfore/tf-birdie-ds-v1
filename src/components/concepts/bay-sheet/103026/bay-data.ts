@@ -45,32 +45,48 @@
  * sims named after where they are, and two named after people, which is the
  * spread the screen has to survive. **A bay is identified by its name.**
  *
+ * **Capacity is real and it differs per bay.** His Simulator Bays screen gives
+ * every resource a max — Blue Bay 8, Green Bay 4, East Porch Sim 1 — and the
+ * sheet had no idea the field existed, so a party of twelve could be booked
+ * into a one-person porch sim. The porch sims below are genuinely 1, which is
+ * the case worth being able to see.
+ *
  * `color` stays on the record because he wants it on resources eventually —
  * *"I wouldn't mind having that... we just don't have it right now"*. Nothing
  * reads it today, and grepping it is how you find every place that has to
  * change when it comes back.
  */
 export const bays = [
-    { id: "red", name: "Red Bay", color: "#C62828" },
-    { id: "orange", name: "Orange Bay", color: "#EF6C00" },
-    { id: "green", name: "Green Bay", color: "#2E7D32" },
-    { id: "blue", name: "Blue Bay", color: "#1565C0" },
-    { id: "magenta", name: "Magenta Bay", color: "#AD1457" },
-    { id: "white", name: "White Bay", color: "#546E7A" },
-    { id: "teal", name: "Teal Bay", color: "#00838F" },
-    { id: "amber", name: "Amber Bay", color: "#F9A825" },
-    { id: "eastporch", name: "East Porch Sim", color: "#6A1B9A" },
-    { id: "westporch", name: "West Porch Sim", color: "#283593" },
-    { id: "nicklaus", name: "Nicklaus Bay", color: "#558B2F" },
-    { id: "palmer", name: "Palmer Bay", color: "#D81B60" },
-    { id: "brown", name: "Brown Bay", color: "#6D4C41" },
-    { id: "cyan", name: "Cyan Bay", color: "#00ACC1" },
-    { id: "patio", name: "Patio Sim", color: "#827717" },
+    { id: "red", name: "Red Bay", color: "#C62828", capacity: 8 },
+    { id: "orange", name: "Orange Bay", color: "#EF6C00", capacity: 8 },
+    { id: "green", name: "Green Bay", color: "#2E7D32", capacity: 8 },
+    { id: "blue", name: "Blue Bay", color: "#1565C0", capacity: 8 },
+    { id: "magenta", name: "Magenta Bay", color: "#AD1457", capacity: 8 },
+    { id: "white", name: "White Bay", color: "#546E7A", capacity: 6 },
+    { id: "teal", name: "Teal Bay", color: "#00838F", capacity: 8 },
+    { id: "amber", name: "Amber Bay", color: "#F9A825", capacity: 8 },
+    { id: "eastporch", name: "East Porch Sim", color: "#6A1B9A", capacity: 1 },
+    { id: "westporch", name: "West Porch Sim", color: "#283593", capacity: 1 },
+    { id: "nicklaus", name: "Nicklaus Bay", color: "#558B2F", capacity: 8 },
+    { id: "palmer", name: "Palmer Bay", color: "#D81B60", capacity: 6 },
+    { id: "brown", name: "Brown Bay", color: "#6D4C41", capacity: 8 },
+    { id: "cyan", name: "Cyan Bay", color: "#00ACC1", capacity: 4 },
+    { id: "patio", name: "Patio Sim", color: "#827717", capacity: 2 },
 ];
 
 export type BayId = (typeof bays)[number]["id"];
 
 export const bayById = (id: string) => bays.find((bay) => bay.id === id) ?? bays[0];
+
+/**
+ * The most people a bay will take.
+ *
+ * The party stepper reads this rather than a flat ceiling, and a booking moved
+ * to a smaller bay is clamped down to fit. Same shape of guard as the overlap
+ * check: refuse the impossible booking where it is made, rather than letting
+ * somebody find out at the bay.
+ */
+export const capacityOf = (bayId: string): number => bayById(bayId).capacity;
 
 /** The sheet's day. Minutes from midnight, so arithmetic is plain. */
 export const DAY_START = 8 * 60;
@@ -138,6 +154,19 @@ export interface Membership {
     color: string;
     /** What a staff member learns from seeing it on the sheet. */
     hint: string;
+    /**
+     * The punch card this plan hands out, if it hands one out.
+     *
+     * > *"For memberships for simulators, what we're going to do is adding
+     * > these punch cards, for their tracking of like hours that they have.
+     * > And it'll just automatically give it to them."* — Weston, Nov 3
+     *
+     * **The balance still lives on the golfer**, not here, because a walk-up
+     * can buy a 10-pack over the counter and has to have somewhere to keep
+     * it. What this field says is only *where the card came from* — enough
+     * to stop the panel presenting the plan and the card as unrelated facts.
+     */
+    grantsPunchCard?: string;
 }
 
 /**
@@ -150,6 +179,7 @@ export const memberships: Membership[] = [
         name: "Gold Punch Membership",
         color: "#C77700",
         hint: "Holds sim hours on a punch card, and has its own afternoon rate.",
+        grantsPunchCard: "Sim 10-Pack",
     },
     {
         id: "super",
@@ -621,14 +651,14 @@ export const seedReservations: Reservation[] = [
     reservation("r-10", "green", 17 * 60, 120, "c-6", 8, { note: "Corporate — invoice to Meridian" }),
     reservation("r-11", "blue", 18 * 60 + 30, 60, "c-2", 2, { repeat: "weekly", seriesId: "s-2" }),
     /* Bays 9–15, so the sideways scroll has something in it to find. */
-    reservation("r-12", "eastporch", 8 * 60 + 30, 90, "c-7", 3, { status: "checkedIn", paid: true, punchesUsed: 2 }),
-    reservation("r-13", "westporch", 9 * 60 + 30, 60, "c-8", 2, { status: "checkedIn", tabOpen: true }),
+    reservation("r-12", "eastporch", 8 * 60 + 30, 90, "c-7", 1, { status: "checkedIn", paid: true, punchesUsed: 2 }),
+    reservation("r-13", "westporch", 9 * 60 + 30, 60, "c-8", 1, { status: "checkedIn", tabOpen: true }),
     reservation("r-14", "nicklaus", 11 * 60, 120, "c-9", 6, { note: "League practice — wants the long tee mats", occasion: "league" }),
     reservation("r-15", "palmer", 13 * 60 + 30, 60, "c-10", 2, { paid: true }),
     reservation("r-16", "brown", 15 * 60, 90, "c-11", 4, { repeat: "biweekly", seriesId: "s-4" }),
     reservation("r-17", "cyan", 16 * 60, 60, "c-12", 2, { status: "noShow" }),
-    reservation("r-18", "patio", 18 * 60, 120, "c-7", 5, { note: "Fitting — email the Trackman numbers after", occasion: "fitting" }),
-    reservation("r-19", "eastporch", 19 * 60 + 30, 60, "c-9", 2, {}),
+    reservation("r-18", "patio", 18 * 60, 120, "c-7", 2, { note: "Fitting — email the Trackman numbers after", occasion: "fitting" }),
+    reservation("r-19", "eastporch", 19 * 60 + 30, 60, "c-9", 1, {}),
 ];
 
 export const seedBlocks: BayBlock[] = [

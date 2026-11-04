@@ -187,6 +187,44 @@ else, because this is the one field that can block four bays in one press and
 
 ---
 
+## Two things the screenshots exposed, now fixed
+
+Neither came up in the call. Both surfaced while shooting the screens against
+Weston's own configuration pages, which is the argument for shooting them.
+
+### 6. A bay has a capacity, and the sheet did not know
+
+His Simulator Bays screen gives every resource a max, and they differ a lot:
+Blue Bay 8, Green Bay 4, **East Porch Sim 1**. The party stepper was a flat
+1-12 for every bay, so **twelve people could be booked into a one-person porch
+sim** and nothing objected.
+
+The stepper now reads the chosen bay's capacity, and moving a booking to a
+smaller bay clamps the party down to fit rather than failing on save. It is
+the same shape of guard as the overlap check: refuse the impossible booking
+where it is made, rather than letting somebody find out at the bay.
+
+Open the booking dialog and pick **East Porch Sim** - the stepper pins to 1
+and the hint says so. Both porch sims in the sample data are genuinely 1,
+because that is the case worth being able to see.
+
+### 7. A punch card comes from a membership
+
+> *"For memberships for simulators, what we're going to do is adding these
+> punch cards, for their tracking of like hours that they have. And it'll just
+> automatically give it to them."*
+
+The sheet treated a punch card as free-floating on the golfer, unconnected to
+any plan - the sample data lined up by luck rather than by rule. A plan now
+declares the card it grants, and the panel says so: *Sim 10-Pack - 6 left ·
+included with Gold Punch Membership*.
+
+**The balance stays on the golfer**, deliberately. A walk-up can buy a 10-pack
+over the counter and has to have somewhere to keep it, so the plan grants the
+card rather than owning it.
+
+---
+
 ## What this does to the tickets
 
 `WJ-169` is answered and closed with the answer written into it. `WJ-170`'s
