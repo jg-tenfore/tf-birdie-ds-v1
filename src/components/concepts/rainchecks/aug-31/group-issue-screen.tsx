@@ -10,7 +10,16 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { ActionButton, AppShell } from "@/components/app-chrome/app-shell";
 import { appColors } from "@/theme/app-replica-tokens";
 import { GroupIssueOneStop } from "../group-issue-one-stop";
-import { clampHoles, draftValue, groupTotals, makeDrafts, rainedOutHeading, usd, type GroupDraft } from "../group-issue";
+import {
+    clampHoles,
+    draftValue,
+    groupTotals,
+    makeDrafts,
+    rainedOutHeading,
+    usd,
+    type GroupDraft,
+    type PreselectMode,
+} from "../group-issue";
 import type { RaincheckPosition } from "../reservation-raincheck";
 
 /**
@@ -50,13 +59,30 @@ export interface GroupIssueScreenProps {
     startHoles?: number;
     /** Pre-adjust the drafts so a story can open on an exception or an exclusion. */
     tweak?: (drafts: GroupDraft[]) => GroupDraft[];
+    /**
+     * Which rows arrive ticked. **Nov 11.**
+     *
+     * Defaults to `all`, which is what shipped — so every Aug 31 story renders
+     * exactly as it did and stays the record of what was decided then. The Nov
+     * 11 stories pass this explicitly.
+     */
+    preselect?: PreselectMode;
+    /** With `preselect="tapped"`, the player whose RAINCHECK button was pressed. */
+    tappedId?: string;
 }
 
-export const GroupIssueScreen = ({ seed, heading = rainedOutHeading, startHoles = 5, tweak }: GroupIssueScreenProps) => {
+export const GroupIssueScreen = ({
+    seed,
+    heading = rainedOutHeading,
+    startHoles = 5,
+    tweak,
+    preselect = "all",
+    tappedId,
+}: GroupIssueScreenProps) => {
     const [positions, setPositions] = useState(seed);
     const [groupHoles, setGroupHoles] = useState(startHoles);
     const [drafts, setDrafts] = useState<GroupDraft[]>(() => {
-        const base = makeDrafts(seed, startHoles);
+        const base = makeDrafts(seed, startHoles, preselect, tappedId);
         return tweak ? tweak(base) : base;
     });
     const [nextId, setNextId] = useState(51381);

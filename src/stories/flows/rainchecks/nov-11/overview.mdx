@@ -1,0 +1,134 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Nov 11/What changed — Nov 11" />
+
+# What changed — Nov 11
+
+**One change, and it is a reversal.** The Aug 31 issue screen opens with every
+player ticked. Nevo has been running it, likes it, and asked for that one thing
+back.
+
+Nothing here reopens the rest of the screen. The hole count shared across the
+group, the exceptions coming off it by hand, the reassignment dropdown, the cap
+rule, voiding — all settled, all untouched. **The entire change is which boxes
+are already ticked when the screen opens.**
+
+---
+
+## Why
+
+> *"Right now, we default to issuing a rain check to all four players. Like,
+> they're all checked… They request — normally they're kind of doing it player
+> by player."* — Weston
+
+> *"Their main concern is that they don't notice the other ones are checked and
+> they accidentally just issued four rain checks. They'd rather have to know
+> they're doing it."* — Ryan
+
+The failure is not that the screen is hard to read. It is that an operator who
+wanted one credit was handed four, already agreed to, and had to notice and
+undo three. The screen proposed it; they only failed to refuse it.
+
+---
+
+## The two options, neither chosen on the call
+
+Both were proposed in the same minute and the call moved on. They are drawn
+rather than decided, and the decision is **yours and Weston's** — not something
+to settle by picking the tidier diff.
+
+| | **Option A** | **Option B** |
+| :-- | :-- | :-- |
+| **Opens with** | Nobody ticked | Only the player whose RAINCHECK you pressed |
+| **Whose** | Weston | Ryan — *"either none or only default the player that you clicked"* |
+| **Action bar reads** | Nothing selected | Issue 1 raincheck · $39.78 |
+| **Rained-off foursome costs** | 4 taps, or one on *Select all* | 3 taps, or one on *Select all* |
+| **Single walk-in costs** | 1 tap | 0 taps |
+| **The risk it carries** | *Select all* quietly becomes the habit, and the problem moves one tap away | The tap now means something it did not mean before — press the nearest button and you have chosen that player |
+
+Open **[1 — The opening default](?path=/story/flows-rainchecks-nov-11-1-the-opening-default--side-by-side)**
+and read the bottom bar in each column. Today's says **Issue 4 rainchecks ·
+$206.18** when the operator meant one, which is the complaint in the place it
+actually bites.
+
+Then walk both trips. The difference only becomes real once you have pressed
+the button that causes it — and Option B in particular cannot be judged from a
+still, because the whole of it is *which* button you pressed.
+
+---
+
+## What stays either way
+
+**The confirmation.** Weston's note on the safety net already in place:
+
+> *"Before you finish and issue the rain check, it'll give you a synopsis of
+> everything that you're doing… So it's not the easiest thing in the world to
+> issue an unintended rain check."*
+
+It stays. But it is a second line of defence, and the argument of this page is
+that a default needing one is the wrong default.
+
+**Select all.** Still in the header, where it has always been. Built to clear a
+list that arrived full; under either option it becomes the fast path for the
+genuine foursome. Worth watching in use — if Nevo presses it every time, Option
+A has moved the problem rather than solved it.
+
+**A credited round is never ticked.** In any of the three modes. `includeFor()`
+checks that first, ahead of the preference, because a round cannot be credited
+twice. There is a story for it.
+
+---
+
+## The case against, kept on the page
+
+Aug 31 chose *everyone ticked* deliberately, and the reason is still in the
+source: singling one player out *"would only invite the operator to think the
+others are somebody else's problem."* A rained-off foursome really is four
+credits, and a default of none makes the common case four taps instead of
+nought.
+
+Nov 11 is evidence against that bet, not an argument against it. Ryan, who runs
+the courses:
+
+> *"It's just more situations where one person's coming in at a time than all
+> four."*
+
+And the reason the solitary case is not an edge case:
+
+> *"We'll give out rain checks for anything, really. Like, someone could hurt
+> their back out there. It's not even raining."*
+
+A raincheck is not a weather instrument. That is probably the most useful single
+sentence from the call for anyone designing this screen.
+
+---
+
+## What this cost in code
+
+Almost nothing, which is itself an argument for deciding it from screens rather
+than from estimates.
+
+- `PreselectMode` and `includeFor()` in `group-issue.tsx` — the one place the
+  three modes differ.
+- `preselect` threaded through `GroupIssueScreen` and `GroupIssueFlow`,
+  **defaulting to `all`**, so every Aug 31 story renders exactly as it did and
+  stays the record of what was decided then.
+- The tapped player carried from the tee sheet. `onAction` has handed over the
+  player all along — it was being dropped on purpose.
+
+---
+
+## Also from this call, not built here
+
+**The rain check report cannot find a rain check by its ID.** Ryan searched
+`49739` in `Reports → Credits → Rain Checks` and got *No rain checks found*;
+searching the customer's name finds the same record. Weston reproduced it live.
+
+That is **Buck, not Birdie**, and it reads as a bug rather than a design
+question — the search appears to match the name column and not the ID column.
+Recorded here so it is not lost with the meeting; it needs an owner either way.
+
+A second, separate effect in the same report: searching before the all-courses
+data has finished loading returns nothing, and the search then appears broken
+when it is merely early. Worth confirming whether these are one problem or two
+before anyone goes looking.

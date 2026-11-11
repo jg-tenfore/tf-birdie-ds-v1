@@ -77,11 +77,44 @@ export interface GroupDraft {
     custom?: boolean;
 }
 
+/**
+ * Which rows arrive ticked when the screen opens. **Nov 11.**
+ *
+ * `all` is what shipped and what Nevo has been using: everybody still owed a
+ * credit comes in ticked. The other two exist because that default issued four
+ * rainchecks when the operator meant one.
+ *
+ * > *"Their main concern is that they don't notice the other ones are checked
+ * > and they accidentally just issued four rain checks. They'd rather have to
+ * > know they're doing it."* — Ryan, Nov 11
+ */
+export type PreselectMode = "all" | "none" | "tapped";
+
+/**
+ * One row's opening tick.
+ *
+ * A round already credited is never ticked, whatever the mode — it cannot be
+ * credited twice, so that rule sits ahead of the preference rather than beside
+ * it. This is the only place the three modes differ, which is what makes them
+ * cheap to compare and cheap to change your mind about.
+ */
+export const includeFor = (position: RaincheckPosition, mode: PreselectMode, tappedId?: string): boolean => {
+    if (position.issued) return false;
+    if (mode === "none") return false;
+    if (mode === "tapped") return position.id === tappedId;
+    return true;
+};
+
 /** A round that has already been credited cannot be credited again, so it starts out. */
-export const makeDrafts = (positions: RaincheckPosition[], holesPlayed: number): GroupDraft[] =>
+export const makeDrafts = (
+    positions: RaincheckPosition[],
+    holesPlayed: number,
+    mode: PreselectMode = "all",
+    tappedId?: string,
+): GroupDraft[] =>
     positions.map((p) => ({
         positionId: p.id,
-        include: !p.issued,
+        include: includeFor(p, mode, tappedId),
         holesPlayed: clampHoles(p, holesPlayed),
         recipientId: p.id,
     }));
