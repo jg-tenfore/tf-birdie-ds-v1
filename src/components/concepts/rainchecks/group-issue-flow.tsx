@@ -18,7 +18,7 @@ import type { Raincheck } from "@/data/rainchecks";
 import { appColors } from "@/theme/app-replica-tokens";
 import { GroupIssueOneStop } from "./group-issue-one-stop";
 import { GroupIssuePerPlayer } from "./group-issue-per-player";
-import { clampHoles, draftValue, groupTotals, makeDrafts, usd, type GroupDraft } from "./group-issue";
+import { clampHoles, draftValue, groupTotals, makeDrafts, usd, type GroupDraft, type PreselectMode } from "./group-issue";
 import { positionTotal, type RaincheckPosition } from "./reservation-raincheck";
 
 /**
@@ -204,11 +204,20 @@ export interface GroupIssueFlowProps {
     heading: string;
     teeTime: string;
     startHoles?: number;
+    /**
+     * Which rows arrive ticked on the issue screen. **Nov 11.**
+     *
+     * Defaults to `all` — what shipped — so the Aug 20 and Aug 31 trips are
+     * untouched. `tapped` is the mode that needs this whole flow rather than
+     * the screen alone, because the player it ticks is only known at the tee
+     * sheet, one screen earlier.
+     */
+    preselect?: PreselectMode;
 }
 
-export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5 }: GroupIssueFlowProps) => {
+export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5, preselect = "all" }: GroupIssueFlowProps) => {
     const [positions, setPositions] = useState(seed);
-    const [drafts, setDrafts] = useState<GroupDraft[]>(() => makeDrafts(seed, startHoles));
+    const [drafts, setDrafts] = useState<GroupDraft[]>(() => makeDrafts(seed, startHoles, preselect));
     const [groupHoles, setGroupHoles] = useState(startHoles);
     const [step, setStep] = useState<"booking" | "issue" | "done">("booking");
     const [credits, setCredits] = useState<Raincheck[]>([]);
@@ -230,12 +239,17 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
     const patch = (positionId: string, next: Partial<GroupDraft>) =>
         setDrafts((prev) => prev.map((d) => (d.positionId === positionId ? { ...d, ...next } : d)));
 
-    const openGroup = () => {
-        // Everyone still owed a credit comes in ticked. The player whose button
-        // was tapped gets no special treatment — the screen is about the group,
-        // and singling one out would only invite the operator to think the
-        // others are somebody else's problem.
-        setDrafts(makeDrafts(positions, groupHoles));
+    const openGroup = (tappedId?: string) => {
+        // Who arrives ticked is now the question this flow exists to ask, so it
+        // is `preselect` that answers it rather than a rule written in here.
+        //
+        // Under `all` — what shipped — everyone still owed a credit comes in
+        // ticked, and the player whose button was tapped gets no special
+        // treatment: the screen is about the group, and singling one out was
+        // thought to invite the operator to treat the others as somebody else's
+        // problem. Nov 11 is the counter-evidence: Nevo kept issuing four when
+        // they meant one, because they did not notice the other three.
+        setDrafts(makeDrafts(positions, groupHoles, preselect, tappedId));
         setStep("issue");
     };
 
@@ -299,8 +313,12 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
                               ] as PlayerAction[]),
                     })),
                 }}
-                onAction={(action) => {
-                    if (action === "Raincheck") openGroup();
+                onAction={(action, player) => {
+                    // The detail screen knows the player by name, not by id —
+                    // its rows are display records. Names are unique within a
+                    // reservation, which is what makes this safe, and the id
+                    // round-trips no further than the next line.
+                    if (action === "Raincheck") openGroup(positions.find((p) => p.name === player.name)?.id);
                 }}
             />
         );
