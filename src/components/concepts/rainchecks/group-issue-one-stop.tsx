@@ -11,6 +11,7 @@ import { VoidDialog, type RaincheckPosition } from "./reservation-raincheck";
 import {
     AlreadyIssued,
     HeaderRow,
+    HoleButtons,
     HoleStepper,
     IncludeBox,
     PlayerCell,
@@ -51,12 +52,43 @@ import {
  * earlier concept has anywhere to put that sentence, because neither has a
  * number that spans players.
  */
+/**
+ * What the two ends of the hole control mean.
+ *
+ * Under the slider these are the only statement of the range. Under the
+ * buttons they do a different job: they say what the first and last key
+ * *mean*, which bare numbers do not — a `0` on a row of numbers is ambiguous
+ * in a way *"never teed off"* is not, and `0` is the one value that hands back
+ * every dollar.
+ */
+const RangeCaptions = ({ max, mt }: { max: number; mt: number }) => (
+    <Stack direction="row" sx={{ justifyContent: "space-between", mt }}>
+        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>0 — never teed off</Typography>
+        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{max} — all but the last</Typography>
+    </Stack>
+);
+
 export interface GroupIssueOneStopProps {
     heading: string;
     positions: RaincheckPosition[];
     /** Where play stopped, for everyone who has not been set by hand. */
     groupHoles: number;
     onGroupHoles?: (holes: number) => void;
+    /**
+     * How the group's hole count is asked. **Nov 12.**
+     *
+     * Defaults to `slider`, which is what Aug 31 chose and what every story in
+     * that folder still renders, so the record of that decision is unaltered.
+     * `buttons` is the Nov 12 replacement, and the reason is a build one rather
+     * than a design one — the slider does not fit the way the screen is built:
+     *
+     * > *"Cody, he tried the slider, and in the way it's built with the stuff
+     * > now, he's like, oh, that's just not gonna work."* — Weston, Nov 12
+     *
+     * Nothing else on the screen moves. The number it produces, the rows that
+     * read it, the clamp banner and the totals are all the same code.
+     */
+    holeControl?: "slider" | "buttons";
     drafts: GroupDraft[];
     onDraft?: (positionId: string, patch: Partial<GroupDraft>) => void;
     onToggleAll?: (include: boolean) => void;
@@ -72,6 +104,7 @@ export const GroupIssueOneStop = ({
     positions,
     groupHoles,
     onGroupHoles,
+    holeControl = "slider",
     drafts,
     onDraft,
     onToggleAll,
@@ -85,6 +118,7 @@ export const GroupIssueOneStop = ({
         if (!position) return d;
         return { ...d, holesPlayed: clampHoles(position, d.custom ? d.holesPlayed : groupHoles) };
     });
+    const buttons = holeControl === "buttons";
     const [voiding, setVoiding] = useState<RaincheckPosition | null>(null);
     const totals = groupTotals(positions, effectiveDrafts);
     const issuable = positions.filter((p) => !p.issued);
@@ -107,49 +141,74 @@ export const GroupIssueOneStop = ({
             </Box>
 
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
-                {/* One question, asked once, at the top — the whole bet. */}
+                {/* One question, asked once, at the top — the whole bet.
+                    
+                    The two controls want different shapes, so the card is laid
+                    out twice rather than bent into one. The slider is narrow
+                    and sits in a row beside the question; the buttons are a
+                    full-width scale and the question goes above them, because
+                    squeezed into a column the row of keys wraps into four
+                    ragged lines and stops reading as a scale at all. Same
+                    question, same answer, same totals — the arrangement is the
+                    only thing that differs. */}
                 <Stack
-                    direction="row"
-                    sx={{ bgcolor: appColors.surface, border: `1px solid ${appColors.divider}`, p: 2, gap: 3, alignItems: "center", mb: 2 }}
+                    sx={{
+                        bgcolor: appColors.surface,
+                        border: `1px solid ${appColors.divider}`,
+                        p: 2,
+                        mb: 2,
+                    }}
                 >
-                    <Stack sx={{ minWidth: 260 }}>
-                        <Typography sx={{ fontSize: 17 }}>Where did play stop?</Typography>
-                        <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.25 }}>
-                            Applies to everyone below unless you set them separately.
-                        </Typography>
-                    </Stack>
-
-                    <HoleStepper value={groupHoles} max={groupMax} label="the group" onChange={onGroupHoles} />
-
-                    <Box sx={{ flex: 1, px: 1 }}>
-                        <Slider
-                            value={groupHoles}
-                            min={0}
-                            max={groupMax}
-                            step={1}
-                            marks
-                            onChange={(_, v) => onGroupHoles?.(Array.isArray(v) ? v[0] : v)}
-                            valueLabelDisplay="auto"
-                            aria-label="Holes played by the group"
-                            sx={{
-                                color: appColors.greenTee,
-                                height: 8,
-                                "& .MuiSlider-thumb": { width: 28, height: 28 },
-                                "& .MuiSlider-mark": { height: 8, opacity: 0.4 },
-                            }}
-                        />
-                        <Stack direction="row" sx={{ justifyContent: "space-between", mt: -0.5 }}>
-                            <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>0 — never teed off</Typography>
-                            <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>{groupMax} — all but the last</Typography>
+                    <Stack direction="row" sx={{ gap: 3, alignItems: buttons ? "flex-start" : "center" }}>
+                        <Stack sx={{ flex: buttons ? 1 : "0 0 auto", minWidth: 260 }}>
+                            <Typography sx={{ fontSize: 17 }}>Where did play stop?</Typography>
+                            <Typography sx={{ fontSize: 14, color: appColors.textSecondary, mt: 0.25 }}>
+                                {buttons
+                                    ? "Applies to everyone. Tap a player's number to set theirs separately, or tap their name to change who receives the credit."
+                                    : "Applies to everyone below unless you set them separately."}
+                            </Typography>
                         </Stack>
-                    </Box>
 
-                    <Stack sx={{ minWidth: 190, textAlign: "right" }}>
-                        <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>Everyone gets back</Typography>
-                        <Typography sx={{ fontSize: 22 }}>
-                            {Math.max(0, longest - groupHoles)} of {longest} holes
-                        </Typography>
+                        {!buttons && (
+                            <>
+                                <HoleStepper value={groupHoles} max={groupMax} label="the group" onChange={onGroupHoles} />
+
+                                <Box sx={{ flex: 1, px: 1 }}>
+                                    <Slider
+                                        value={groupHoles}
+                                        min={0}
+                                        max={groupMax}
+                                        step={1}
+                                        marks
+                                        onChange={(_, v) => onGroupHoles?.(Array.isArray(v) ? v[0] : v)}
+                                        valueLabelDisplay="auto"
+                                        aria-label="Holes played by the group"
+                                        sx={{
+                                            color: appColors.greenTee,
+                                            height: 8,
+                                            "& .MuiSlider-thumb": { width: 28, height: 28 },
+                                            "& .MuiSlider-mark": { height: 8, opacity: 0.4 },
+                                        }}
+                                    />
+                                    <RangeCaptions max={groupMax} mt={-0.5} />
+                                </Box>
+                            </>
+                        )}
+
+                        <Stack sx={{ minWidth: 190, textAlign: "right" }}>
+                            <Typography sx={{ fontSize: 15, color: appColors.textSecondary }}>Everyone gets back</Typography>
+                            <Typography sx={{ fontSize: 22 }}>
+                                {Math.max(0, longest - groupHoles)} of {longest} holes
+                            </Typography>
+                        </Stack>
                     </Stack>
+
+                    {buttons && (
+                        <Box sx={{ mt: 1.5 }}>
+                            <HoleButtons value={groupHoles} max={groupMax} label="the group" onChange={onGroupHoles} />
+                            <RangeCaptions max={groupMax} mt={0.75} />
+                        </Box>
+                    )}
                 </Stack>
 
                 {clampedRows.length > 0 && (
@@ -294,7 +353,11 @@ export const GroupIssueOneStop = ({
                                                 <Typography
                                                     sx={{ fontSize: 12, color: clamped ? appColors.orange : appColors.textSecondary }}
                                                 >
-                                                    {clamped ? `capped — booked ${position.holes}` : "same as the group"}
+                                                    {clamped
+                                                        ? `capped — booked ${position.holes}`
+                                                        : buttons
+                                                          ? "with the group"
+                                                          : "same as the group"}
                                                 </Typography>
                                             </ButtonBase>
                                         )}

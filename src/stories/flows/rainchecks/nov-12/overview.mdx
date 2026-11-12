@@ -1,0 +1,109 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Rainchecks/Nov 12/What changed — Nov 12" />
+
+# What changed — Nov 12
+
+**Two changes, and both of them close something.** Nov 11 asked a question and
+drew two answers without choosing. Nov 12 chose, and a second change came back
+from the build in the same conversation.
+
+Everything else on the issue screen is as Aug 31 settled it: one hole count for
+the group, rows taken off it by hand, the `SET BY HAND` flag, the cap rule, the
+reassignment dropdown, voiding, the confirmation synopsis. None of it is
+reopened here. **The entire diff is which boxes open ticked, and what shape the
+hole control is.**
+
+---
+
+## 1. Option B is chosen
+
+The screen opens with **only the player whose RAINCHECK button was pressed**
+ticked.
+
+Weston, looking at the Nov 11 comparison on screen: *"Yeah. This is the one…
+that's the one we go [with]."*
+
+So Nov 11 stops being an open question. **Option A — nobody ticked — is
+retired**, the same way Aug 20's Option A went once the hole-count decision was
+made. It stays in `Flows → Rainchecks → Nov 11` as the record of how the choice
+was made, and that page should be read as history from here, not as a decision
+waiting on anyone.
+
+What it fixes is still the thing Nevo brought back:
+
+> *"Their main concern is that they don't notice the other ones are checked and
+> they accidentally just issued four rain checks. They'd rather have to know
+> they're doing it."* — Ryan, Nov 11
+
+**The risk it carries, unchanged and still worth watching:** the tap now means
+something it did not mean before. An operator who presses whichever RAINCHECK
+button is nearest has chosen that player. The confirmation synopsis is what
+stands behind that, and `Select all` is still in the header for the genuine
+rained-off foursome.
+
+---
+
+## 2. The slider is replaced by buttons
+
+One key per hole, **0 to 17**, where the group slider was.
+
+This one did not come from the design side. It came back from the build:
+
+> *"We did change the slider [to] the buttons. I forgot to tell you that… Cody,
+> he tried the slider, and in the way it's built with the stuff now, he's like,
+> oh, that's just not gonna work."* — Weston, Nov 12
+
+It is worth saying plainly that it is **not a concession**:
+
+| | **Slider (Aug 31)** | **Buttons (Nov 12)** |
+| :-- | :-- | :-- |
+| **Getting to 12** | A drag that lands near it; read the number back to check | One tap, exactly |
+| **Seeing the range** | Two end captions; the middle is discovered | Every answer on screen at once |
+| **Width** | Narrow | A full row |
+| **Repeated per row** | Four imprecise drags — rejected Aug 20 | Four walls of keys — also rejected |
+
+The output of this control is money. A value that is **chosen** beats a value
+that is approximated and then verified, and the cost is width on a landscape
+tablet that has it.
+
+The width is also exactly why this is the **group** control only. The rows keep
+the stepper. Eighteen keys once is a legible row; eighteen keys four times is a
+wall, which is the Aug 20 argument against four sliders arriving intact on the
+other side of the swap.
+
+**The end captions stay.** `0 — never teed off` and `17 — all but the last` were
+the slider's only statement of its range. Under the buttons they do a different
+job: they say what the first and last key *mean*, which bare numbers do not. A
+`0` on a row of numbers is ambiguous in a way *"never teed off"* is not — and
+`0` is the one value that hands back every dollar.
+
+---
+
+## What this cost in code
+
+Almost nothing, which is the point of having drawn it rather than estimated it.
+
+- `HoleButtons` in `group-issue.tsx`, beside the stepper it does not replace.
+- `holeControl` threaded through `GroupIssueOneStop`, `GroupIssueScreen` and
+  `GroupIssueFlow`, **defaulting to `slider`** — so every Aug 31 and Nov 11
+  story renders exactly as it did and stays the record of what was decided
+  then.
+- The row caption reads **with the group** under the buttons, matching the
+  build, where the slider version says *same as the group*.
+- Option B needed no new code at all. Nov 11 already built `preselect`; these
+  stories just pass it.
+
+---
+
+## One open question for the build
+
+The screenshot from the build spells it **rain check**, two words — in the
+title and on the action bar. This design system has said **raincheck**, one
+word, since the first Aug 20 screen: story titles, the record, the tender, the
+ticket names.
+
+Not changed here, because it is a system-wide rename rather than a screen edit
+and it would touch every raincheck story in the library. **Worth deciding
+once**, and then doing in one pass, rather than letting the comps and the build
+drift apart a word at a time.

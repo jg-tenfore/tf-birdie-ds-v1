@@ -213,9 +213,23 @@ export interface GroupIssueFlowProps {
      * sheet, one screen earlier.
      */
     preselect?: PreselectMode;
+    /**
+     * How the group's hole count is asked on the issue screen. **Nov 12.**
+     * Defaults to `slider`, so the Aug 20, Aug 31 and Nov 11 trips are
+     * unchanged; the Nov 12 trip passes `buttons`.
+     */
+    holeControl?: "slider" | "buttons";
 }
 
-export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5, preselect = "all" }: GroupIssueFlowProps) => {
+export const GroupIssueFlow = ({
+    variant,
+    seed,
+    heading,
+    teeTime,
+    startHoles = 5,
+    preselect = "all",
+    holeControl,
+}: GroupIssueFlowProps) => {
     const [positions, setPositions] = useState(seed);
     const [drafts, setDrafts] = useState<GroupDraft[]>(() => makeDrafts(seed, startHoles, preselect));
     const [groupHoles, setGroupHoles] = useState(startHoles);
@@ -356,6 +370,7 @@ export const GroupIssueFlow = ({ variant, seed, heading, teeTime, startHoles = 5
                         positions={positions}
                         groupHoles={groupHoles}
                         onGroupHoles={setGroupHoles}
+                        holeControl={holeControl}
                         drafts={drafts}
                         onDraft={patch}
                         onToggleAll={(include) => setDrafts((prev) => prev.map((d) => ({ ...d, include })))}

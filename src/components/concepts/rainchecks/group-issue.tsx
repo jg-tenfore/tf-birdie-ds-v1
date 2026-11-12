@@ -274,6 +274,70 @@ export const HoleStepper = ({
     );
 };
 
+/**
+ * Holes played, as one button per hole. **Nov 12.**
+ *
+ * The replacement for the group slider, and it is a build constraint rather
+ * than a design preference:
+ *
+ * > *"We did change the slider [to] the buttons… Cody, he tried the slider, and
+ * > in the way it's built with the stuff now, he's like, oh, that's just not
+ * > gonna work."* — Weston, Nov 12
+ *
+ * It costs width and buys two things the slider never had. The value is chosen
+ * rather than approximated — one tap lands exactly on 12, where a drag lands
+ * near it and the operator has to read back what they got — and every reachable
+ * answer is on screen at once, so the range is read instead of discovered.
+ *
+ * What it costs is honest: eighteen keys across a row, which is why this is the
+ * group control and the rows keep the stepper. Eighteen buttons once is a
+ * legible row; eighteen buttons four times is a wall.
+ *
+ * `max` is the longest round in the group minus one — you cannot be credited
+ * for a round you finished — so an 18-hole group draws 0–17.
+ */
+export const HoleButtons = ({
+    value,
+    max,
+    label,
+    onChange,
+}: {
+    value: number;
+    max: number;
+    label: string;
+    onChange?: (holes: number) => void;
+}) => (
+    <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap" }}>
+        {Array.from({ length: max + 1 }, (_, hole) => {
+            const on = hole === value;
+            return (
+                <ButtonBase
+                    key={hole}
+                    aria-label={`${hole} holes played by ${label}`}
+                    aria-pressed={on}
+                    onClick={() => onChange?.(hole)}
+                    sx={{
+                        // 48dp keys, and they grow to fill the row rather than
+                        // leaving a ragged gap at the end — the control is a
+                        // scale, and a scale that does not reach its own edge
+                        // reads as a list of options instead.
+                        flex: "1 1 0",
+                        minWidth: 48,
+                        minHeight: 56,
+                        borderRadius: 0.5,
+                        border: `1px solid ${on ? appColors.greenTee : appColors.divider}`,
+                        bgcolor: on ? appColors.greenTee : appColors.surface,
+                        color: on ? "#FFFFFF" : appColors.textPrimary,
+                        fontSize: 20,
+                    }}
+                >
+                    {hole}
+                </ButtonBase>
+            );
+        })}
+    </Stack>
+);
+
 /** The include/exclude tick. Requirement 2, and the reason this is a list rather than a queue. */
 export const IncludeBox = ({
     checked,
