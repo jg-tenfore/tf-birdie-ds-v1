@@ -69,6 +69,12 @@ export interface GroupIssueScreenProps {
     preselect?: PreselectMode;
     /** With `preselect="tapped"`, the player whose RAINCHECK button was pressed. */
     tappedId?: string;
+    /**
+     * How the group's hole count is asked. **Nov 12.** Defaults to `slider`,
+     * so every Aug 31 and Nov 11 story is unchanged; the Nov 12 stories pass
+     * `buttons`.
+     */
+    holeControl?: "slider" | "buttons";
 }
 
 export const GroupIssueScreen = ({
@@ -78,6 +84,7 @@ export const GroupIssueScreen = ({
     tweak,
     preselect = "all",
     tappedId,
+    holeControl,
 }: GroupIssueScreenProps) => {
     const [positions, setPositions] = useState(seed);
     const [groupHoles, setGroupHoles] = useState(startHoles);
@@ -180,6 +187,7 @@ export const GroupIssueScreen = ({
                         heading={heading}
                         positions={positions}
                         groupHoles={groupHoles}
+                        holeControl={holeControl}
                         onGroupHoles={(h) => {
                             setGroupHoles(h);
                             setFlash(null);
