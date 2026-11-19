@@ -17,9 +17,15 @@ import { EdgeLabel } from "./tables-shared-parts";
 
 export const newTableAction = <Typography sx={{ fontSize: 13, letterSpacing: "0.06em", color: "#fff" }}>NEW TABLE</Typography>;
 
+/**
+ * Ad-hoc tables, named after the party on them rather than by the app's
+ * generated `Detached 27699` IDs — short enough to sit inside a 95px token.
+ */
 export const detachedTokens: ChartTable[] = [
-    { label: "Detached 27699", x: 96, y: 90 },
-    { label: "Detached 58829", x: 241, y: 111 },
+    { label: "Brooksby", x: 96, y: 90 },
+    { label: "Nakamura", x: 241, y: 111 },
+    { label: "Okafor", x: 386, y: 90 },
+    { label: "Farnsworth", x: 531, y: 111 },
 ];
 
 /** The room button renders its stored casing verbatim, hence `transform="none"`. */

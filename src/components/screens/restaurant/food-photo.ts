@@ -39,6 +39,20 @@ const ALIASES: Record<string, string> = {
     "double stack": "Clubhouse Cheeseburger",
 };
 
+/**
+ * Generated product shots for labels with no honest catalogue match.
+ *
+ * Aliasing these to the catalogue's beers would have put a Corona on a row that
+ * says Busch. These were generated to the brief of each — a light lager can, a
+ * golden pilsner, a hazy IPA — and deliberately **unbranded**: no label, no
+ * logo, because inventing another company's packaging is not ours to do.
+ */
+const GENERATED: Record<string, string> = {
+    "busch prod": "generated/lager.jpg",
+    "carlsberg pilsner": "generated/pilsner.jpg",
+    "full grown man": "generated/ipa.jpg",
+};
+
 const norm = (s: string) =>
     s
         .toLowerCase()
@@ -54,6 +68,9 @@ const byName = (name: string) => foodItems.find((i) => i.name === name);
 
 export function resolveFoodPhoto(label: string): string | null {
     const target = norm(label);
+
+    const generated = GENERATED[target];
+    if (generated) return storeImage(generated);
 
     const alias = ALIASES[target];
     if (alias) {

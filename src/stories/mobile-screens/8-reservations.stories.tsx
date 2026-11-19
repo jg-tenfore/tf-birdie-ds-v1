@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { MobileCreateReservation, MobileReservationsDay } from "@/components/mobile/screens/mobile-reservations";
+import { MobileCreateReservation, MobileReservationsDay, reservationsDay } from "@/components/mobile/screens/mobile-reservations";
 
 /**
  * **Mobile Screens — 8-reservations.** The restaurant's book for one day, laid
@@ -42,6 +42,20 @@ type Story = StoryObj<typeof meta>;
  */
 export const DayList: Story = {
     render: () => <MobileReservationsDay />,
+};
+
+/**
+ * **Day list — booked.** The same Wednesday with nine bookings on it.
+ *
+ * Each booking stacks the way the column band had to go: time and party size
+ * on the first line, the guest's name under it, then email and phone. The
+ * section heading totals the day in reservations and covers, which is what a
+ * host checks first; the party size is right-aligned so the covers can be read
+ * straight down the list.
+ */
+export const DayListBooked: Story = {
+    name: "Day list — booked",
+    render: () => <MobileReservationsDay bookings={reservationsDay} />,
 };
 
 /**

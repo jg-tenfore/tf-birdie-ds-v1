@@ -17,7 +17,15 @@ import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
 import { posCategories } from "@/data/pos-inventory";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
-import { MobileAttachedCustomer, MobileEmpty, MobileRow, MobileSearch, MobileSectionHeading, MobileTotals } from "../mobile-parts";
+import {
+    attachedCustomerAvatar,
+    MobileAttachedCustomer,
+    MobileEmpty,
+    MobileRow,
+    MobileSearch,
+    MobileSectionHeading,
+    MobileTotals,
+} from "../mobile-parts";
 import {
     MobileActionArea,
     MobileAppBar,
@@ -154,7 +162,7 @@ export const MobileProShop = ({
             }
             bottomNav={
                 <>
-                    <MobileAttachedCustomer name="Weston Farnsworth" count={lines.length || undefined} />
+                    <MobileAttachedCustomer name="Weston Farnsworth" avatar={attachedCustomerAvatar} count={lines.length || undefined} />
                     <MobileBottomNav items={navItems} active={tab} onChange={(k) => setTab(k as Tab)} />
                 </>
             }

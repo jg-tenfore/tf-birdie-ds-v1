@@ -13,7 +13,15 @@ import { seatBandColors } from "@/components/screens/restaurant/tabs-parts";
 import { posCategory, posItem } from "@/data/pos-inventory";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
-import { MobileAttachedCustomer, MobileFab, MobileFilterTabs, MobileRow, MobileSearch, MobileSeatBand } from "../mobile-parts";
+import {
+    attachedCustomerAvatar,
+    MobileAttachedCustomer,
+    MobileFab,
+    MobileFilterTabs,
+    MobileRow,
+    MobileSearch,
+    MobileSeatBand,
+} from "../mobile-parts";
 import {
     MobileActionArea,
     MobileAppBar,
@@ -96,7 +104,7 @@ export const MobileTables = ({
                 appBar={<MobileAppBar title="Beers" leading="back" showSearch />}
                 bottomNav={
                     <>
-                        <MobileAttachedCustomer name="Weston Farnsworth" count={2} />
+                        <MobileAttachedCustomer name="Weston Farnsworth" avatar={attachedCustomerAvatar} count={2} />
                         <MobileBottomNav items={navItems} active="menus" />
                     </>
                 }
@@ -129,7 +137,7 @@ export const MobileTables = ({
             fab={<MobileFab label="Create Order" />}
             bottomNav={
                 <>
-                    <MobileAttachedCustomer name="Weston Farnsworth" count={2} />
+                    <MobileAttachedCustomer name="Weston Farnsworth" avatar={attachedCustomerAvatar} count={2} />
                     <MobileBottomNav items={navItems} active="menus" />
                 </>
             }
@@ -193,7 +201,7 @@ export const MobileTableOrder = ({ fired = false }: { fired?: boolean }) => {
             }
             bottomNav={
                 <>
-                    <MobileAttachedCustomer name="Weston Farnsworth" count={seatedLines.length} />
+                    <MobileAttachedCustomer name="Weston Farnsworth" avatar={attachedCustomerAvatar} count={seatedLines.length} />
                     <MobileBottomNav items={orderNav} active="order" />
                 </>
             }

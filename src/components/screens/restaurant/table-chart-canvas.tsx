@@ -22,7 +22,8 @@ export interface ChartTable {
 
 /**
  * A draggable table token — a dark rounded square with a single centered,
- * non-wrapping label. "Detached 27699" renders as "ached 276".
+ * non-wrapping label. A label wider than the token is clipped at both ends
+ * rather than shortened, which is why chart tables carry short names.
  */
 export const TableToken = ({ table }: { table: ChartTable }) => (
     <ButtonBase

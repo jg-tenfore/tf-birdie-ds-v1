@@ -66,7 +66,12 @@ const StatusBar = () => (
         aria-hidden
         sx={{
             height: mobileChrome.statusBar,
-            px: 1.5,
+            // Wide enough that the clock and the signal icons clear the screen's
+            // rounded corners. The frame is a flat rectangle but the hardware is
+            // not: on the handheld the corner radius eats roughly 30px of the top
+            // row, which was clipping the "2" off the clock in device mockups.
+            // Real Android insets this row for exactly the same reason.
+            px: 5,
             alignItems: "center",
             gap: 0.75,
             bgcolor: appColors.slate,
@@ -188,6 +193,12 @@ export const MobileAppBar = ({
             sx={{
                 minHeight: 56,
                 px: 0.5,
+                // A little breathing room under the status row, so the title
+                // and its actions are not sitting directly beneath the camera
+                // notch on hardware that has one, and the same again below so
+                // the bar is not crowded against the content it introduces.
+                pt: 1,
+                pb: 1,
                 alignItems: "center",
                 gap: 0.5,
                 bgcolor: appColors.slate,

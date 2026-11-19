@@ -37,6 +37,7 @@ function serveRepoAssets(): Plugin {
     const mounts: [string, string][] = [
         ["/logos/", resolve(repoRoot, "logos")],
         ["/store-images/", resolve(repoRoot, "store/images")],
+        ["/avatars/", resolve(repoRoot, "avatars")],
     ];
 
     return {

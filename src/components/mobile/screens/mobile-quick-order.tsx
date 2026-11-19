@@ -22,6 +22,7 @@ import { appColors, appRadius } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
 import {
     MobileAttachedCustomer,
+    attachedCustomerAvatar,
     MobileEmpty,
     MobileFab,
     MobileFilterTabs,
@@ -205,7 +206,7 @@ export const MobileQuickOrder = ({
             }
             bottomNav={
                 <>
-                    <MobileAttachedCustomer name="Weston Farnsworth" count={lines.length || undefined} />
+                    <MobileAttachedCustomer name="Weston Farnsworth" avatar={attachedCustomerAvatar} count={lines.length || undefined} />
                     <MobileBottomNav items={navItems} active={tab} onChange={(k) => setTab(k as Tab)} />
                 </>
             }

@@ -64,13 +64,110 @@ import { MobileActionArea, MobileAppBar, MobilePrimary, MobileScreen } from "../
 
 const referenceDate = "WEDNESDAY, JULY 29 2026";
 
+/** One booking on the restaurant's book. */
+export interface Reservation {
+    time: string;
+    party: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    /** The optional note from the create form, shown as a short tag. */
+    note?: string;
+}
+
 /**
- * A day with nothing booked.
+ * A booked day — the same Wednesday as the empty one, so the two stories read
+ * as before and after rather than as two different screens.
+ *
+ * Names, emails and phones come from the shared customer seed so they match
+ * what Customer Search shows for the same people.
+ */
+export const reservationsDay: Reservation[] = [
+    { time: "11:30 AM", party: 2, firstName: "Oda", lastName: "Brennevin", email: "oda.brennevin@att.net", phone: "(801) 708-4153" },
+    {
+        time: "12:00 PM",
+        party: 4,
+        firstName: "Weston",
+        lastName: "Farnsworth",
+        email: "weston.farnsworth@tenfore.golf",
+        phone: "(801) 708-4153",
+        note: "Patio",
+    },
+    { time: "12:15 PM", party: 3, firstName: "Igor", lastName: "Kuznetsov", email: "igor.kuznetsov@gmail.com", phone: "(801) 554-0982" },
+    {
+        time: "1:00 PM",
+        party: 6,
+        firstName: "Tony",
+        lastName: "Finau",
+        email: "tony.finau@tenfore.golf",
+        phone: "(801) 375-8144",
+        note: "Birthday",
+    },
+    { time: "1:45 PM", party: 2, firstName: "Marissa", lastName: "Chen", email: "marissa.chen@tenfore.golf", phone: "(801) 440-2219" },
+    { time: "5:30 PM", party: 4, firstName: "Tom", lastName: "Watson", email: "tom.watson@yahoo.com", phone: "(801) 263-0392" },
+    {
+        time: "6:00 PM",
+        party: 8,
+        firstName: "Priya",
+        lastName: "Raman",
+        email: "priya.raman@att.net",
+        phone: "(801) 887-1046",
+        note: "Member dinner",
+    },
+    { time: "6:30 PM", party: 2, firstName: "Chris", lastName: "Moreno", email: "chris.moreno@aol.com", phone: "(801) 332-0765" },
+    { time: "7:15 PM", party: 5, firstName: "Kelsey", lastName: "Sutton", email: "kelsey.sutton@att.net", phone: "(801) 660-4417" },
+];
+
+/**
+ * One booking, stacked the way the column band had to go: **time and party
+ * size leading, the name / email / phone in the lines beneath.**
+ *
+ * The party size is right-aligned on the first line so the eye can run down the
+ * covers for the day; the email and phone share the last line and give way to
+ * an ellipsis before the name ever does, because the name is what a host reads
+ * out at the stand.
+ */
+const BookingRow = ({ r }: { r: Reservation }) => (
+    <Stack sx={{ px: 1.5, py: 1.25, gap: 0.25, borderBottom: `1px solid ${appColors.divider}`, bgcolor: appColors.surface }}>
+        <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 500, color: appColors.textPrimary }}>{r.time}</Typography>
+            {r.note && (
+                <Box
+                    sx={{
+                        px: 0.75,
+                        py: 0.125,
+                        borderRadius: 0.5,
+                        bgcolor: appColors.canvas,
+                        color: appColors.textSecondary,
+                        fontSize: 12,
+                    }}
+                >
+                    {r.note}
+                </Box>
+            )}
+            <Box sx={{ flex: 1 }} />
+            <Typography sx={{ fontSize: 14, color: appColors.textSecondary }}>Party of {r.party}</Typography>
+        </Stack>
+        <Typography sx={{ fontSize: 15, color: appColors.textPrimary }}>
+            {r.firstName} {r.lastName}
+        </Typography>
+        <Typography
+            sx={{ fontSize: 13, color: appColors.textSecondary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+        >
+            {r.email} · {r.phone}
+        </Typography>
+    </Stack>
+);
+
+/**
+ * The day's book. Empty by default — the shipped story — or filled from
+ * `bookings`, which is opt-in so the empty-day story renders unchanged.
  *
  * Reached from the drawer, so the leading is the hamburger rather than the
  * tablet's BACK.
  */
-export const MobileReservationsDay = ({ drawerOpen = false }: { drawerOpen?: boolean }) => {
+export const MobileReservationsDay = ({ drawerOpen = false, bookings }: { drawerOpen?: boolean; bookings?: Reservation[] }) => {
     const [drawer, setDrawer] = useState(drawerOpen);
     return (
         <MobileScreen
@@ -86,7 +183,20 @@ export const MobileReservationsDay = ({ drawerOpen = false }: { drawerOpen?: boo
             {/* The tablet's AntlerEmptyState draws the mark at 216×200 — over a
                 quarter of the phone's 725dp canvas. `MobileEmpty` is the same
                 mark and the same sentence at 88px. */}
-            <MobileEmpty message="No reservations for this date." />
+            {bookings && bookings.length > 0 ? (
+                <>
+                    <MobileSectionHeading>
+                        {bookings.length} reservations · {bookings.reduce((n, r) => n + r.party, 0)} guests
+                    </MobileSectionHeading>
+                    {bookings.map((r) => (
+                        <BookingRow key={`${r.time}-${r.lastName}`} r={r} />
+                    ))}
+                    {/* Clear of the floating pill, so the last booking is never under it. */}
+                    <Box sx={{ height: 88 }} />
+                </>
+            ) : (
+                <MobileEmpty message="No reservations for this date." />
+            )}
         </MobileScreen>
     );
 };
