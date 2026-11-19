@@ -17,17 +17,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 
-import {
-    backNineBack,
-    backNineFront,
-    listRows,
-    multiCourseColumns,
-    sheetHeader,
-    sheetStats,
-    slotSettingsMenu,
-    type SheetRow,
-    type SheetSlot,
-} from "@/components/screens/tee-sheet/tee-sheet-data";
+import { transcribedDay, type TeeSheetDay } from "@/components/screens/tee-sheet/tee-sheet-busy-day";
+import { sheetHeader, slotSettingsMenu, type SheetRow, type SheetSlot } from "@/components/screens/tee-sheet/tee-sheet-data";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
 import { MobileFilterTabs } from "../mobile-parts";
@@ -106,14 +97,14 @@ const DateBar = ({ course = sheetHeader.course, onCourse }: { course?: string; o
  * six fit here because they are numbers, not labels: the label shrinks to a
  * word and the number carries the weight.
  */
-const StatStrip = () => (
+const StatStrip = ({ stats }: { stats: TeeSheetDay["stats"] }) => (
     <Stack direction="row" sx={{ bgcolor: appColors.slateDark, px: 1, py: 0.5, justifyContent: "space-between", flexShrink: 0 }}>
         {[
-            ["Total", sheetStats.total],
-            ["Booked", sheetStats.booked],
-            ["Paid", sheetStats.paid],
-            ["No show", sheetStats.noShows],
-            ["Open", sheetStats.available],
+            ["Total", stats.total],
+            ["Booked", stats.booked],
+            ["Paid", stats.paid],
+            ["No show", stats.noShows],
+            ["Open", stats.available],
         ].map(([label, value]) => (
             <Stack key={label} sx={{ alignItems: "center", minWidth: 0 }}>
                 <Typography sx={{ fontSize: 14, color: "#fff" }}>{value}</Typography>
@@ -238,9 +229,20 @@ export interface MobileTeeSheetProps {
     /** Seeds an overlay open so a story can show it without a click. */
     overlay?: null | "menu" | "course";
     drawerOpen?: boolean;
+    /**
+     * Which day to draw. Defaults to the transcribed May 12 evening, which is
+     * what the tablet stories show; the phone stories pass `busyDay` so the
+     * sheet looks like a course on a good day rather than a quiet one.
+     */
+    day?: TeeSheetDay;
 }
 
-export const MobileTeeSheet = ({ view: view0 = "list", overlay: overlay0 = null, drawerOpen = false }: MobileTeeSheetProps) => {
+export const MobileTeeSheet = ({
+    view: view0 = "list",
+    overlay: overlay0 = null,
+    drawerOpen = false,
+    day = transcribedDay,
+}: MobileTeeSheetProps) => {
     const [view, setView] = useState<SheetView>(view0);
     const [overlay, setOverlay] = useState(overlay0);
     const [drawer, setDrawer] = useState(drawerOpen);
@@ -284,7 +286,13 @@ export const MobileTeeSheet = ({ view: view0 = "list", overlay: overlay0 = null,
     // Multi and Back 9 keep their data and lose their side-by-side comparison —
     // there is one column here, so the second axis becomes a switcher.
     const rows: SheetRow[] =
-        view === "back9" ? (nine === "Front" ? backNineFront : backNineBack) : view === "multi" ? multiCourseRowsFor(course) : listRows;
+        view === "back9"
+            ? nine === "Front"
+                ? day.backNineFront
+                : day.backNineBack
+            : view === "multi"
+              ? (day.multiCourse[course] ?? day.list)
+              : day.list;
 
     return (
         <MobileScreen
@@ -293,7 +301,7 @@ export const MobileTeeSheet = ({ view: view0 = "list", overlay: overlay0 = null,
         >
             <MobileFilterTabs tabs={VIEW_TABS} active={activeTab} onChange={(t) => setView(VIEW_OF[t])} />
             <DateBar course={view === "multi" ? course : sheetHeader.course} onCourse={() => setOverlay("course")} />
-            <StatStrip />
+            <StatStrip stats={day.stats} />
 
             {view === "back9" && (
                 <Stack direction="row" sx={{ bgcolor: appColors.surface, borderBottom: `1px solid ${appColors.divider}`, flexShrink: 0 }}>
@@ -366,19 +374,3 @@ export const MobileTeeSheet = ({ view: view0 = "list", overlay: overlay0 = null,
         </MobileScreen>
     );
 };
-
-/**
- * Multi view's data is per column; the phone shows one column at a time.
- *
- * A column's cards carry only the slots that are filled — a 2-ball is a
- * two-element array, not four with two nulls — because the tablet draws bars
- * rather than positions. The phone's rows are position-shaped, so each card is
- * padded back out to four and the padding becomes the "open positions" row.
- */
-function multiCourseRowsFor(course: string): SheetRow[] {
-    const column = multiCourseColumns.find((c) => c.course === course) ?? multiCourseColumns[0];
-    return column.cards.map((card) => ({
-        time: card.time,
-        slots: Array.from({ length: 4 }, (_, i) => card.slots[i] ?? null),
-    }));
-}

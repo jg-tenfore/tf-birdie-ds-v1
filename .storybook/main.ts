@@ -29,6 +29,8 @@ const config: StorybookConfig = {
         { from: "../logos", to: "/logos" },
         // Real product photography for the Pro Shop and Quick Order tiles.
         { from: "../store/images", to: "/store-images" },
+        // Profile photos for the attached-customer chip on the mobile screens.
+        { from: "../avatars", to: "/avatars" },
     ],
 
     viteFinal: async (viteConfig, { configType }) => {

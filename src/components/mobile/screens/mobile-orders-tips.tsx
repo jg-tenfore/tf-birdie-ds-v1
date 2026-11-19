@@ -119,9 +119,155 @@ const MobileDayTotals = ({ totals }: { totals: DayTotal[] }) => (
     </Box>
 );
 
+/** One card payment on the ledger that can still take a tip. */
+export interface TippablePayment {
+    paymentId: string;
+    orderId: string;
+    time: string;
+    customer: string;
+    /** "Visa ····4412" and the like. */
+    payment: string;
+    amount: number;
+    /** Entered so far; blank until the server keys it in. */
+    tip?: number;
+}
+
+/** A traded Wednesday — totals that agree with the ledger beneath them. */
+export const tradedDayPayments: TippablePayment[] = [
+    {
+        paymentId: "40211876532",
+        orderId: "3846547",
+        time: "11:42 AM",
+        customer: "Weston Farnsworth",
+        payment: "Visa ····4412",
+        amount: 64.2,
+        tip: 12.84,
+    },
+    {
+        paymentId: "40211876610",
+        orderId: "3846553",
+        time: "12:08 PM",
+        customer: "Oda Brennevin",
+        payment: "Amex ····1009",
+        amount: 38.5,
+        tip: 7.7,
+    },
+    {
+        paymentId: "40211876698",
+        orderId: "3846560",
+        time: "12:31 PM",
+        customer: "Tony Finau",
+        payment: "Mastercard ····8820",
+        amount: 112.75,
+        tip: 22.55,
+    },
+    { paymentId: "40211876741", orderId: "3846566", time: "1:14 PM", customer: "Marissa Chen", payment: "Visa ····3301", amount: 27.0 },
+    {
+        paymentId: "40211876805",
+        orderId: "3846571",
+        time: "1:52 PM",
+        customer: "Igor Kuznetsov",
+        payment: "Visa ····6675",
+        amount: 46.3,
+        tip: 9.0,
+    },
+    { paymentId: "40211876877", orderId: "3846579", time: "5:46 PM", customer: "Tom Watson", payment: "Discover ····2290", amount: 88.4 },
+    {
+        paymentId: "40211876932",
+        orderId: "3846584",
+        time: "6:22 PM",
+        customer: "Priya Raman",
+        payment: "Amex ····7713",
+        amount: 214.6,
+        tip: 42.92,
+    },
+    {
+        paymentId: "40211876990",
+        orderId: "3846590",
+        time: "6:58 PM",
+        customer: "Kelsey Sutton",
+        payment: "Mastercard ····5541",
+        amount: 52.15,
+    },
+];
+
+const usd = (n: number) => `$${n.toFixed(2)}`;
+
+/** The seven figures for that day, in `dayTotalLabels` order. */
+export const tradedDayTotals: DayTotal[] = (() => {
+    const credit = tradedDayPayments.reduce((n, p) => n + p.amount, 0);
+    const tips = tradedDayPayments.reduce((n, p) => n + (p.tip ?? 0), 0);
+    const cash = 186.4;
+    const values = [credit + cash + 41.2, credit + cash, cash, credit, 18.0, 23.2, tips];
+    return dayTotalLabels.map((label, i) => ({ label, value: usd(values[i]) }));
+})();
+
+/**
+ * One payment, stacked as `mobilePaymentRowOrder` says: customer leading with
+ * the amount trailing, the payment / time / order IDs joined beneath, and the
+ * tip as the row's own entry. A blank tip shows its field empty rather than
+ * `$0.00`, because "not entered yet" and "no tip" are different answers.
+ */
+const PaymentRow = ({ p }: { p: TippablePayment }) => (
+    <Stack
+        direction="row"
+        sx={{
+            alignItems: "center",
+            gap: 1.5,
+            px: 1.5,
+            py: 1.25,
+            borderBottom: `1px solid ${appColors.divider}`,
+            bgcolor: appColors.surface,
+        }}
+    >
+        <Stack sx={{ flex: 1, minWidth: 0, gap: 0.25 }}>
+            <Stack direction="row" sx={{ alignItems: "baseline", gap: 1 }}>
+                <Typography
+                    sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: 16,
+                        color: appColors.textPrimary,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    {p.customer}
+                </Typography>
+                <Typography sx={{ fontSize: 15, color: appColors.textPrimary, flexShrink: 0 }}>{usd(p.amount)}</Typography>
+            </Stack>
+            <Typography
+                sx={{ fontSize: 12, color: appColors.textSecondary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+            >
+                {p.payment} · {p.time} · #{p.orderId}
+            </Typography>
+        </Stack>
+        <Box
+            sx={{
+                width: 84,
+                flexShrink: 0,
+                px: 1,
+                py: 0.75,
+                bgcolor: appColors.fieldFill,
+                borderBottom: `1px solid ${p.tip !== undefined ? appColors.greenTee : appColors.textSecondary}`,
+            }}
+        >
+            <Typography sx={{ fontSize: 10, color: appColors.textSecondary, lineHeight: 1.2 }}>Tip</Typography>
+            <Typography
+                sx={{ fontSize: 15, lineHeight: 1.3, color: p.tip !== undefined ? appColors.textPrimary : appColors.textSecondary }}
+            >
+                {p.tip !== undefined ? usd(p.tip) : "—"}
+            </Typography>
+        </Box>
+    </Stack>
+);
+
 export interface MobileOrdersTipsProps {
     /** The seven day figures. Blank values on a day with no activity. */
     totals?: DayTotal[];
+    /** The day's tippable card payments. Omitted, the screen shows its empty state. */
+    payments?: TippablePayment[];
     /** Seeds the overflow sheet open. */
     sheet?: boolean;
     drawerOpen?: boolean;
@@ -137,6 +283,7 @@ export const MobileOrdersTips = ({
     totals = dayTotalLabels.map((label) => ({ label })),
     sheet: sheet0 = false,
     drawerOpen = false,
+    payments,
 }: MobileOrdersTipsProps) => {
     const [sheet, setSheet] = useState(sheet0);
     const [drawer, setDrawer] = useState(drawerOpen);
@@ -179,7 +326,26 @@ export const MobileOrdersTips = ({
                 the day band `8-reservations` already uses. */}
             <MobileSeatBand label="WEDNESDAY, JULY 29 2026" color={appColors.slate} />
             <MobileDayTotals totals={totals} />
-            <MobileEmpty message="No tippable payments exist for this day." />
+            {payments && payments.length > 0 ? (
+                <>
+                    <Stack
+                        direction="row"
+                        sx={{ px: 1.5, py: 1, bgcolor: appColors.canvas, borderBottom: `1px solid ${appColors.divider}` }}
+                    >
+                        <Typography sx={{ flex: 1, fontSize: 13, color: appColors.textSecondary }}>
+                            {payments.length} tippable payments
+                        </Typography>
+                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
+                            {payments.filter((p) => p.tip === undefined).length} awaiting a tip
+                        </Typography>
+                    </Stack>
+                    {payments.map((p) => (
+                        <PaymentRow key={p.paymentId} p={p} />
+                    ))}
+                </>
+            ) : (
+                <MobileEmpty message="No tippable payments exist for this day." />
+            )}
         </MobileScreen>
     );
 };

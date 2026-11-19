@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
+import { type FloorElement, FloorElementView, floorColors, seededFloorPlans, statusFill } from "@/components/screens/restaurant/floor-plan";
 import { type ChartTable, chartRooms } from "@/components/screens/restaurant/table-chart-canvas";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileEmpty, MobileRow, MobileSectionHeading } from "../mobile-parts";
@@ -61,8 +62,9 @@ import {
  *
  * ## One thing the list does better
  *
- * The tablet token clips its label at both ends — `Detached 27699` renders as
- * `ached 276`, which is why chart tables are normally numbered. A row gives the
+ * The tablet token clips its label at both ends — the app's generated
+ * `Detached 27699` IDs render as `ached 276`, which is why the seed names
+ * detached tables after their party instead. A row gives the
  * label its full width, so the detached tables are legible here and are not
  * legible there. Worth keeping when the editor is revisited.
  */
@@ -144,6 +146,115 @@ export const MobileTableChart = ({
             <Box sx={{ px: 1.5, py: 2 }}>
                 <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
                     Positions are set on the terminal. This device lists the tables in a room and can add one; it does not place them.
+                </Typography>
+            </Box>
+        </MobileScreen>
+    );
+};
+
+/* ------------------------------------------------------------- floor plan */
+
+const STATUS_KEYS = [
+    { key: "idle", label: "Open", test: (e: FloorElement) => !e.status || e.status === "empty" },
+    { key: "occupied", label: "Seated", test: (e: FloorElement) => e.status === "occupied" || e.status === "check-requested" },
+    { key: "reserved", label: "Reserved", test: (e: FloorElement) => e.status === "reserved" },
+    { key: "cleaning", label: "Cleaning", test: (e: FloorElement) => e.status === "cleaning" },
+] as const;
+
+/**
+ * **The room, drawn — read-only.**
+ *
+ * The editor argument above still holds: dragging tokens to an x/y needs a
+ * room-sized canvas, a drag that is not a scroll, and two hands. None of that
+ * applies to *looking*. A host walking the floor wants to see which tables are
+ * seated, held or being reset, and the plan answers that faster than any list.
+ *
+ * So this draws the room's real elements, scaled to the phone's width, with no
+ * drag affordance at all — nothing here moves, and the line under the plan says
+ * so. Under the plan, the seated tables are listed with party, covers, server
+ * and open tab, which is the half of this a phone does better than a terminal.
+ */
+export const MobileFloorPlan = ({ room = "bigroom", label }: { room?: string; label?: string }) => {
+    const elements = seededFloorPlans[room] ?? [];
+    const tables = elements.filter((e) => e.kind === "table");
+    const pad = 24;
+    const roomW = Math.max(...elements.map((e) => e.x + e.w)) + pad;
+    const roomH = Math.max(...elements.map((e) => e.y + e.h)) + pad;
+    const canvasW = 402 - 16;
+    const scale = canvasW / roomW;
+    // Biggest parties first: the six-tops are what a host is watching, not
+    // the single stools along the bar.
+    const seated = tables
+        .filter((e) => e.party)
+        .sort((a, b) => (b.party?.guests ?? 0) - (a.party?.guests ?? 0) || (b.party?.tab ?? 0) - (a.party?.tab ?? 0));
+
+    return (
+        <MobileScreen appBar={<MobileAppBar title="Table Chart" leading="back" action="New Table" showOverflow={false} />}>
+            <MobileRow title="Room" trailing={label ?? room} drills />
+
+            <Box sx={{ p: 1 }}>
+                <Box
+                    sx={{
+                        position: "relative",
+                        width: canvasW,
+                        height: roomH * scale,
+                        bgcolor: floorColors.canvas,
+                        border: `1px solid ${appColors.divider}`,
+                        borderRadius: 1,
+                        overflow: "hidden",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            width: roomW,
+                            height: roomH,
+                            transform: `scale(${scale})`,
+                            transformOrigin: "0 0",
+                        }}
+                    >
+                        {elements.map((e) => (
+                            <FloorElementView key={e.id} element={e} />
+                        ))}
+                    </Box>
+                </Box>
+            </Box>
+
+            {/* The legend doubles as the room's tally. */}
+            <Stack direction="row" sx={{ px: 1.5, pb: 1, gap: 1.5, flexWrap: "wrap" }}>
+                {STATUS_KEYS.map((s) => (
+                    <Stack key={s.key} direction="row" sx={{ alignItems: "center", gap: 0.75 }}>
+                        <Box
+                            sx={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: 0.5,
+                                bgcolor: s.key === "idle" ? floorColors.idle : statusFill(s.key),
+                            }}
+                        />
+                        <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
+                            {s.label} {tables.filter(s.test).length}
+                        </Typography>
+                    </Stack>
+                ))}
+            </Stack>
+
+            <MobileSectionHeading>Seated now · {seated.reduce((n, e) => n + (e.party?.guests ?? 0), 0)} guests</MobileSectionHeading>
+            {seated.map((e) => (
+                <MobileRow
+                    key={e.id}
+                    title={`${e.id.startsWith("stool-") ? "Bar" : "Table"} ${e.num ?? e.id} · ${e.party?.name}`}
+                    subtitle={`${e.party?.guests} ${e.party?.guests === 1 ? "guest" : "guests"} · Server ${e.party?.server}`}
+                    price={e.party?.tab}
+                    drills
+                />
+            ))}
+
+            <Box sx={{ px: 1.5, py: 2 }}>
+                <Typography sx={{ fontSize: 13, color: appColors.textSecondary }}>
+                    Read-only on this device. Tables are moved on the terminal.
                 </Typography>
             </Box>
         </MobileScreen>

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { MobileOrdersTips } from "@/components/mobile/screens/mobile-orders-tips";
+import { MobileOrdersTips, tradedDayPayments, tradedDayTotals } from "@/components/mobile/screens/mobile-orders-tips";
 
 /**
  * **Mobile Screens — 9-ordersTips.** End-of-shift reconciliation, laid out for
@@ -55,6 +55,15 @@ type Story = StoryObj<typeof meta>;
  * once at close and a shift report is printed per server on demand, so the
  * rarer of the two prints is the one that moves.
  */
+/**
+ * **A traded day.** Eight card payments that can still take a tip, five with
+ * tips keyed in and three waiting, under a totals strip that adds up to them.
+ */
+export const TradedDay: Story = {
+    name: "Traded day",
+    render: () => <MobileOrdersTips totals={tradedDayTotals} payments={tradedDayPayments} />,
+};
+
 export const NoTippablePayments: Story = {
     render: () => <MobileOrdersTips />,
 };

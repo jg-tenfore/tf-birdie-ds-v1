@@ -37,6 +37,7 @@ const appDir = join(dist, "prototype");
 try {
     await cp(join(root, "logos"), join(appDir, "logos"), { recursive: true });
     await cp(join(root, "store/images"), join(appDir, "store-images"), { recursive: true });
+    await cp(join(root, "avatars"), join(appDir, "avatars"), { recursive: true });
 } catch (error) {
     // The app build may not have run (e.g. `npm run build-site` on its own).
     if (error.code !== "ENOENT") throw error;

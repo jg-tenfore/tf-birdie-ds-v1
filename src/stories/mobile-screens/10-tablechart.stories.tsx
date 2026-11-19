@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { MobileCreateTable, MobileTableChart } from "@/components/mobile/screens/mobile-table-chart";
+import { MobileCreateTable, MobileFloorPlan, MobileTableChart } from "@/components/mobile/screens/mobile-table-chart";
 import { detachedTokens } from "@/components/screens/restaurant/table-chart-chrome";
 
 /**
@@ -29,7 +29,8 @@ import { detachedTokens } from "@/components/screens/restaurant/table-chart-chro
  * can confirm Table 10 is in *banquet*; they cannot say where in it.
  *
  * One thing the list does better: the tablet token clips its label at both ends
- * (`Detached 27699` renders as `ached 276`). A row gives it the full width.
+ * (the app's generated `Detached 27699` renders as `ached 276`). A row gives
+ * it the full width.
  */
 const meta = {
     title: "Mobile Screens/10-tablechart",
@@ -46,6 +47,17 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/**
+ * **Floor plan — live room.** The busy room drawn read-only: the bar and its
+ * stools, the dining tables, and each one coloured by status, with the seated
+ * parties listed underneath. Placing tables is still a terminal job; seeing the
+ * room is not.
+ */
+export const FloorPlan: Story = {
+    name: "Floor plan — live room",
+    render: () => <MobileFloorPlan room="bigroom" label="Main Dining" />,
+};
 
 /**
  * The `[Detached Tables]` room. The same two tokens the tablet draws, listed —

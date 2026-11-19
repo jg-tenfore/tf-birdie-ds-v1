@@ -546,17 +546,17 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
         // The bar: one long barrier with a dashed label over the stool row.
         { id: "bar", kind: "barrier", x: 60, y: 60, w: 1140, h: 16 },
         { id: "bar-label", kind: "label", x: 580, y: 28, w: 100, h: 22, text: "Bar" },
-        stool(0, "B1", "occupied", { name: "Reid", guests: 1, server: "BT", tab: 24 }),
-        stool(1, "B2", "occupied", { name: "Park", guests: 1, server: "BT", tab: 18.5 }),
+        stool(0, "B1", "occupied", { name: "Fiona Doyle", guests: 1, server: "BT", tab: 24 }),
+        stool(1, "B2", "occupied", { name: "Jonah Hamlet", guests: 1, server: "BT", tab: 18.5 }),
         stool(2, "B3", "empty"),
-        stool(3, "B4", "occupied", { name: "Singh", guests: 1, server: "BT", tab: 42 }),
-        stool(4, "B5", "occupied", { name: "Brooks", guests: 1, server: "BT", tab: 31 }),
+        stool(3, "B4", "occupied", { name: "Rosa Ito", guests: 1, server: "BT", tab: 42 }),
+        stool(4, "B5", "occupied", { name: "Teo Achebe", guests: 1, server: "BT", tab: 31 }),
         stool(5, "B6", "empty"),
-        stool(6, "B7", "occupied", { name: "Khan", guests: 1, server: "BT", tab: 12 }),
-        stool(7, "B8", "occupied", { name: "Lee", guests: 1, server: "BT", tab: 56.5 }),
+        stool(6, "B7", "occupied", { name: "Ursula Kaur", guests: 1, server: "BT", tab: 12 }),
+        stool(7, "B8", "occupied", { name: "Viggo Osei", guests: 1, server: "BT", tab: 56.5 }),
         stool(8, "B9", "empty"),
         stool(9, "B10", "empty"),
-        stool(10, "B11", "occupied", { name: "Moss", guests: 1, server: "BT", tab: 28 }),
+        stool(10, "B11", "occupied", { name: "Wren Baptiste", guests: 1, server: "BT", tab: 28 }),
         stool(11, "B12", "empty"),
 
         // Front row — four-tops by the window.
@@ -571,7 +571,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             num: "1",
             seats: 4,
             status: "occupied",
-            party: { name: "Williams", guests: 3, server: "SC", tab: 143.5 },
+            party: { name: "Weston Farnsworth", guests: 3, server: "SC", tab: 143.5 },
         },
         { id: "t2", kind: "table", shape: "square", x: 250, y: 230, w: 100, h: 100, num: "2", seats: 4, status: "empty" },
         {
@@ -585,7 +585,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             num: "3",
             seats: 4,
             status: "occupied",
-            party: { name: "Chen", guests: 4, server: "MR", tab: 67.25 },
+            party: { name: "Marissa Chen", guests: 4, server: "MR", tab: 67.25 },
         },
         { id: "t4", kind: "table", shape: "square", x: 550, y: 230, w: 100, h: 100, num: "4", seats: 4, status: "reserved" },
 
@@ -602,7 +602,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             seats: 4,
             lockAR: true,
             status: "occupied",
-            party: { name: "Garcia", guests: 2, server: "SC", tab: 38 },
+            party: { name: "Caleb Delgado", guests: 2, server: "SC", tab: 38 },
         },
         {
             id: "t6",
@@ -616,7 +616,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             seats: 4,
             lockAR: true,
             status: "occupied",
-            party: { name: "Anderson", guests: 4, server: "MR", tab: 287 },
+            party: { name: "Tony Finau", guests: 4, server: "MR", tab: 287 },
         },
         { id: "t7", kind: "table", shape: "circle", x: 410, y: 390, w: 110, h: 110, num: "7", seats: 4, lockAR: true, status: "cleaning" },
         {
@@ -631,7 +631,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             seats: 4,
             lockAR: true,
             status: "occupied",
-            party: { name: "Thompson", guests: 3, server: "JL", tab: 112.5 },
+            party: { name: "Simone Okafor", guests: 3, server: "JL", tab: 112.5 },
         },
         {
             id: "t12",
@@ -645,7 +645,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             seats: 4,
             lockAR: true,
             status: "check-requested",
-            party: { name: "Nguyen", guests: 4, server: "MR", tab: 245 },
+            party: { name: "Dermot Nguyen", guests: 4, server: "MR", tab: 245 },
         },
 
         // Back row — the group tables.
@@ -660,7 +660,7 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             num: "9",
             seats: 6,
             status: "occupied",
-            party: { name: "Davis", guests: 6, server: "JL", tab: 412.75 },
+            party: { name: "Priya Raman", guests: 6, server: "JL", tab: 412.75 },
         },
         {
             id: "t10",
@@ -673,9 +673,59 @@ export const seededFloorPlans: Record<string, FloorElement[]> = {
             num: "10",
             seats: 6,
             status: "occupied",
-            party: { name: "Rodriguez", guests: 5, server: "AK", tab: 198 },
+            party: { name: "Anders Marchetti", guests: 5, server: "AK", tab: 198 },
         },
         { id: "t11", kind: "table", shape: "rectangle", x: 520, y: 550, w: 180, h: 100, num: "11", seats: 8, status: "blocked" },
+
+        // The window side, behind a half wall. The bar always ran the full width
+        // of the room but nothing sat under its right third, so on any screen
+        // that draws the whole room the layout read as unfinished: two-tops on
+        // the glass, a six-top round, and two booths along the back.
+        { id: "wall-window", kind: "barrier", x: 900, y: 190, w: 12, h: 470 },
+        { id: "window-label", kind: "label", x: 1010, y: 188, w: 120, h: 22, text: "Window" },
+        {
+            id: "t13",
+            kind: "table",
+            shape: "square",
+            x: 950,
+            y: 220,
+            w: 80,
+            h: 80,
+            num: "13",
+            seats: 2,
+            status: "occupied",
+            party: { name: "Quinn Zeller", guests: 2, server: "AK", tab: 54.25 },
+        },
+        { id: "t14", kind: "table", shape: "square", x: 950, y: 340, w: 80, h: 80, num: "14", seats: 2, status: "reserved" },
+        {
+            id: "t15",
+            kind: "table",
+            shape: "circle",
+            x: 1070,
+            y: 220,
+            w: 120,
+            h: 120,
+            num: "15",
+            seats: 6,
+            lockAR: true,
+            status: "occupied",
+            party: { name: "Amara Nakamura", guests: 6, server: "AK", tab: 318.4 },
+        },
+        { id: "t16", kind: "table", shape: "square", x: 1090, y: 380, w: 80, h: 80, num: "16", seats: 2, status: "empty" },
+        {
+            id: "t17",
+            kind: "table",
+            shape: "rectangle",
+            x: 950,
+            y: 500,
+            w: 110,
+            h: 150,
+            num: "17",
+            seats: 4,
+            status: "occupied",
+            party: { name: "Callum Halloran", guests: 4, server: "JL", tab: 96.8 },
+        },
+        { id: "t18", kind: "table", shape: "rectangle", x: 1080, y: 500, w: 110, h: 150, num: "18", seats: 4, status: "cleaning" },
     ],
     "Private Hall": [
         { id: "p-label", kind: "label", x: 380, y: 90, w: 110, h: 24, text: "Private Hall" },

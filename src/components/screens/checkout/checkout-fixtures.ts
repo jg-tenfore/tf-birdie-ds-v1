@@ -10,11 +10,16 @@
  * real store data through the same props. See Foundations → Prototype Seam.
  */
 
+import { storeImage } from "@/utils/asset-url";
+
 import type { CheckoutLine } from "./checkout-panes";
 
 export const checkoutLines: CheckoutLine[] = [
-    { id: "greenfee", name: "Senior Weekday", qty: 1, unitPrice: 26.99, stock: [27, 350] },
-    { id: "cart", name: "Dunes Cart", qty: 1, unitPrice: 23.1, stock: [20, 100] },
+    // A tee box and a cart rather than grey squares: a green fee and a cart
+    // rental have no product shot, so these are generated stand-ins for what
+    // each line buys.
+    { id: "greenfee", name: "Senior Weekday", qty: 1, unitPrice: 26.99, stock: [27, 350], image: storeImage("generated/teebox.jpg") },
+    { id: "cart", name: "Dunes Cart", qty: 1, unitPrice: 23.1, stock: [20, 100], image: storeImage("generated/cart.jpg") },
 ];
 
 export const checkoutTotals = {

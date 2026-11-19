@@ -11,7 +11,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 
 import { appColors, appRadius } from "@/theme/app-replica-tokens";
-import { assetUrl } from "@/utils/asset-url";
+import { assetUrl, avatarImage } from "@/utils/asset-url";
 
 /**
  * **Mobile Screens — the parts.** From `references/090426/`.
@@ -325,6 +325,14 @@ export const MobileEmpty = ({ message }: { message: string }) => (
  * order this is* is the one fact an operator must never have to navigate to
  * check. The count on the right is the number of items on it.
  */
+/**
+ * Profile photo for the demo customer carried across the mobile screens.
+ *
+ * One constant rather than six literals, so the screens cannot drift apart
+ * on which face belongs to the name beside it.
+ */
+export const attachedCustomerAvatar = avatarImage("weston-farnsworth.jpg");
+
 export const MobileAttachedCustomer = ({ name, count, avatar }: { name: string; count?: number; avatar?: string }) => (
     <Stack
         direction="row"

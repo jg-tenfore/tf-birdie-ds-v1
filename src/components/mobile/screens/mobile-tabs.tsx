@@ -19,7 +19,15 @@ import { openTabs } from "@/components/screens/restaurant/tabs-story-parts";
 import { posCategory, posItem } from "@/data/pos-inventory";
 import { appColors } from "@/theme/app-replica-tokens";
 import { MobileNavDrawer } from "../mobile-drawer";
-import { MobileAttachedCustomer, MobileFab, MobileFilterTabs, MobileRow, MobileSearch, MobileSeatBand } from "../mobile-parts";
+import {
+    attachedCustomerAvatar,
+    MobileAttachedCustomer,
+    MobileFab,
+    MobileFilterTabs,
+    MobileRow,
+    MobileSearch,
+    MobileSeatBand,
+} from "../mobile-parts";
 import { MobileActionArea, MobileAppBar, MobileBottomNav, MobileBottomSheet, MobilePrimary, MobileScreen } from "../mobile-shell";
 
 /**
@@ -190,7 +198,7 @@ export const MobileTabDetail = ({
             fab={tab === "menus" && !drilled && !showCombos ? <MobileFab label="Quick Order" /> : undefined}
             bottomNav={
                 <>
-                    <MobileAttachedCustomer name="Weston Farnsworth" count={seatedLines.length} />
+                    <MobileAttachedCustomer name="Weston Farnsworth" avatar={attachedCustomerAvatar} count={seatedLines.length} />
                     <MobileBottomNav items={navItems} active={tab} onChange={(k) => setTab(k as "menus" | "order")} />
                 </>
             }

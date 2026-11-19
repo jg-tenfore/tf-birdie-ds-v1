@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { MobileTeeSheet } from "@/components/mobile/screens/mobile-tee-sheet";
+import { busyDay, busyNotes, busyReservationHistory } from "@/components/screens/tee-sheet/tee-sheet-busy-day";
 import {
     MobileCartSignOut,
     MobileCreateRaincheck,
@@ -25,6 +26,13 @@ import {
  * courses, or the front and back nine, *at a glance*. Three columns cannot exist
  * in 402px — that is 32px per position — so both become switchers. The data
  * survives; the comparison does not, and no layout recovers it at this width.
+ *
+ * **The day is a busy one.** The tablet stories draw the transcribed May 12
+ * evening, which was quiet — mostly open times. These draw the same course on a
+ * full Tuesday afternoon (`tee-sheet-busy-day.ts`): foursomes, the Women's
+ * League block, an outing, riders and walkers, paid and unpaid, a few positions
+ * still open. Same names as the customer records, and the 5:58 PM and 6:54 PM
+ * times are the transcribed ones, so the detail screens still match.
  */
 const meta = {
     title: "Mobile Screens/2-teesheet",
@@ -38,11 +46,11 @@ type Story = StoryObj<typeof meta>;
 /**
  * **List view** — the transposed agenda, and the primary view.
  *
- * The 5:58 PM foursome reads top to bottom instead of left to right, each
- * position keeping its tone stripe, its glyphs and its price. The four empty
- * times around it are one row each rather than four.
+ * Each foursome reads top to bottom instead of left to right, each position
+ * keeping its tone stripe, its glyphs and its price. The odd open position left
+ * on a busy afternoon collapses to one row rather than taking a row each.
  */
-export const ListView: Story = { name: "List view", render: () => <MobileTeeSheet view="list" /> };
+export const ListView: Story = { name: "List view", render: () => <MobileTeeSheet view="list" day={busyDay} /> };
 
 /**
  * **List view — tee time menu.** Squeeze, Clear, Clone, Move Player(s).
@@ -52,14 +60,20 @@ export const ListView: Story = { name: "List view", render: () => <MobileTeeShee
  * with `Clear Time` in the app's own red, because it is the one that destroys
  * something.
  */
-export const TeeTimeMenu: Story = { name: "List view — tee time menu", render: () => <MobileTeeSheet view="list" overlay="menu" /> };
+export const TeeTimeMenu: Story = {
+    name: "List view — tee time menu",
+    render: () => <MobileTeeSheet view="list" overlay="menu" day={busyDay} />,
+};
 
 /**
  * **List view — course picker.** Three courses, from the date bar.
  *
  * A dropdown on tablet, a sheet here. Same three options, same order.
  */
-export const CoursePicker: Story = { name: "List view — course picker", render: () => <MobileTeeSheet view="list" overlay="course" /> };
+export const CoursePicker: Story = {
+    name: "List view — course picker",
+    render: () => <MobileTeeSheet view="list" overlay="course" day={busyDay} />,
+};
 
 /**
  * **Grid view** — the phone's version of "denser".
@@ -71,7 +85,7 @@ export const CoursePicker: Story = { name: "List view — course picker", render
  *
  * Shrinking the type instead would have produced a grid nobody can tap.
  */
-export const GridView: Story = { name: "Grid view", render: () => <MobileTeeSheet view="grid" /> };
+export const GridView: Story = { name: "Grid view", render: () => <MobileTeeSheet view="grid" day={busyDay} /> };
 
 /**
  * **Multi view — three courses.** A course switcher.
@@ -81,7 +95,7 @@ export const GridView: Story = { name: "Grid view", render: () => <MobileTeeShee
  * shows one course at a time and names which, with the banner saying so rather
  * than leaving a reviewer to wonder where the other two went.
  */
-export const MultiView: Story = { name: "Multi view — three courses", render: () => <MobileTeeSheet view="multi" /> };
+export const MultiView: Story = { name: "Multi view — three courses", render: () => <MobileTeeSheet view="multi" day={busyDay} /> };
 
 /**
  * **Back 9 view — front and back.** A Front / Back toggle.
@@ -90,7 +104,7 @@ export const MultiView: Story = { name: "Multi view — three courses", render: 
  * reachable and loses the side-by-side read, which on tablet is the entire
  * reason the view exists.
  */
-export const BackNineView: Story = { name: "Back 9 view — front and back", render: () => <MobileTeeSheet view="back9" /> };
+export const BackNineView: Story = { name: "Back 9 view — front and back", render: () => <MobileTeeSheet view="back9" day={busyDay} /> };
 
 /**
  * **Tee time detail — foursome.**
@@ -129,8 +143,17 @@ export const DetailPaidPair: Story = { name: "Tee time detail — paid pair", re
  */
 export const DetailOpenTime: Story = { name: "Tee time detail — open time", render: () => <MobileTeeTimeDetail variant="open-time" /> };
 
-/** **Dialog — reservation history.** A centred card on tablet; a screen here. */
-export const DialogHistory: Story = { name: "Dialog — reservation history", render: () => <MobileReservationHistory /> };
+/**
+ * **Dialog — reservation history.** A centred card on tablet; a screen here.
+ *
+ * Shown with the reservation's full trail — booked online, a player added, the
+ * rate changed, the cart assigned — rather than the single line the tablet
+ * capture happened to hold.
+ */
+export const DialogHistory: Story = {
+    name: "Dialog — reservation history",
+    render: () => <MobileReservationHistory history={busyReservationHistory} />,
+};
 
 /**
  * **Dialog — customer notes.**
@@ -138,13 +161,22 @@ export const DialogHistory: Story = { name: "Dialog — reservation history", re
  * A dialog whose whole purpose is a text area cannot afford to be a card inside
  * 402px, so it takes the screen and the text area gets the full width.
  */
-export const DialogCustomerNotes: Story = { name: "Dialog — customer notes", render: () => <MobileNotes title="Customer Notes" /> };
+export const DialogCustomerNotes: Story = {
+    name: "Dialog — customer notes",
+    render: () => <MobileNotes title="Customer Notes" text={busyNotes["Customer Notes"]} />,
+};
 
 /** **Dialog — group notes.** */
-export const DialogGroupNotes: Story = { name: "Dialog — group notes", render: () => <MobileNotes title="Group Notes" /> };
+export const DialogGroupNotes: Story = {
+    name: "Dialog — group notes",
+    render: () => <MobileNotes title="Group Notes" text={busyNotes["Group Notes"]} />,
+};
 
 /** **Dialog — tee time notes.** */
-export const DialogTeeTimeNotes: Story = { name: "Dialog — tee time notes", render: () => <MobileNotes title="Tee Time Notes" /> };
+export const DialogTeeTimeNotes: Story = {
+    name: "Dialog — tee time notes",
+    render: () => <MobileNotes title="Tee Time Notes" text={busyNotes["Tee Time Notes"]} />,
+};
 
 /**
  * **Edit reservation — fees.**

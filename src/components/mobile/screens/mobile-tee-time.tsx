@@ -40,6 +40,9 @@ import {
     MobileSecondaryRow,
 } from "../mobile-shell";
 
+/** The shape both the transcribed and the busy-day history share. */
+type ReservationHistory = { id: string; entries: readonly { when: string; who: string; what: string }[] };
+
 /**
  * **Mobile Screens — 2-teesheet, the tee time.** Detail, dialogs and forms.
  *
@@ -214,14 +217,20 @@ export const MobileTeeTimeDetail = ({
 
 /* --------------------------------------------------------------- dialogs */
 
-/** Reservation history — a dialog on tablet, a screen here. */
-export const MobileReservationHistory = () => (
-    <MobileScreen
-        appBar={<MobileAppBar title="Reservation History" subtitle={`#${reservationHistory.id}`} leading="close" showOverflow={false} />}
-    >
-        {reservationHistory.entries.map((e) => (
+/**
+ * Reservation history — a dialog on tablet, a screen here.
+ *
+ * `history` defaults to the transcribed single line; the phone stories pass the
+ * busy day's fuller trail so the screen shows what a two-day-old booking really
+ * accumulates.
+ */
+export const MobileReservationHistory = ({ history = reservationHistory }: { history?: ReservationHistory }) => (
+    <MobileScreen appBar={<MobileAppBar title="Reservation History" subtitle={`#${history.id}`} leading="close" showOverflow={false} />}>
+        {history.entries.map((e, i) => (
             <Stack
-                key={e.when}
+                // Two events can share a minute — a booking and its
+                // confirmation email — so the timestamp alone is not a key.
+                key={`${e.when}-${i}`}
                 sx={{ px: 1.5, py: 1.25, gap: 0.25, bgcolor: appColors.surface, borderBottom: `1px solid ${appColors.divider}` }}
             >
                 <Stack direction="row" sx={{ justifyContent: "space-between" }}>
@@ -241,7 +250,14 @@ export const MobileReservationHistory = () => (
  * dialogs for the same reason, and duplicating that here would be duplicating a
  * quirk rather than a design.
  */
-export const MobileNotes = ({ title }: { title: "Customer Notes" | "Group Notes" | "Tee Time Notes" }) => (
+export const MobileNotes = ({
+    title,
+    text,
+}: {
+    title: "Customer Notes" | "Group Notes" | "Tee Time Notes";
+    /** A note already on file. Absent, the field shows its placeholder. */
+    text?: string;
+}) => (
     <MobileScreen
         appBar={<MobileAppBar title={title} leading="close" showOverflow={false} />}
         actions={
@@ -266,7 +282,11 @@ export const MobileNotes = ({ title }: { title: "Customer Notes" | "Group Notes"
                 border: `1px solid ${appColors.divider}`,
             }}
         >
-            <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>Enter {title.toLowerCase()}…</Typography>
+            {text ? (
+                <Typography sx={{ fontSize: 16, lineHeight: 1.5, color: appColors.textPrimary }}>{text}</Typography>
+            ) : (
+                <Typography sx={{ fontSize: 16, color: appColors.textSecondary }}>Enter {title.toLowerCase()}…</Typography>
+            )}
         </Box>
     </MobileScreen>
 );
